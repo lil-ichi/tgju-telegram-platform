@@ -198,7 +198,9 @@ endpoint (local LLMs included):
 ## ⚠️ Data & Disclaimer
 
 - Market data is sourced from **TGJU** ([tgju.org](https://www.tgju.org)).
-  This project is **not affiliated with or endorsed by TGJU**.
+  This project is developed by a TGJU team member as an **internal automation
+  tool** published for the community. It is an unofficial project — please
+  refer to tgju.org for official data and services.
 - Data is provided for **informational purposes only** — not financial advice.
   Verify before making any decision.
 - Polls are interaction-focused and deliberately avoid market signals or
