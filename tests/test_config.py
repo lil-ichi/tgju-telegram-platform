@@ -11,7 +11,7 @@ import tempfile
 
 import pytest
 
-import platform.tgju_engine_config as cfg
+import tgju.tgju_engine_config as cfg
 
 YAML_PATH = os.path.join(os.path.dirname(__file__), "..", "platform", "channels.yaml")
 

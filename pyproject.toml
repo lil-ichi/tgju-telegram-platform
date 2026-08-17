@@ -32,10 +32,10 @@ dependencies = [
 dev = ["pytest>=8.0"]
 
 [project.scripts]
-tgju-platform = "tgju_platform:main"
+tgju-platform = "tgju.tgju_platform:main"
 
 [tool.setuptools]
-packages = ["platform", "platform.tgju_core"]
+packages = ["tgju", "tgju.tgju_core"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

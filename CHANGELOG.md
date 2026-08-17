@@ -23,14 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Removed hardcoded `Agent 10` username from `tgju_platform.py`,
   `tgju_multi.py`, `tgju_engine_bot.py` — token lookup now uses
   `expanduser()` (identical result, any machine).
-- `platform/channels.yaml` — real Telegram channel IDs replaced with empty
+- `tgju/channels.yaml` — real Telegram channel IDs replaced with empty
   placeholders (public repo safety). Re-enter via dashboard or YAML.
 - `tgju_platform.py` — `main()` entry point extracted.
 
 ## [2.0.0] — 2026-08-16
 
 ### Added
-- New modular core: `platform/tgju_core/` (channels, health, runs, events,
+- New modular core: `tgju/tgju_core/` (channels, health, runs, events,
   idempotency, secrets, approval, simulation, types).
 - WhatsApp (Meta Cloud API) + Bale delivery from the same dashboard.
 - AI orchestrator: 4 customizable jobs (analysis, poll select, poll generate,

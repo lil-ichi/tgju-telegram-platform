@@ -1,7 +1,7 @@
 import re, io
 
 SRC = r'D:\Hermes\TGJU-Telegram\platform\tgju_platform_ui.html'
-TMP = r'D:\Hermes\TGJU-Telegram\platform\new_css_block.txt'
+TMP = r'D:\Hermes\TGJU-Telegram\tgju\new_css_block.txt'
 
 with io.open(SRC, encoding='utf-8') as f:
     src = f.read()

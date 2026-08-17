@@ -12,5 +12,5 @@ if [ -z "$PYEXE" ] && [ -x ".venv/bin/python" ]; then PYEXE=".venv/bin/python"; 
 if [ -z "$PYEXE" ] && [ -x ".venv/Scripts/python.exe" ]; then PYEXE=".venv/Scripts/python.exe"; fi
 if [ -z "$PYEXE" ]; then PYEXE="python"; fi
 
-cd platform
+cd tgju
 exec "$PYEXE" tgju_platform.py

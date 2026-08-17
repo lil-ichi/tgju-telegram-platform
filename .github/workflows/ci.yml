@@ -34,10 +34,10 @@ jobs:
 
       - name: Verify package imports
         run: |
-          python -c "import platform.tgju_engine_format; import platform.tgju_core; print('imports OK')"
+          python -c "import tgju.tgju_engine_format; import tgju.tgju_core; print('imports OK')"
 
       - name: Run tests
         run: python -m pytest -v
 
       - name: Compile check
-        run: python -m compileall -q platform tests
+        run: python -m compileall -q tgju tests

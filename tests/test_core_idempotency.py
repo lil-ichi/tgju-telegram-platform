@@ -14,7 +14,7 @@ import tempfile
 
 import pytest
 
-from platform.tgju_core.idempotency import IdempotencyManager
+from tgju.tgju_core.idempotency import IdempotencyManager
 
 CONTENT = {"text": "قیمت دلار امروز", "type": "prices"}
 CONTENT_SAME = {"text": "قیمت دلار امروز", "type": "prices"}

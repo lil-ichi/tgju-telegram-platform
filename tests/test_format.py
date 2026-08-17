@@ -5,7 +5,7 @@ Run:  python -m pytest tests/ -v
 """
 import pytest
 
-import platform.tgju_engine_format as fmt
+import tgju.tgju_engine_format as fmt
 
 
 # ── esc / digits ──────────────────────────────────────────────────────────

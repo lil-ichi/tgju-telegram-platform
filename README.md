@@ -90,7 +90,7 @@ pip install -r requirements.txt
 
 The token is read from (highest priority first):
 
-1. The active profile in `platform/state/bot_profile.json` (created by the
+1. The active profile in `tgju/state/bot_profile.json` (created by the
    dashboard's **Bot** tab — recommended)
 2. `TELEGRAM_BOT_TOKEN` in the legacy Hermes `.env` location
    (`%LOCALAPPDATA%\hermes\.env`), or in `~/.hermes/.env` on Unix

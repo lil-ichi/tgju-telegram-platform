@@ -57,25 +57,25 @@ bash D:\Hermes\TGJU-Telegram\start-platform.sh
 
 | Path | Role |
 |---|---|
-| `platform/tgju_platform.py` | FastAPI app (~2,600 lines): all `/api/*` routes, RUNTIME cache, refresher_loop + scheduler_loop (Telegram + WhatsApp ticks), UI serving |
-| `platform/tgju_platform_ui.html` | Single-file RTL Persian dashboard (CSS + JS inline, Vazirmatn base64 font) — control-center header with platform menu |
-| `platform/channels.yaml` | Telegram channel definitions (slug groups, headers, news cats, schedule, post_types) — Telegram config untouched by the WhatsApp platform |
-| `platform/tgju_engine_config.py` | channels.yaml load/save (json.dumps quoting), per-channel state `state/analysis_ch*.json`, slug overrides, `rename_slug()` |
-| `platform/tgju_engine_scrape.py` | tgju.org fetch + parse (230+ slugs), profile backfill, SLUG_ALIASES |
-| `platform/tgju_engine_format.py` | Message builders: chips/star/template/footer, unit conversion (ريال→تومان), `esc()`, `plain_chip_line()` (platform-neutral) |
-| `platform/tgju_engine_orchestrator.py` | `get_channel_rows` (slug pool + overrides + throttled backfill), `build_for_channel` |
-| `platform/tgju_engine_news.py` | Category/tag pages → rotating article → TGJU og:description hyperlink |
-| `platform/tgju_engine_ai.py` | AI providers, `run_analysis`, `_chat_completion`, AI Orchestrator jobs + activity |
-| `platform/tgju_engine_functions.py` | Interval functions (analysis/poll/news) in `state/functions.json` |
-| `platform/tgju_engine_bot.py` | Multi-bot profiles `state/bot_profile.json`, legacy .env migration |
-| `platform/tgju_engine_whatsapp.py` | **WhatsApp interactive bot (NEW)**: config `state/whatsapp.json`, menus/categories, Meta Cloud API sender + mock, webhook processing, conversation sim, keyword lookup |
-| `platform/tgju_engine_bale.py` | **Bale (بله) platform**: config `state/bale.json`, Bot API sender (`tapi.bale.ai`), channel CRUD, preview, per-channel state — mirrors Telegram orchestration |
-| `platform/tgju_engine_fallback.py` | Disk fallback caches (prices/news/analysis, 12h max age) for tgju.org outages |
-| `platform/tgju_core/` | v2 architecture: types, events, runs, channels, orchestrator (decision engine), health, secrets, idempotency, approval, simulation |
-| `platform/tgju_core_integration.py` | Legacy↔core bridge: `orchestrated_post()`, `explain_run()`, `command_center()` |
-| `platform/tgju_core_sources.py` | Data sources: TgjuPricesSource / TgjuNewsSource / TgjuProfileSource |
-| `platform/tgju_multi.py` | CLI: `--list`, `--preview ch1`, `--post ch1 --real` (routes through core) |
-| `platform/state/` | settings.json, ai_config.json, ai_jobs.json, functions.json, bot_profile.json, polls.json, slug_overrides.json, profile_cache.json, fallback_*.json, platform.log, runs/, events/, approvals/, idempotency/ |
+| `tgju/tgju_platform.py` | FastAPI app (~2,600 lines): all `/api/*` routes, RUNTIME cache, refresher_loop + scheduler_loop (Telegram + WhatsApp ticks), UI serving |
+| `tgju/tgju_platform_ui.html` | Single-file RTL Persian dashboard (CSS + JS inline, Vazirmatn base64 font) — control-center header with platform menu |
+| `tgju/channels.yaml` | Telegram channel definitions (slug groups, headers, news cats, schedule, post_types) — Telegram config untouched by the WhatsApp platform |
+| `tgju/tgju_engine_config.py` | channels.yaml load/save (json.dumps quoting), per-channel state `state/analysis_ch*.json`, slug overrides, `rename_slug()` |
+| `tgju/tgju_engine_scrape.py` | tgju.org fetch + parse (230+ slugs), profile backfill, SLUG_ALIASES |
+| `tgju/tgju_engine_format.py` | Message builders: chips/star/template/footer, unit conversion (ريال→تومان), `esc()`, `plain_chip_line()` (platform-neutral) |
+| `tgju/tgju_engine_orchestrator.py` | `get_channel_rows` (slug pool + overrides + throttled backfill), `build_for_channel` |
+| `tgju/tgju_engine_news.py` | Category/tag pages → rotating article → TGJU og:description hyperlink |
+| `tgju/tgju_engine_ai.py` | AI providers, `run_analysis`, `_chat_completion`, AI Orchestrator jobs + activity |
+| `tgju/tgju_engine_functions.py` | Interval functions (analysis/poll/news) in `state/functions.json` |
+| `tgju/tgju_engine_bot.py` | Multi-bot profiles `state/bot_profile.json`, legacy .env migration |
+| `tgju/tgju_engine_whatsapp.py` | **WhatsApp interactive bot (NEW)**: config `state/whatsapp.json`, menus/categories, Meta Cloud API sender + mock, webhook processing, conversation sim, keyword lookup |
+| `tgju/tgju_engine_bale.py` | **Bale (بله) platform**: config `state/bale.json`, Bot API sender (`tapi.bale.ai`), channel CRUD, preview, per-channel state — mirrors Telegram orchestration |
+| `tgju/tgju_engine_fallback.py` | Disk fallback caches (prices/news/analysis, 12h max age) for tgju.org outages |
+| `tgju/tgju_core/` | v2 architecture: types, events, runs, channels, orchestrator (decision engine), health, secrets, idempotency, approval, simulation |
+| `tgju/tgju_core_integration.py` | Legacy↔core bridge: `orchestrated_post()`, `explain_run()`, `command_center()` |
+| `tgju/tgju_core_sources.py` | Data sources: TgjuPricesSource / TgjuNewsSource / TgjuProfileSource |
+| `tgju/tgju_multi.py` | CLI: `--list`, `--preview ch1`, `--post ch1 --real` (routes through core) |
+| `tgju/state/` | settings.json, ai_config.json, ai_jobs.json, functions.json, bot_profile.json, polls.json, slug_overrides.json, profile_cache.json, fallback_*.json, platform.log, runs/, events/, approvals/, idempotency/ |
 | `APP.md` | This file |
 | `start-platform.bat` / `.sh` | Launchers |
 
@@ -408,7 +408,7 @@ posts return canned `bale-mock-<n>` ids without network. UI shows
 
 ## 18. tgju_core (v2 architecture)
 
-`platform/tgju_core/` — the "proper" architecture alongside the legacy engine:
+`tgju/tgju_core/` — the "proper" architecture alongside the legacy engine:
 `types.py` (ContentType/TriggerType/RunStatus/EventType enums, Snapshot,
 OrchestrationDecision, RunRecord, ChannelDefinition — full v2 schema with
 schedule/max_posts_per_day/formatting/ai/delivery), `orchestrator.py`

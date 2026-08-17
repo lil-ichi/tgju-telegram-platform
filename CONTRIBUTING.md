@@ -30,12 +30,12 @@ runtime state, the network, or Telegram.
 - Python 3.11+, type hints on public functions
 - Persian strings for user-facing content; English for code/docs
 - Keep `tgju_engine_*.py` single-purpose; shared services live in
-  `platform/tgju_core/`
+  `tgju/tgju_core/`
 
 ## Before you open a PR
 
 1. Run `python -m pytest` — all green.
-2. Run `python -m compileall -q platform tests` — no syntax errors.
+2. Run `python -m compileall -q tgju tests` — no syntax errors.
 3. If you changed the app structure, update `APP.md` (this is a hard rule —
    `APP.md` is the canonical agent-facing doc).
 

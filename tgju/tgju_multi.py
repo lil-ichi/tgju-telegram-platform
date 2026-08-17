@@ -2,9 +2,9 @@
 """tgju_multi.py — CLI for the TGJU Telegram multi-channel platform.
 
 Usage:
-    python -m platform.tgju_multi --list
-    python -m platform.tgju_multi --preview ch1
-    python -m platform.tgju_multi --post ch1 [--real]
+    python -m tgju.tgju_multi --list
+    python -m tgju.tgju_multi --preview ch1
+    python -m tgju.tgju_multi --post ch1 [--real]
     (--real sends to the channel via bot; default prints only)
 """
 import argparse
