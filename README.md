@@ -54,9 +54,7 @@ settings, and logs.
 
 | | |
 |---|---|
-| Dashboard (main) | ![](docs/screenshots/dashboard.png) |
-
-<sup>Add your own screenshots under `docs/screenshots/` to complete this section.</sup>
+| Dashboard — channel management (Persian RTL) | ![](docs/screenshots/dashboard.png) |
 
 ---
 
@@ -187,11 +185,13 @@ endpoint (local LLMs included):
 
 ## 🧭 Roadmap
 
-- [ ] Docker image + `docker-compose` (one-command deploy)
-- [ ] GitHub Actions CI (lint + smoke test)
-- [ ] Unit & integration tests (`pytest`)
-- [ ] Multi-language post templates (EN/Farsi)
+- [x] Test suite (`tests/`) — 47 tests, hermetic (no network/Telegram)
+- [x] CI pipeline (`.github/workflows/ci.yml`) — Python 3.11/3.12 × Ubuntu/Windows
+- [x] Proper packaging (`pyproject.toml`, `pip install -e .`)
+- [x] Dockerfile (one-command deploy)
+- [ ] GitHub Actions release workflow (tag → PyPI/ghcr)
 - [ ] Webhook-based Telegram delivery (vs. polling)
+- [ ] Multi-language post templates (EN/Farsi)
 
 ---
 

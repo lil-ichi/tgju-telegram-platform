@@ -2803,7 +2803,12 @@ def index():
     return HTMLResponse(UI_PAGE, headers={"Content-Type": "text/html; charset=utf-8"})
 
 
-if __name__ == "__main__":
+def main():
+    """Console entry point (also used by the launcher scripts)."""
     import uvicorn
     print("TGJU Telegram Platform → http://localhost:8791")
     uvicorn.run(app, host="0.0.0.0", port=8791)
+
+
+if __name__ == "__main__":
+    main()
