@@ -1,0 +1,507 @@
+# TGJU Telegram Platform — channel definitions
+# Edit here OR via the webapp UI (localhost:8791).
+# Fill in your telegram_id for each channel: add your bot to the channel as
+# admin, then use @RawDataBot or the dashboard Connections tab to find the ID.
+
+channels:
+  - id: "ch1"
+    name: "نرخ ارز"
+    telegram_id: ""
+    enabled: true
+    icon: "💰"
+    header: ""
+    section_title: "قیمتها"
+    slug_groups:
+      "ارز آزاد":
+        - "price_dollar_rl"
+        - "price_eur"
+        - "price_gbp"
+        - "price_aed"
+        - "price_try"
+        - "crypto-tether"
+      "ارز بانکی":
+        - "bank_usd"
+        - "bank_eur"
+        - "bank_gbp"
+        - "bank_aed"
+    slugs:
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+      - "price_dollar_rl"
+      - "price_eur"
+      - "price_gbp"
+      - "price_aed"
+      - "price_try"
+      - "crypto-tether"
+      - "bank_usd"
+      - "bank_eur"
+      - "bank_gbp"
+      - "bank_aed"
+    news_categories:
+      - "اخبار-ارزی"
+    analysis_tags:
+      - "تحلیل-تکنیکال-دلار"
+      - "تحلیل-تکنیکال-نرخ-ارز-آزاد"
+    schedule_minutes: 10
+    poll_enabled: true
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: ""
+    format: "chips"
+    post_types:
+      - "prices"
+      - "news"
+    custom_data:
+      "report_link": "https://example.com/report"
+      "note": "Important channel"
+  - id: "ch2"
+    name: "قیمت ابشده طلا"
+    telegram_id: ""
+    enabled: true
+    icon: "🥇"
+    header: "قیمت ابشده طلا"
+    section_title: "آبشده طلا"
+    slug_groups:
+      "آبشده":
+        - "gold_futures"
+        - "mesghal"
+        - "geram18"
+        - "geram24"
+    slugs:
+      - "gold_futures"
+      - "mesghal"
+      - "geram18"
+      - "geram24"
+      - "gold_futures"
+      - "mesghal"
+      - "geram18"
+      - "geram24"
+    news_categories:
+      - "اخبار-طلا-و-سکه"
+    analysis_tags:
+      - "تحلیل-تکنیکال-طلا"
+      - "تحلیل-تکنیکال-مثقال"
+    schedule_minutes: 10
+    poll_enabled: true
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
+    format: "chips"
+    post_types:
+      - "prices"
+      - "news"
+  - id: "ch3"
+    name: "قیمت فلزات"
+    telegram_id: ""
+    enabled: false
+    icon: "⚙️"
+    header: "قیمت فلزات"
+    section_title: "فلزات"
+    slug_groups:
+      "فلزات گران‌بها":
+        - "ons"
+        - "silver"
+        - "platinum"
+        - "palladium"
+      "فلزات پایه":
+        - "base_global_copper"
+        - "base_global_lead"
+        - "base_global_nickel"
+        - "base_global_tin"
+        - "base_global_zinc"
+    news_categories:
+      - "اخبار-جهان"
+    analysis_tags:
+      - "تحلیل-تکنیکال-فلزات-گرانبها"
+    schedule_minutes: 10
+    poll_enabled: false
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
+    format: "chips"
+  - id: "ch4"
+    name: "قیمت سکه"
+    telegram_id: ""
+    enabled: false
+    icon: "🪙"
+    header: "قیمت سکه"
+    section_title: "سکه"
+    slug_groups:
+      "سکه":
+        - "sekee"
+        - "sekeb"
+        - "nim"
+        - "rob"
+        - "gerami"
+      "سکه بازار آزاد":
+        - "retail_sekee"
+        - "retail_sekeb"
+        - "retail_nim"
+        - "retail_rob"
+        - "retail_gerami"
+    news_categories:
+      - "اخبار-طلا-و-سکه"
+    analysis_tags:
+      - "تحلیل-تکنیکال-سکه"
+    schedule_minutes: 10
+    poll_enabled: false
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
+    format: "chips"
+  - id: "ch5"
+    name: "قیمت ارز ها دیجیتال"
+    telegram_id: ""
+    enabled: false
+    icon: "₿"
+    header: "قیمت ارز ها دیجیتال"
+    section_title: "ارز دیجیتال"
+    slug_groups:
+      "اصلی":
+        - "crypto-bitcoin"
+        - "crypto-ethereum"
+        - "crypto-litecoin"
+        - "crypto-ripple"
+        - "crypto-solana"
+        - "crypto-cardano"
+        - "crypto-dogecoin"
+        - "crypto-tether"
+      "دیگر":
+        - "crypto-avalanche"
+        - "crypto-binance-coin"
+        - "crypto-bitcoin-cash"
+        - "crypto-dash"
+        - "crypto-polkadot"
+        - "crypto-shiba-inu"
+        - "crypto-stellar"
+        - "crypto-toncoin"
+        - "crypto-tron"
+    slugs:
+      - "crypto-bitcoin"
+      - "crypto-ethereum"
+      - "crypto-litecoin"
+      - "crypto-ripple"
+      - "crypto-solana"
+      - "crypto-cardano"
+      - "crypto-dogecoin"
+      - "crypto-tether"
+      - "crypto-avalanche"
+      - "crypto-binance-coin"
+      - "crypto-bitcoin-cash"
+      - "crypto-dash"
+      - "crypto-polkadot"
+      - "crypto-shiba-inu"
+      - "crypto-stellar"
+      - "crypto-toncoin"
+      - "crypto-tron"
+    news_categories:
+      - "اخبار-ارزهای-دیجیتال"
+    analysis_tags:
+      - "تحلیل-تکنیکال-بیت-کوین"
+      - "تحلیل-تکنیکال-اتریوم"
+    schedule_minutes: 10
+    poll_enabled: false
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
+    format: "chips"
+  - id: "ch6"
+    name: "بازار جهانی"
+    telegram_id: ""
+    enabled: true
+    icon: "🌍"
+    header: "بازار جهانی"
+    section_title: "شاخص‌ها و کالا"
+    slug_groups:
+      "فلزات گران‌بها":
+        - "ons"
+        - "silver"
+        - "platinum"
+        - "palladium"
+      "شاخص‌های جهانی":
+        - "bourse_sp-500"
+        - "indices-dji-indx"
+        - "bourse_nasdaq"
+        - "bourse_dax"
+        - "bourse_ftse-100"
+        - "bourse_nikkei-225"
+        - "bourse_hang-seng"
+    slugs:
+      - "ons"
+      - "silver"
+      - "platinum"
+      - "palladium"
+      - "bourse_sp-500"
+      - "indices-dji-indx"
+      - "bourse_nasdaq"
+      - "bourse_dax"
+      - "bourse_ftse-100"
+      - "bourse_nikkei-225"
+      - "bourse_hang-seng"
+    news_categories:
+      - "اخبار-جهان"
+    analysis_tags:
+      - "تحلیل-تکنیکال-شاخص-های-جهانی"
+    schedule_minutes: 10
+    poll_enabled: true
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
+    format: "chips"
+  - id: "ch7"
+    name: "نفت و انرژی"
+    telegram_id: ""
+    enabled: false
+    icon: "⛽"
+    header: "نفت و انرژی"
+    section_title: "نفت و انرژی"
+    slug_groups:
+      "نفت":
+        - "oil_brent"
+        - "oil_opec"
+        - "louisiana_light_oil"
+      "انرژی":
+        - "energy_carbon_emissions"
+        - "commodity_corn"
+        - "commodity_us_wheat"
+        - "commodity_soybeans"
+    news_categories:
+      - "اخبار-نفت-و-انرژی"
+    analysis_tags:
+      - "تحلیل-تکنیکال-نفت-و-انرژی"
+    schedule_minutes: 10
+    poll_enabled: false
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
+    format: "chips"
+  - id: "ch8"
+    name: "اخبار گزارش و تحلیل ها"
+    telegram_id: ""
+    enabled: false
+    icon: "📰"
+    header: "اخبار گزارش و تحلیل ها"
+    section_title: "اخبار و گزارش‌ها"
+    news_categories:
+      - "اخبار-ویژه"
+      - "اخبار-قیمت-ها"
+      - "اخبار-جهان"
+      - "اخبار-بورس"
+    analysis_tags:
+      - "تحلیل-تکنیکال"
+    schedule_minutes: 30
+    poll_enabled: false
+    with_star: false
+    with_analysis: true
+    with_footer: true
+    footer: "منبع: tgju.org | اخبار و تحلیل‌ها"
+    format: "chips"
+  - id: "ch9"
+    name: "قیمت ها"
+    telegram_id: ""
+    enabled: false
+    icon: "📊"
+    header: "قیمت ها"
+    section_title: "قیمت‌ها"
+    slug_groups:
+      "ارز":
+        - "price_dollar_rl"
+        - "price_eur"
+        - "price_gbp"
+        - "price_aed"
+        - "price_try"
+        - "price_keshvar"
+        - "price_cny"
+        - "price_jpy"
+        - "price_sek"
+        - "price_chf"
+        - "price_isk"
+        - "price_nok"
+        - "price_kwd"
+        - "price_iqd"
+        - "price_qar"
+        - "price_bhd"
+        - "price_omr"
+        - "price_sar"
+        - "price_azn"
+        - "price_amd"
+        - "price_afn"
+        - "price_gel"
+        - "price_ils"
+        - "price_eur_ml"
+        - "price_try_ml"
+        - "price_aed_ml"
+        - "price_gbp_ml"
+        - "price_usd_ml"
+        - "price_dkk"
+        - "price_syp"
+        - "price_lbp"
+        - "price_jod"
+        - "price_myr"
+        - "price_thb"
+        - "price_php"
+        - "price_idr"
+        - "price_krw"
+        - "price_bdt"
+        - "price_uzs"
+        - "price_tjs"
+        - "price_rub"
+        - "price_inr"
+        - "price_pkr"
+        - "price_irq"
+        - "price_tmt"
+        - "price_mmk"
+        - "price_hkd"
+        - "price_sgd"
+        - "price_aud"
+        - "price_nzd"
+        - "price_cad"
+      "سکه":
+        - "sekee"
+        - "sekeb"
+        - "nim"
+        - "rob"
+        - "gerami"
+      "طلا":
+        - "gold_futures"
+        - "mesghal"
+        - "geram18"
+        - "geram24"
+      "دیجیتال":
+        - "crypto-bitcoin"
+        - "crypto-ethereum"
+        - "crypto-tether"
+        - "crypto-solana"
+      "جهانی":
+        - "ons"
+        - "silver"
+        - "bourse_sp-500"
+        - "indices-dji-indx"
+        - "bourse_nasdaq"
+        - "oil_brent"
+    news_categories:
+      - "اخبار-قیمت-ها"
+    analysis_tags:
+      - "تحلیل-تکنیکال"
+    schedule_minutes: 30
+    poll_enabled: true
+    with_star: true
+    with_analysis: true
+    with_footer: true
+    footer: "به‌روزرسانی: هر ۳۰ دقیقه | منبع: tgju.org"
+    format: "chips"

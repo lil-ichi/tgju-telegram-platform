@@ -1,0 +1,42 @@
+# ── Python ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+*.so
+
+# ── Virtual environments ────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Runtime state (created automatically by the app) ────────────────────
+platform/state/
+analysis_state.json
+*.log
+
+# ── Dev / scratch artifacts ─────────────────────────────────────────────
+legacy/
+presentation/
+*.bak
+_ui_check.js
+_ui_e2e_out.json
+new_css_block.txt
+*.tmp.css
+.new_style.tmp.css
+
+# ── Secrets (never commit) ──────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+
+# ── IDE / OS ────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
