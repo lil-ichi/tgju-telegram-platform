@@ -10,6 +10,8 @@ Automated Telegram channels, WhatsApp & Bale delivery, a full Persian RTL dashbo
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.133-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Telegram%20•%20WhatsApp%20•%20Bale-2CA5E0?style=flat-square)
+![CI](https://github.com/lil-ichi/tgju-telegram-platform/actions/workflows/ci.yml/badge.svg)
+![Tests](https://img.shields.io/badge/Tests-47%20passing-brightgreen?style=flat-square)
 
 </div>
 
