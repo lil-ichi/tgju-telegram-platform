@@ -43,7 +43,7 @@ import os
 import sys
 import threading
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles  # noqa: F401  (historical import)
 
@@ -88,18 +88,27 @@ from tgju_core.categories import (  # noqa: E402  # noqa: F401
 from tgju_core.scheduler import (  # noqa: E402  # noqa: F401
     _channel_post_types, _next_post_type, _scheduler_tick, scheduler_loop)
 from tgju_core.api_routes import router as api_router  # noqa: E402
+from tgju_core.auth import require_auth  # noqa: E402
 
 app = FastAPI(title="TGJU Telegram Platform", version="1.1.0")
 
 # Attach every route handler (URLs/responses unchanged).
 app.include_router(api_router)
 # Status-family endpoints live in tgju_core/status.py; register them under
-# the exact same URLs the monolith used.
-app.add_api_route("/api/status", api_status, methods=["GET"], include_in_schema=True)
-app.add_api_route("/api/connections", api_connections, methods=["GET"], include_in_schema=True)
-app.add_api_route("/api/connections/probe", api_connections_probe, methods=["GET"], include_in_schema=True)
-app.add_api_route("/api/health", api_health, methods=["GET"], include_in_schema=True)
-app.add_api_route("/api/secret_health", api_secret_health, methods=["GET"], include_in_schema=True)
+# the exact same URLs the monolith used.  They are registered on the app
+# directly (NOT the router), so they get the auth guard explicitly here —
+# otherwise they would bypass require_auth entirely.
+_status_routes = [
+    ("/api/status", api_status),
+    ("/api/connections", api_connections),
+    ("/api/connections/probe", api_connections_probe),
+    ("/api/health", api_health),
+    ("/api/secret_health", api_secret_health),
+]
+for _path, _fn in _status_routes:
+    app.add_api_route(_path, _fn, methods=["GET"], include_in_schema=True,
+                      dependencies=[Depends(require_auth)])
+del _path, _fn, _status_routes
 
 
 @app.on_event("startup")
