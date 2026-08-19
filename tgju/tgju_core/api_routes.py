@@ -65,8 +65,9 @@ router = APIRouter(dependencies=[Depends(auth.require_auth)])
 # ── Auth (login / logout / status) ────────────────────────────────────────
 # Public by design (see PUBLIC_AUTH_PATHS in auth.py): the UI must be able
 # to reach /api/auth/status before any login exists.  There is NO setup
-# endpoint — the platform ships with a premade account (tgadmin) that is
-# auto-seeded on first boot, so only login/logout are needed.
+# endpoint and NO default account — the single local credential is seeded
+# into auth.json on first boot from state/auth.local.json or env vars, so
+# only login/logout are needed.
 
 @router.get("/api/auth/status", dependencies=[])
 def api_auth_status(request: Request):

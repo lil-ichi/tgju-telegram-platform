@@ -19,6 +19,7 @@ import tgju_core.auth as auth
 def _isolated_auth(tmp_path):
     """Point auth at a temp file and reset caches between tests."""
     auth.AUTH_PATH = str(tmp_path / "auth.json")
+    auth.LOCAL_AUTH_FILE = str(tmp_path / "auth.local.json")
     auth._cache["data"] = None
     auth._cache["mtime"] = 0.0
     auth._failed.clear()
@@ -71,24 +72,41 @@ class TestSetupAndCredentials:
 
 
 class TestDefaultAdmin:
-    def test_ensure_default_admin_seeds_once(self):
-        auth.ensure_default_admin()
+    def _write_local(self, u, p):
+        import os as _os
+        _os.makedirs(_os.path.dirname(auth.LOCAL_AUTH_FILE), exist_ok=True)
+        with open(auth.LOCAL_AUTH_FILE, "w", encoding="utf-8") as f:
+            json.dump({"username": u, "password": p}, f)
+
+    def test_no_credentials_means_no_seed(self):
+        # no local file, no env vars → ensure_default_admin returns False
+        assert not auth.ensure_default_admin()
+        assert not auth.setup_complete()
+
+    def test_seed_from_local_file(self):
+        self._write_local("owner", "local-pass-1")
+        assert auth.ensure_default_admin()
         assert auth.setup_complete()
-        assert auth.verify_credentials(auth.DEFAULT_ADMIN_USERNAME, "admin@tg")
-        # second call must not overwrite (idempotent)
+        assert auth.verify_credentials("owner", "local-pass-1")
+        assert not auth.verify_credentials("owner", "wrong")
+        # idempotent: second call does not overwrite
         auth.ensure_default_admin()
         data = json.load(open(auth.AUTH_PATH, encoding="utf-8"))
-        assert set(data["users"].keys()) == {auth.DEFAULT_ADMIN_USERNAME}
+        assert set(data["users"].keys()) == {"owner"}
 
-    def test_default_admin_uses_baked_hash(self):
-        rec = auth.default_admin_hash()
-        assert rec["iterations"] == auth.PBKDF2_ITERATIONS
-        assert rec["salt"] == auth.DEFAULT_ADMIN_SALT
-        assert rec["password_hash"] == auth.DEFAULT_ADMIN_HASH
+    def test_seed_from_env_vars(self, monkeypatch):
+        monkeypatch.setenv("TGJU_AUTH_USERNAME", "boss")
+        monkeypatch.setenv("TGJU_AUTH_PASSWORD", "env-pass-2")
+        assert auth.ensure_default_admin()
+        assert auth.verify_credentials("boss", "env-pass-2")
 
-    def test_default_admin_wrong_password_fails(self):
+    def test_seeded_hash_is_pbkdf2(self):
+        self._write_local("owner", "local-pass-1")
         auth.ensure_default_admin()
-        assert not auth.verify_credentials(auth.DEFAULT_ADMIN_USERNAME, "wrong")
+        data = json.load(open(auth.AUTH_PATH, encoding="utf-8"))
+        rec = data["users"]["owner"]
+        assert rec["iterations"] == auth.PBKDF2_ITERATIONS
+        assert "salt" in rec and "password_hash" in rec
 
 
 class TestSessions:
