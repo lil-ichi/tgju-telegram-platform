@@ -19,25 +19,31 @@ reproducible patch is available.
 - `state/` files are created automatically on first boot — nothing needs to
   be checked in for the app to run.
 
-## Dashboard Access (private — no credentials in the repo)
+## Dashboard Access (default account, password NOT in repo)
 
-The dashboard requires login. The platform ships **without** any credentials —
-the repo contains no username or password, so a public clone cannot log in.
-The **owner** creates the single account locally:
+The dashboard requires login. It ships with a **default account**
+(username `tgadmin`); the **password is not stored in this repository** —
+only a salted PBKDF2-HMAC-SHA256 hash (310,000 iterations) is baked into
+the code, which is not reversible. Anyone who downloads the code must log
+in, and the password is distributed privately to trusted members only.
+
+To change the default password for your team:
 
 ```bash
-# from the repo root, BEFORE first start
-python scripts/setup_auth_local.py --username yourname --password 'yourpass'
+python scripts/setup_auth_local.py --username tgadmin --password 'your-secret'
 # or environment variables (also read at first boot):
-#   TGJU_AUTH_USERNAME=yourname
-#   TGJU_AUTH_PASSWORD=yourpass
+#   TGJU_AUTH_USERNAME=tgadmin
+#   TGJU_AUTH_PASSWORD=your-secret
 ```
 
-- Credentials are stored **only** in git-ignored `state/auth.local.json` /
-  `state/auth.json` (salted PBKDF2-HMAC-SHA256, 310,000 iterations — never
-  plaintext). Nothing credential-like is ever pushed to GitHub.
+Then restart the platform. The local credential (git-ignored
+`state/auth.local.json`) **overrides** the baked default at boot.
+
+- Credentials are stored **only** as salted PBKDF2-HMAC-SHA256, 310,000
+  iterations — never plaintext. Nothing credential-like is ever pushed to
+  GitHub.
 - **No signup, no change-password option, one account only.** Only people you
-  share the local credentials with can log in.
+  share the password with can log in.
 - Failed logins are rate-limited: **5 failures within 5 minutes ⇒ 5-minute
   lockout**.
 - Sessions are 24-hour opaque tokens in `state/auth.json` (HttpOnly cookie,
