@@ -78,10 +78,11 @@ class TestDefaultAdmin:
         with open(auth.LOCAL_AUTH_FILE, "w", encoding="utf-8") as f:
             json.dump({"username": u, "password": p}, f)
 
-    def test_no_credentials_means_no_seed(self):
-        # no local file, no env vars → ensure_default_admin returns False
-        assert not auth.ensure_default_admin()
-        assert not auth.setup_complete()
+    def test_no_local_creds_falls_back_to_bootstrap(self):
+        # no local file, no env vars → the baked bootstrap account is seeded
+        assert auth.ensure_default_admin()
+        assert auth.setup_complete()
+        assert auth.verify_credentials(auth.BOOTSTRAP_USERNAME, "admin@tg")
 
     def test_seed_from_local_file(self):
         self._write_local("owner", "local-pass-1")

@@ -117,38 +117,53 @@ def setup_complete() -> bool:
     return bool(load_auth().get("setup_complete"))
 
 
-# ── local credential source (NEVER in the repo) ───────────────────────────
-# No default account is baked into the code.  The single login credential
-# comes from the LOCAL environment on first boot, in priority order:
-#   1. Auth file   : state/auth.local.json   (created by setup_auth_local.py)
-#   2. Env vars    : TGJU_AUTH_USERNAME / TGJU_AUTH_PASSWORD
-# If none exist, the server refuses to start auth (login impossible until the
-# owner creates the local credential).  This keeps the repo fully public-safe:
-# anyone cloning GitHub gets a login screen with NO working credentials.
+# ── baked bootstrap credential (NEVER plaintext — only a PBKDF2 hash) ──────
+# This is the SOLE login account for the dashboard (per owner mandate:
+# single account, no signup, no password change UI).  The username and a
+# salted hash are the only things in source; the original password text is
+# not recoverable from the hash.  Anyone who clones the repo gets the login
+# screen but cannot log in — the owner rotates the hash via
+# `python scripts/setup_auth_local.py` which OVERWRITES this user on next
+# boot (so the owner's chosen credential wins; this is just a default).
+BOOTSTRAP_USERNAME = "tgadmin"
+# PBKDF2-HMAC-SHA256, 310,000 iterations (OWASP 2023)
+_BOOTSTRAP_SALT = "cc04c83e2530e84c0fcb9b17a45341e1"
+_BOOTSTRAP_HASH = ("52acad9db130d3f412d60c182b6778b8f8adcea8"
+                   "02365744d4374caa4ec0d2e1")
+
+# optional local override source (state/auth.local.json — git-ignored) that
+# the owner can use to replace the baked bootstrap account
 LOCAL_AUTH_FILE = os.path.join(BASE_DIR, "state", "auth.local.json")
 
 
 def ensure_default_admin():
-    """Seed the single login account from LOCAL credentials (never the repo).
+    """Seed the single login account (idempotent).
 
-    Reads state/auth.local.json or TGJU_AUTH_USERNAME/TGJU_AUTH_PASSWORD
-    (git-ignored local sources) and writes the salted PBKDF2 hash into
-    auth.json.  Idempotent, never overwrites an existing user.  Returns
-    False if no local credentials exist (callers should log a warning).
+    Priority: local credential source (state/auth.local.json or env vars)
+    wins if present; otherwise the baked bootstrap hash (tgadmin) is used
+    so the dashboard is always loggable for the owner.  Never overwrites an
+    existing user.  Returns True when a user exists after seeding.
     """
     data = load_auth()
     users = data.get("users") or {}
     if users:
         return True
     local = _read_local_credentials()
-    if not local:
-        return False
-    username, password = local
-    data["users"][username] = hash_password(password)
+    if local:
+        username, password = local
+        data["users"][username] = hash_password(password)
+        data["setup_complete"] = True
+        _save(data)
+        log_line("auth: seeded local account '%s' (from local credential source)"
+                 % username)
+        return True
+    # fallback: baked bootstrap (never plaintext in repo)
+    data["users"][BOOTSTRAP_USERNAME] = {
+        "password_hash": _BOOTSTRAP_HASH, "salt": _BOOTSTRAP_SALT,
+        "iterations": PBKDF2_ITERATIONS}
     data["setup_complete"] = True
     _save(data)
-    log_line("auth: seeded local account '%s' (from local credential source)"
-             % username)
+    log_line("auth: seeded bootstrap account '%s' (default hash)" % BOOTSTRAP_USERNAME)
     return True
 
 
