@@ -46,22 +46,6 @@ FAIL_WINDOW_SECONDS = 5 * 60         # 5 failed attempts counted within 5 min
 FAIL_MAX = 5                         # ...then locked out
 LOCKOUT_SECONDS = 5 * 60             # ...for 5 minutes
 
-# ── default (premade) account ─────────────────────────────────────────────
-# The platform ships with ONE pre-made account so anyone who clones the repo
-# can log in immediately (no setup flow, no account creation).  The hash
-# below is PBKDF2-HMAC-SHA256 (310,000 iters, salt `DEFAULT_ADMIN_SALT`) of
-# the password `admin@tg` — the password itself is NEVER stored in the repo;
-# only the salted hash is baked in.  It is a bootstrap credential that MUST
-# be rotated after first login (see scripts/set_password.py).
-DEFAULT_ADMIN_USERNAME = "tgadmin"
-DEFAULT_ADMIN_SALT = "e04a0e9c796ab1d1ccf678ec3eaf55c2"   # fixed salt, matches baked hash
-DEFAULT_ADMIN_HASH = "8c45ffdd024a9a91b934a9cb17fec025e3534069ed9d8c42d227f97e65c1c755"
-
-def default_admin_hash() -> dict:
-    """The premade account's password record (salt + PBKDF2 hash + iterations)."""
-    return {"password_hash": DEFAULT_ADMIN_HASH, "salt": DEFAULT_ADMIN_SALT,
-            "iterations": PBKDF2_ITERATIONS}
-
 # in-process caches (auth.json is the source of truth; these avoid disk I/O
 # on every request and make require_auth fast)
 _cache = {"data": None, "mtime": 0.0}
@@ -133,23 +117,57 @@ def setup_complete() -> bool:
     return bool(load_auth().get("setup_complete"))
 
 
-def ensure_default_admin():
-    """Auto-seed the premade account on first boot (idempotent).
+# ── local credential source (NEVER in the repo) ───────────────────────────
+# No default account is baked into the code.  The single login credential
+# comes from the LOCAL environment on first boot, in priority order:
+#   1. Auth file   : state/auth.local.json   (created by setup_auth_local.py)
+#   2. Env vars    : TGJU_AUTH_USERNAME / TGJU_AUTH_PASSWORD
+# If none exist, the server refuses to start auth (login impossible until the
+# owner creates the local credential).  This keeps the repo fully public-safe:
+# anyone cloning GitHub gets a login screen with NO working credentials.
+LOCAL_AUTH_FILE = os.path.join(BASE_DIR, "state", "auth.local.json")
 
-    If no users exist yet, create DEFAULT_ADMIN_USERNAME using the baked-in
-    salted PBKDF2 hash (the password string is never in the repo) and mark
-    setup_complete=True so the UI goes straight to the login form.  Never
-    overwrites an existing user.
+
+def ensure_default_admin():
+    """Seed the single login account from LOCAL credentials (never the repo).
+
+    Reads state/auth.local.json or TGJU_AUTH_USERNAME/TGJU_AUTH_PASSWORD
+    (git-ignored local sources) and writes the salted PBKDF2 hash into
+    auth.json.  Idempotent, never overwrites an existing user.  Returns
+    False if no local credentials exist (callers should log a warning).
     """
     data = load_auth()
     users = data.get("users") or {}
-    if not users:
-        data["users"][DEFAULT_ADMIN_USERNAME] = default_admin_hash()
-        data["setup_complete"] = True
-        _save(data)
-        log_line("auth: seeded default admin '%s' (change the password!)"
-                 % DEFAULT_ADMIN_USERNAME)
-    return data
+    if users:
+        return True
+    local = _read_local_credentials()
+    if not local:
+        return False
+    username, password = local
+    data["users"][username] = hash_password(password)
+    data["setup_complete"] = True
+    _save(data)
+    log_line("auth: seeded local account '%s' (from local credential source)"
+             % username)
+    return True
+
+
+def _read_local_credentials():
+    """Return (username, password) from local sources, or None."""
+    try:
+        with open(LOCAL_AUTH_FILE, "r", encoding="utf-8") as f:
+            lc = json.load(f)
+        u = (lc.get("username") or "").strip()
+        p = lc.get("password") or ""
+        if u and p:
+            return u, p
+    except (OSError, ValueError):
+        pass
+    u = (os.environ.get("TGJU_AUTH_USERNAME") or "").strip()
+    p = os.environ.get("TGJU_AUTH_PASSWORD") or ""
+    if u and p:
+        return u, p
+    return None
 
 
 def log_line(msg: str):

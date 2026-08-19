@@ -115,7 +115,11 @@ del _path, _fn, _status_routes
 
 @app.on_event("startup")
 async def startup():
-    auth.ensure_default_admin()   # seed the premade tgadmin account (first boot)
+    seeded = auth.ensure_default_admin()   # seed the local-only login account
+    if not seeded:
+        print("⚠️  TGJU Auth: no local credentials found. Set TGJU_AUTH_USERNAME/"
+              "TGJU_AUTH_PASSWORD or run scripts/setup_auth_local.py — "
+              "the dashboard will reject all logins until you do.")
     RUNTIME["channels"] = load_channels()
     # warm the cache immediately (background), then keep it warm
     asyncio.create_task(refresher_loop())

@@ -110,21 +110,21 @@ start-platform.bat
 ./start-platform.sh
 ```
 
-Then open **http://localhost:8791** and log in with the premade account:
+Then open **http://localhost:8791** — you'll see the login screen. The
+platform is **private**: it ships with no credentials. The owner creates the
+single login account locally before first start:
 
-| Username | Password   |
-|----------|------------|
-| `tgadmin` | `admin@tg` |
+```bash
+python scripts/setup_auth_local.py --username yourname --password 'yourpass'
+# or via environment variables:
+#   TGJU_AUTH_USERNAME=yourname TGJU_AUTH_PASSWORD=yourpass
+```
 
-> 🔐 The dashboard is login-protected — anyone who downloads the code needs
-> these credentials to use the platform. The password is public (bootstrap),
-> so **change it after first login**:
->
-> ```bash
-> python scripts/set_password.py tgadmin 'your-strong-new-password'
-> ```
->
-> (See [SECURITY.md](SECURITY.md) for details.)
+> 🔐 **Why?** This repo is public on GitHub — anyone can download the code.
+> The dashboard stays locked because valid credentials never leave your
+> machine (they live in git-ignored `state/`). There is **no signup, no
+> change-password option**, and only ONE account — only trusted members you
+> give the credentials to can log in. See [SECURITY.md](SECURITY.md).
 
 > **Tip:** `TGJU_PYTHON` environment variable overrides the Python
 > interpreter used by the launcher scripts.
