@@ -70,6 +70,27 @@ class TestSetupAndCredentials:
         assert not auth.verify_credentials("ghost", "pw1234")
 
 
+class TestDefaultAdmin:
+    def test_ensure_default_admin_seeds_once(self):
+        auth.ensure_default_admin()
+        assert auth.setup_complete()
+        assert auth.verify_credentials(auth.DEFAULT_ADMIN_USERNAME, "admin@tg")
+        # second call must not overwrite (idempotent)
+        auth.ensure_default_admin()
+        data = json.load(open(auth.AUTH_PATH, encoding="utf-8"))
+        assert set(data["users"].keys()) == {auth.DEFAULT_ADMIN_USERNAME}
+
+    def test_default_admin_uses_baked_hash(self):
+        rec = auth.default_admin_hash()
+        assert rec["iterations"] == auth.PBKDF2_ITERATIONS
+        assert rec["salt"] == auth.DEFAULT_ADMIN_SALT
+        assert rec["password_hash"] == auth.DEFAULT_ADMIN_HASH
+
+    def test_default_admin_wrong_password_fails(self):
+        auth.ensure_default_admin()
+        assert not auth.verify_credentials(auth.DEFAULT_ADMIN_USERNAME, "wrong")
+
+
 class TestSessions:
     def test_create_and_validate(self):
         tok = auth.create_session("admin")

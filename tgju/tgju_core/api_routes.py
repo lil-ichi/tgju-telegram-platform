@@ -62,43 +62,19 @@ from tgju_core import auth as auth  # noqa: E402
 # FastAPI merges router-level deps into every route and cannot opt out.
 router = APIRouter(dependencies=[Depends(auth.require_auth)])
 
-# ── Auth (setup / login / logout / status) ────────────────────────────────
+# ── Auth (login / logout / status) ────────────────────────────────────────
 # Public by design (see PUBLIC_AUTH_PATHS in auth.py): the UI must be able
-# to reach /api/auth/status and /api/auth/setup before any login exists.
+# to reach /api/auth/status before any login exists.  There is NO setup
+# endpoint — the platform ships with a premade account (tgadmin) that is
+# auto-seeded on first boot, so only login/logout are needed.
 
 @router.get("/api/auth/status", dependencies=[])
 def api_auth_status(request: Request):
-    """Public: tells the UI whether setup is done and who is logged in."""
+    """Public: tells the UI who is logged in."""
     username = auth.current_username(request)
     return {"authenticated": username is not None,
             "setup_complete": auth.setup_complete(),
             "username": username}
-
-@router.post("/api/auth/setup", dependencies=[])
-async def api_auth_setup(request: Request):
-    """Create the first user. Only allowed while setup_complete is false.
-
-    Idempotent-ish: once a user exists the endpoint refuses, so a second
-    browser hitting it right after the first can't wipe the account.
-    """
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-    if auth.setup_complete():
-        return JSONResponse({"error": "setup already complete"}, status_code=409)
-    username = (body.get("username") or "").strip()
-    password = body.get("password") or ""
-    if not username:
-        return JSONResponse({"error": "username is required"}, status_code=400)
-    if not password:
-        return JSONResponse({"error": "password is required"}, status_code=400)
-    if len(password) < 4:
-        return JSONResponse({"error": "password too short (min 4 chars)"},
-                            status_code=400)
-    auth.create_user(username, password)
-    auth.log_line("auth setup: first user created (%s)" % username)
-    return {"ok": True, "setup_complete": True}
 
 @router.post("/api/auth/login", dependencies=[])
 async def api_auth_login(request: Request):

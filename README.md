@@ -110,7 +110,21 @@ start-platform.bat
 ./start-platform.sh
 ```
 
-Then open **http://localhost:8791** — the dashboard loads immediately.
+Then open **http://localhost:8791** and log in with the premade account:
+
+| Username | Password   |
+|----------|------------|
+| `tgadmin` | `admin@tg` |
+
+> 🔐 The dashboard is login-protected — anyone who downloads the code needs
+> these credentials to use the platform. The password is public (bootstrap),
+> so **change it after first login**:
+>
+> ```bash
+> python scripts/set_password.py tgadmin 'your-strong-new-password'
+> ```
+>
+> (See [SECURITY.md](SECURITY.md) for details.)
 
 > **Tip:** `TGJU_PYTHON` environment variable overrides the Python
 > interpreter used by the launcher scripts.
