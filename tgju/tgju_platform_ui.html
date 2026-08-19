@@ -475,8 +475,8 @@ button + button{ margin-inline-start:10px; }
         <div class="nav-item sys-item" data-panel="activity">📋 فعالیت‌ها</div>
       </div>
       <div class="auth-user" id="auth_user">
-        <span>👤 مهمان</span>
-        <button onclick="authLogout()">خروج</button>
+        <span id="auth_user_name"></span>
+        <button onclick="authLogout()" id="auth_logout_btn">خروج</button>
       </div>
     </aside>
   <main class="main">
@@ -1229,7 +1229,8 @@ function authSetUser(username){
   const el = $('auth_user');
   if(el){
     el.style.display = username ? 'flex' : 'none';
-    el.firstChild.textContent = '👤 ' + (username||'');
+    const nm = $('auth_user_name');
+    if(nm){ nm.textContent = '👤 ' + (username||''); }
   }
 }
 
@@ -1257,6 +1258,7 @@ async function authSubmit(ev){
     const r = await jpost('/api/auth/login', {username:u, password:p});
     if(r.ok){
       authHide(); authSetUser(u); showBanner('✅ خوش آمدید', true);
+      bootDashboard();   // load pages/tabs automatically after login
     } else {
       authBtn(false);
       authSetErr(r.error || 'خطا در ورود — دوباره تلاش کنید');
@@ -2666,12 +2668,15 @@ async function balePost(){
 }
 
 // ── Init ──
-(async function(){
-  const authed = await authCheck();
-  if(!authed) return;   // gate on screen — dashboard loads after login
+function bootDashboard(){
   loadPlatformMenu();
   setPlatform('telegram');
   refresh();
+}
+(async function(){
+  const authed = await authCheck();
+  if(!authed) return;   // gate on screen — dashboard loads after login
+  bootDashboard();
 })();
 
 </script>
