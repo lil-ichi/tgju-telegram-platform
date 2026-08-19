@@ -18,7 +18,7 @@ import re
 import time
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from tgju_engine_config import (  # noqa: E402
@@ -54,8 +54,110 @@ from tgju_core.status import (  # noqa: E402
 from tgju_core.categories import (  # noqa: E402
     load_categories, save_categories, channel_category, CATEGORY_DEFAULTS,
     CATEGORIES_PATH)
+from tgju_core import auth as auth  # noqa: E402
 
-router = APIRouter()
+# Auth guard on EVERY /api/* route (the HTML shell at "/" stays public; the
+# UI decides what to render from GET /api/auth/status).  require_auth itself
+# exempts the /api/auth/* endpoints (PUBLIC_AUTH_PATHS in auth.py) because
+# FastAPI merges router-level deps into every route and cannot opt out.
+router = APIRouter(dependencies=[Depends(auth.require_auth)])
+
+# ── Auth (setup / login / logout / status) ────────────────────────────────
+# Public by design (see PUBLIC_AUTH_PATHS in auth.py): the UI must be able
+# to reach /api/auth/status and /api/auth/setup before any login exists.
+
+@router.get("/api/auth/status", dependencies=[])
+def api_auth_status(request: Request):
+    """Public: tells the UI whether setup is done and who is logged in."""
+    username = auth.current_username(request)
+    return {"authenticated": username is not None,
+            "setup_complete": auth.setup_complete(),
+            "username": username}
+
+@router.post("/api/auth/setup", dependencies=[])
+async def api_auth_setup(request: Request):
+    """Create the first user. Only allowed while setup_complete is false.
+
+    Idempotent-ish: once a user exists the endpoint refuses, so a second
+    browser hitting it right after the first can't wipe the account.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if auth.setup_complete():
+        return JSONResponse({"error": "setup already complete"}, status_code=409)
+    username = (body.get("username") or "").strip()
+    password = body.get("password") or ""
+    if not username:
+        return JSONResponse({"error": "username is required"}, status_code=400)
+    if not password:
+        return JSONResponse({"error": "password is required"}, status_code=400)
+    if len(password) < 4:
+        return JSONResponse({"error": "password too short (min 4 chars)"},
+                            status_code=400)
+    auth.create_user(username, password)
+    auth.log_line("auth setup: first user created (%s)" % username)
+    return {"ok": True, "setup_complete": True}
+
+@router.post("/api/auth/login", dependencies=[])
+async def api_auth_login(request: Request):
+    """Validate credentials → 24h UUID session → tgju_session cookie.
+
+    HttpOnly + SameSite=Lax always; Secure only when the request came over
+    HTTPS (plain http://localhost and http://LAN-IP:8791 must keep working).
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    username = (body.get("username") or "").strip()
+    password = body.get("password") or ""
+    if not username or not password:
+        return JSONResponse({"error": "username and password are required"},
+                            status_code=400)
+    if auth.is_locked(username):
+        remaining = auth.lockout_remaining(username)
+        return JSONResponse(
+            {"error": "too many failed attempts",
+             "detail": "try again in %d seconds" % remaining,
+             "retry_after": remaining},
+            status_code=429)
+    if not auth.verify_credentials(username, password):
+        auth.register_failure(username)
+        if auth.is_locked(username):
+            remaining = auth.lockout_remaining(username)
+            return JSONResponse(
+                {"error": "too many failed attempts",
+                 "detail": "try again in %d seconds" % remaining,
+                 "retry_after": remaining},
+                status_code=429)
+        return JSONResponse({"error": "invalid credentials"}, status_code=401)
+    auth.clear_failures(username)
+    token = auth.create_session(username)
+    secure = auth._request_is_https(request)
+    resp = JSONResponse({"ok": True, "username": username})
+    resp.set_cookie(
+        "tgju_session", token,
+        max_age=auth.SESSION_TTL_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=secure,
+        path="/",
+    )
+    return resp
+
+@router.post("/api/auth/logout", dependencies=[])
+async def api_auth_logout(request: Request):
+    """Drop the session from active_sessions and clear the cookie."""
+    token = request.cookies.get("tgju_session")
+    if token:
+        auth.destroy_session(token)
+    secure = auth._request_is_https(request)
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie("tgju_session", path="/", secure=secure, httponly=True,
+                       samesite="lax")
+    return resp
 
 @router.get("/api/types")
 def api_types():

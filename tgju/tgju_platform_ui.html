@@ -376,6 +376,67 @@ button + button{ margin-inline-start:10px; }
   .row > button{ flex:1 1 45%; }
   .form-grid{ grid-template-columns:1fr; }
 }
+
+/* ── Auth gate (ورود / راه‌اندازی اولیه) ── */
+.auth-gate{
+  position:fixed; inset:0; z-index:1000;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); padding:20px;
+}
+.auth-card{
+  width:100%; max-width:400px;
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:30px 28px 22px;
+  box-shadow:var(--shadow-lg);
+  animation:authIn .35s var(--spring);
+}
+@keyframes authIn{ from{ opacity:0; transform:translateY(10px) scale(.985); } }
+.auth-logo{ display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+.auth-logo .logo{ font-size:38px; }
+.auth-title{ text-align:center; font-size:19px; font-weight:800; color:var(--txt); }
+.auth-sub{ text-align:center; color:var(--dim); font-size:12.5px; margin:4px 0 22px; line-height:1.7; }
+.auth-err{
+  display:none; background:#fef2f2; border:1px solid #fecaca; color:#991b1b;
+  border-radius:var(--r-sm); padding:9px 12px; font-size:12.5px; margin-bottom:14px;
+  line-height:1.6;
+}
+.auth-err.show{ display:block; }
+.auth-field{ margin-bottom:14px; }
+.auth-field label{ display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--txt); }
+.auth-field input{
+  width:100%; padding:10px 12px; font-size:14px;
+  border:1px solid var(--border); border-radius:var(--r-sm);
+  font-family:inherit; background:#fff; color:var(--txt);
+  transition:border-color var(--trans), box-shadow var(--trans);
+}
+.auth-field input:focus{
+  outline:none; border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.auth-btn{
+  width:100%; padding:11px; margin-top:4px; font-size:14.5px; font-weight:800;
+  background:var(--accent); color:#fff; border:none; border-radius:var(--r-sm);
+  cursor:pointer; font-family:inherit;
+  transition:background var(--trans), transform var(--trans), box-shadow var(--trans);
+}
+.auth-btn:hover{ background:var(--accent-h); box-shadow:var(--shadow-md); }
+.auth-btn:active{ transform:scale(.97); }
+.auth-btn:disabled{ opacity:.6; cursor:default; }
+.auth-hint{ text-align:center; color:var(--dim); font-size:12px; margin-top:14px; line-height:1.7; }
+.auth-foot{ text-align:center; color:var(--faint); font-size:11.5px; margin-top:20px; border-top:1px solid var(--border-soft); padding-top:14px; }
+.auth-user{
+  display:none; align-items:center; gap:8px;
+  padding:10px 12px; margin-top:14px;
+  border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+  font-size:12px; color:var(--dim);
+}
+.auth-user button{
+  margin-inline-start:auto;
+  background:transparent; border:1px solid var(--border); border-radius:8px;
+  padding:4px 12px; font-size:11.5px; cursor:pointer; color:var(--dim);
+  font-family:inherit; transition:all var(--trans);
+}
+.auth-user button:hover{ border-color:var(--bad); color:var(--bad); background:#fef2f2; }
 </style>
 </head>
 <body>
@@ -412,6 +473,10 @@ button + button{ margin-inline-start:10px; }
         <div class="nav-item sys-item" data-panel="functions">⚙️ وظایف</div>
         <div class="nav-item sys-item" data-panel="settings">تنظیمات سامانه</div>
         <div class="nav-item sys-item" data-panel="activity">📋 فعالیت‌ها</div>
+      </div>
+      <div class="auth-user" id="auth_user">
+        <span>👤 مهمان</span>
+        <button onclick="authLogout()">خروج</button>
       </div>
     </aside>
   <main class="main">
@@ -1087,6 +1152,29 @@ button + button{ margin-inline-start:10px; }
   </div>
 </div>
 
+<!-- ── Auth gate: ورود / راه‌اندازی اولیه ── -->
+<div id="auth_gate" class="auth-gate" style="display:none">
+  <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth_title">
+    <div class="auth-logo"><span class="logo">🛰️</span></div>
+    <div class="auth-title" id="auth_title">ورود به پلتفرم</div>
+    <div class="auth-sub" id="auth_sub">برای استفاده از مرکز کنترل باید وارد شوید</div>
+    <div class="auth-err" id="auth_err"></div>
+    <form id="auth_form" autocomplete="off">
+      <div class="auth-field">
+        <label for="auth_username">نام کاربری</label>
+        <input id="auth_username" name="username" autocomplete="username" autofocus dir="ltr" placeholder="username">
+      </div>
+      <div class="auth-field">
+        <label for="auth_password">رمز عبور</label>
+        <input id="auth_password" name="password" type="password" autocomplete="current-password" dir="ltr" placeholder="••••••••">
+      </div>
+      <button type="submit" class="auth-btn" id="auth_btn">ورود</button>
+    </form>
+    <div class="auth-hint" id="auth_hint"></div>
+    <div class="auth-foot">TGJU Telegram Platform</div>
+  </div>
+</div>
+
 <script>
 
 const $ = id => document.getElementById(id);
@@ -1109,6 +1197,90 @@ function closeModal(){ $('modal').style.display='none'; }
 function faNum(n){ try{ return String(n).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]); }catch(e){ return n; } }
 function pill(s){ const m={'completed':'pill-ok','success':'pill-ok','running':'pill-warn','failed':'pill-bad','cancelled':'pill-dim','ok_admin':'pill-ok','not_admin':'pill-warn','not_set':'pill-dim','error':'pill-bad','enabled':'pill-ok','disabled':'pill-dim'}; return `<span class="pill ${m[s]||'pill-dim'}">${esc(s)}</span>`; }
 function showBanner(msg, good){ const b=$('banner'); b.style.display='block'; b.innerHTML=msg; b.style.background= good?'#f0fdf4':'#fef2f2'; b.style.borderColor= good?'#bbf7d0':'#fecaca'; b.style.color= good?'#166534':'#991b1b'; setTimeout(()=>b.style.display='none',6000); }
+
+// ── Auth (ورود / خروج) ──
+const AUTH = { username: null };
+
+function authSetErr(msg){ const e=$('auth_err'); e.textContent=msg||''; e.classList.toggle('show', !!msg); }
+function authBtn(loading){
+  const b=$('auth_btn');
+  b.disabled = !!loading;
+  b.textContent = loading ? '⏳ …' : (AUTH.mode==='setup' ? 'ایجاد حساب مدیر' : 'ورود');
+}
+function authShow(mode){
+  AUTH.mode = mode;
+  const setup = mode==='setup';
+  $('auth_title').textContent = setup ? 'راه‌اندازی اولیه' : 'ورود به پلتفرم';
+  $('auth_sub').textContent = setup
+    ? 'اولین بار است که پلتفرم اجرا می‌شود — یک حساب مدیر بسازید تا دسترسی سامانه فقط برای افراد مطمئن باشد'
+    : 'برای استفاده از مرکز کنترل باید وارد شوید';
+  $('auth_username').value = '';
+  $('auth_password').value = '';
+  $('auth_username').placeholder = setup ? 'مثلاً admin' : 'username';
+  $('auth_password').autocomplete = setup ? 'new-password' : 'current-password';
+  $('auth_username').autocomplete = setup ? 'off' : 'username';
+  $('auth_hint').innerHTML = setup ? '' : 'رمز عبور را از مدیر سامانه دریافت کنید';
+  authSetErr('');
+  authBtn(false);
+  $('auth_gate').style.display = 'flex';
+  setTimeout(()=>$('auth_username').focus(), 60);
+}
+function authHide(){ $('auth_gate').style.display='none'; }
+
+function authSetUser(username){
+  AUTH.username = username;
+  const el = $('auth_user');
+  if(el){
+    el.style.display = username ? 'flex' : 'none';
+    el.firstChild.textContent = '👤 ' + (username||'');
+  }
+}
+
+async function authCheck(){
+  try{
+    const r = await jget('/api/auth/status');
+    if(r.setup_complete && !r.authenticated){ authShow('login'); return false; }
+    if(!r.setup_complete){ authShow('setup'); return false; }
+    authHide(); authSetUser(r.username||null); return true;
+  }catch(e){
+    // سرور در دسترس نیست — پلتفرم را هم نشان نده
+    $('auth_gate').style.display = 'none';
+    return true;
+  }
+}
+
+async function authSubmit(ev){
+  ev.preventDefault();
+  const u = $('auth_username').value.trim();
+  const p = $('auth_password').value;
+  if(!u || !p){ authSetErr('نام کاربری و رمز عبور را وارد کنید'); return; }
+  authBtn(true); authSetErr('');
+  try{
+    const url = AUTH.mode==='setup' ? '/api/auth/setup' : '/api/auth/login';
+    const r = await jpost(url, {username:u, password:p});
+    if(r.ok){
+      if(AUTH.mode==='setup'){ await authCheck(); }
+      else { authHide(); authSetUser(u); showBanner('✅ خوش آمدید', true); }
+    } else {
+      authBtn(false);
+      authSetErr(r.error || 'خطا در ورود — دوباره تلاش کنید');
+      if(r.locked){ $('auth_hint').textContent = '⏳ تا '+r.locked+' ثانیه دیگر تلاش کنید'; }
+    }
+  }catch(e){
+    authBtn(false);
+    authSetErr('ارتباط با سرور برقرار نشد');
+  }
+}
+$('auth_form').addEventListener('submit', authSubmit);
+
+async function authLogout(){
+  try{
+    await jpost('/api/auth/logout', {});
+  }catch(e){}
+  authShow('login');
+  authSetUser(null);
+  showBanner('خروج انجام شد', true);
+}
 
 // ── Platform brand icons (inline SVG logos) ──
 const PLATFORM_ICONS = {
@@ -2498,9 +2670,13 @@ async function balePost(){
 }
 
 // ── Init ──
-loadPlatformMenu();
-setPlatform('telegram');
-refresh();
+(async function(){
+  const authed = await authCheck();
+  if(!authed) return;   // gate on screen — dashboard loads after login
+  loadPlatformMenu();
+  setPlatform('telegram');
+  refresh();
+})();
 
 </script>
 </body>
