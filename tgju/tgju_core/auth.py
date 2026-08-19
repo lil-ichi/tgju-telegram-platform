@@ -46,6 +46,22 @@ FAIL_WINDOW_SECONDS = 5 * 60         # 5 failed attempts counted within 5 min
 FAIL_MAX = 5                         # ...then locked out
 LOCKOUT_SECONDS = 5 * 60             # ...for 5 minutes
 
+# ── default (premade) account ─────────────────────────────────────────────
+# The platform ships with ONE pre-made account so anyone who clones the repo
+# can log in immediately (no setup flow, no account creation).  The hash
+# below is PBKDF2-HMAC-SHA256 (310,000 iters, salt `DEFAULT_ADMIN_SALT`) of
+# the password `admin@tg` — the password itself is NEVER stored in the repo;
+# only the salted hash is baked in.  It is a bootstrap credential that MUST
+# be rotated after first login (see scripts/set_password.py).
+DEFAULT_ADMIN_USERNAME = "tgadmin"
+DEFAULT_ADMIN_SALT = "e04a0e9c796ab1d1ccf678ec3eaf55c2"   # fixed salt, matches baked hash
+DEFAULT_ADMIN_HASH = "8c45ffdd024a9a91b934a9cb17fec025e3534069ed9d8c42d227f97e65c1c755"
+
+def default_admin_hash() -> dict:
+    """The premade account's password record (salt + PBKDF2 hash + iterations)."""
+    return {"password_hash": DEFAULT_ADMIN_HASH, "salt": DEFAULT_ADMIN_SALT,
+            "iterations": PBKDF2_ITERATIONS}
+
 # in-process caches (auth.json is the source of truth; these avoid disk I/O
 # on every request and make require_auth fast)
 _cache = {"data": None, "mtime": 0.0}
@@ -115,6 +131,25 @@ def _prune_expired(data: dict) -> bool:
 
 def setup_complete() -> bool:
     return bool(load_auth().get("setup_complete"))
+
+
+def ensure_default_admin():
+    """Auto-seed the premade account on first boot (idempotent).
+
+    If no users exist yet, create DEFAULT_ADMIN_USERNAME using the baked-in
+    salted PBKDF2 hash (the password string is never in the repo) and mark
+    setup_complete=True so the UI goes straight to the login form.  Never
+    overwrites an existing user.
+    """
+    data = load_auth()
+    users = data.get("users") or {}
+    if not users:
+        data["users"][DEFAULT_ADMIN_USERNAME] = default_admin_hash()
+        data["setup_complete"] = True
+        _save(data)
+        log_line("auth: seeded default admin '%s' (change the password!)"
+                 % DEFAULT_ADMIN_USERNAME)
+    return data
 
 
 def log_line(msg: str):
@@ -304,12 +339,14 @@ def auth_disabled(request: Request) -> bool:
 
 
 # Endpoints the UI must reach before any login exists.  The router-wide
-# guard applies to every /api/* route; FastAPI MERGES router-level and
-# route-level dependencies (it cannot opt out), so require_auth skips these
-# paths itself.  Add any new public /api/auth/* route here.
+# guard applies to every route (including "/" — FastAPI MERGES router-level
+# and route-level dependencies, it cannot opt out), so require_auth skips
+# these paths itself.  "/" is the public HTML shell that renders the login
+# gate; the /api/auth/* set is the pre-login API.  Add any new public route
+# here.
 PUBLIC_AUTH_PATHS = frozenset({
+    "/",
     "/api/auth/status",
-    "/api/auth/setup",
     "/api/auth/login",
     "/api/auth/logout",
 })

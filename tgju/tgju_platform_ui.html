@@ -1205,21 +1205,18 @@ function authSetErr(msg){ const e=$('auth_err'); e.textContent=msg||''; e.classL
 function authBtn(loading){
   const b=$('auth_btn');
   b.disabled = !!loading;
-  b.textContent = loading ? '⏳ …' : (AUTH.mode==='setup' ? 'ایجاد حساب مدیر' : 'ورود');
+  b.textContent = loading ? '⏳ …' : 'ورود';
 }
-function authShow(mode){
-  AUTH.mode = mode;
-  const setup = mode==='setup';
-  $('auth_title').textContent = setup ? 'راه‌اندازی اولیه' : 'ورود به پلتفرم';
-  $('auth_sub').textContent = setup
-    ? 'اولین بار است که پلتفرم اجرا می‌شود — یک حساب مدیر بسازید تا دسترسی سامانه فقط برای افراد مطمئن باشد'
-    : 'برای استفاده از مرکز کنترل باید وارد شوید';
+function authShow(){
+  AUTH.mode = 'login';
+  $('auth_title').textContent = 'ورود به پلتفرم';
+  $('auth_sub').textContent = 'برای استفاده از مرکز کنترل باید وارد شوید';
   $('auth_username').value = '';
   $('auth_password').value = '';
-  $('auth_username').placeholder = setup ? 'مثلاً admin' : 'username';
-  $('auth_password').autocomplete = setup ? 'new-password' : 'current-password';
-  $('auth_username').autocomplete = setup ? 'off' : 'username';
-  $('auth_hint').innerHTML = setup ? '' : 'رمز عبور را از مدیر سامانه دریافت کنید';
+  $('auth_username').placeholder = 'نام کاربری';
+  $('auth_username').autocomplete = 'username';
+  $('auth_password').autocomplete = 'current-password';
+  $('auth_hint').innerHTML = '';
   authSetErr('');
   authBtn(false);
   $('auth_gate').style.display = 'flex';
@@ -1239,8 +1236,9 @@ function authSetUser(username){
 async function authCheck(){
   try{
     const r = await jget('/api/auth/status');
-    if(r.setup_complete && !r.authenticated){ authShow('login'); return false; }
-    if(!r.setup_complete){ authShow('setup'); return false; }
+    // No setup flow: the premade account is always seeded (setup_complete=true).
+    // If for any reason setup is incomplete, seed happens on next server boot.
+    if(!r.authenticated){ authShow(); return false; }
     authHide(); authSetUser(r.username||null); return true;
   }catch(e){
     // سرور در دسترس نیست — پلتفرم را هم نشان نده
@@ -1256,11 +1254,9 @@ async function authSubmit(ev){
   if(!u || !p){ authSetErr('نام کاربری و رمز عبور را وارد کنید'); return; }
   authBtn(true); authSetErr('');
   try{
-    const url = AUTH.mode==='setup' ? '/api/auth/setup' : '/api/auth/login';
-    const r = await jpost(url, {username:u, password:p});
+    const r = await jpost('/api/auth/login', {username:u, password:p});
     if(r.ok){
-      if(AUTH.mode==='setup'){ await authCheck(); }
-      else { authHide(); authSetUser(u); showBanner('✅ خوش آمدید', true); }
+      authHide(); authSetUser(u); showBanner('✅ خوش آمدید', true);
     } else {
       authBtn(false);
       authSetErr(r.error || 'خطا در ورود — دوباره تلاش کنید');

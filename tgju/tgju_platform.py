@@ -88,9 +88,11 @@ from tgju_core.categories import (  # noqa: E402  # noqa: F401
 from tgju_core.scheduler import (  # noqa: E402  # noqa: F401
     _channel_post_types, _next_post_type, _scheduler_tick, scheduler_loop)
 from tgju_core.api_routes import router as api_router  # noqa: E402
+from tgju_core import auth  # noqa: E402
 from tgju_core.auth import require_auth  # noqa: E402
 
-app = FastAPI(title="TGJU Telegram Platform", version="1.1.0")
+app = FastAPI(title="TGJU Telegram Platform", version="1.1.0",
+              docs_url=None, redoc_url=None, openapi_url=None)
 
 # Attach every route handler (URLs/responses unchanged).
 app.include_router(api_router)
@@ -113,6 +115,7 @@ del _path, _fn, _status_routes
 
 @app.on_event("startup")
 async def startup():
+    auth.ensure_default_admin()   # seed the premade tgadmin account (first boot)
     RUNTIME["channels"] = load_channels()
     # warm the cache immediately (background), then keep it warm
     asyncio.create_task(refresher_loop())
