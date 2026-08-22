@@ -121,14 +121,18 @@ the code; not reversible). Share it only with trusted members:
 
 > 🔐 The dashboard is login-protected — anyone who downloads the code must
 > log in. The password is **not** in this repo (only its PBKDF2 hash is).
-> To change it for your team:
+> There is **no signup, no password-change UI** — only one account.
+>
+> **To change the password** (trusted members only), you must know the
+> current master password:
 >
 > ```bash
-> python scripts/setup_auth_local.py --username tgadmin --password 'your-secret'
+> python scripts/setup_auth_local.py --username tgadmin --password 'new-secret'
 > ```
 >
-> This overwrites the default account (restart after). There is **no signup,
-> no password-change UI** — only one account.
+> The script will prompt for the **current master password** before accepting
+> any change. Without it, access is denied. This ensures the password can
+> only be modified by someone who already holds it.
 
 > **Tip:** `TGJU_PYTHON` environment variable overrides the Python
 > interpreter used by the launcher scripts.
