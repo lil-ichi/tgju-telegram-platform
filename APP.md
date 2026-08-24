@@ -647,4 +647,22 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   Chrome DOM probe through an auth-cookie proxy: `#p=rubika` →
   `panel_rub_channels class="panel active"` + header «مدیریت روبیکا» +
   rubika_group visible; `#p=eitaa` likewise. 70/70 tests pass.
+- **2026-08-24 (9)** — Full Telegram-parity channel tabs for Bale/Rubika/
+  Eitaa (user: «same exact channel tab as telegram … do not touch telegram»).
+  ROOT CAUSE of dead «کانال جدید» buttons: the panel clone renamed inner
+  field ids but never the form container (`id="bale_form"` ×3 duplicates) →
+  `$('rub_form')` was null and the handler threw; also the save body sent
+  `rub_id` while the API expected `chat_id`. Rebuilt all three channels
+  panels with the complete Telegram-style form (name/chat_id/icon/header/
+  section/schedule/format/footer/slugs/news_categories/analysis_tags/
+  template + with_star/with_analysis/with_footer toggles + post-type
+  checkboxes — poll omitted on non-Telegram platforms) and a rich channel
+  table (status, post types, last post, error, edit/quick-preview/delete).
+  JS replaced with a generic generator per platform (~200 lines each,
+  ASCII identifiers). Backends: bale/rubika/eitaa new+update endpoints now
+  accept the full field set (bale accepts chat_id as bale_id alias);
+  engines' normalize defaults gained format/with_star/with_analysis.
+  E2E verified via API for all three platforms: create with full Persian
+  fields → persisted → PUT edits applied → preview renders with custom
+  header → delete cleans up. 70/70 tests pass.
 

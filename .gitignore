@@ -44,3 +44,4 @@ Thumbs.db
 
 # UI backups
 *.bak-*
+*.js

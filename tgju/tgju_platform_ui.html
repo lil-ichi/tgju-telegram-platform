@@ -662,7 +662,13 @@ html[data-mode="light"] .ts-emerald.active {}
             <select id="f_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
           </div>
           <div style="grid-column:1/-1"><label>پانوشت</label><input id="f_footer"></div>
-                    <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label><input id="f_slugs" placeholder="price_dollar_rl, price_eur, crypto-tether"></div>
+                    <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label>
+            <div class="row" style="gap:8px;align-items:flex-start">
+              <input id="f_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
+              <button type="button" class="small" onclick="openSlugPicker('f_slugs')">🏷 انتخاب از فهرست</button>
+              <select id="f_copy_from" onchange="copySlugsFrom('f_copy_from','f_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+            </div>
+          </div>
                     <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="f_news" placeholder="اخبار-ارزی"></div>
                     <div style="grid-column:1/-1">
                       <label>قالب پیام (Template) — اختیاری؛ خالی = پیش‌فرض</label>
@@ -1341,7 +1347,13 @@ html[data-mode="light"] .ts-emerald.active {}
             <select id="bale_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
           </div>
           <div style="grid-column:1/-1"><label>پانوشت</label><input id="bale_footer"></div>
-          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label><input id="bale_slugs" placeholder="price_dollar_rl, price_eur, crypto-tether"></div>
+          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label>
+            <div class="row" style="gap:8px;align-items:flex-start">
+              <input id="bale_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
+              <button type="button" class="small" onclick="openSlugPicker('bale_slugs')">🏷 انتخاب از فهرست</button>
+              <select id="bale_copy_from" onchange="copySlugsFrom('bale_copy_from','bale_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+            </div>
+          </div>
           <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="bale_news" placeholder="اخبار-ارزی"></div>
           <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="bale_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
           <div style="grid-column:1/-1">
@@ -1448,7 +1460,13 @@ html[data-mode="light"] .ts-emerald.active {}
             <select id="rub_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
           </div>
           <div style="grid-column:1/-1"><label>پانوشت</label><input id="rub_footer"></div>
-          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label><input id="rub_slugs" placeholder="price_dollar_rl, price_eur, crypto-tether"></div>
+          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label>
+            <div class="row" style="gap:8px;align-items:flex-start">
+              <input id="rub_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
+              <button type="button" class="small" onclick="openSlugPicker('rub_slugs')">🏷 انتخاب از فهرست</button>
+              <select id="rub_copy_from" onchange="copySlugsFrom('rub_copy_from','rub_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+            </div>
+          </div>
           <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="rub_news" placeholder="اخبار-ارزی"></div>
           <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="rub_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
           <div style="grid-column:1/-1">
@@ -1556,7 +1574,13 @@ html[data-mode="light"] .ts-emerald.active {}
             <select id="eit_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
           </div>
           <div style="grid-column:1/-1"><label>پانوشت</label><input id="eit_footer"></div>
-          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label><input id="eit_slugs" placeholder="price_dollar_rl, price_eur, crypto-tether"></div>
+          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label>
+            <div class="row" style="gap:8px;align-items:flex-start">
+              <input id="eit_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
+              <button type="button" class="small" onclick="openSlugPicker('eit_slugs')">🏷 انتخاب از فهرست</button>
+              <select id="eit_copy_from" onchange="copySlugsFrom('eit_copy_from','eit_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+            </div>
+          </div>
           <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="eit_news" placeholder="اخبار-ارزی"></div>
           <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="eit_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
           <div style="grid-column:1/-1">
@@ -1958,7 +1982,7 @@ function toggleCh(id){ const el=$('chbody_'+id); el.style.display = el.style.dis
 
 // ── Channel form ──
 let EDIT_ID = null;
-function newChannel(){ EDIT_ID=null; $('form_title').textContent='کانال جدید'; $('del_btn').style.display='none'; $('channel_form').style.display='block';
+function newChannel(){ refreshCopyFromSelects(); EDIT_ID=null; $('form_title').textContent='کانال جدید'; $('del_btn').style.display='none'; $('channel_form').style.display='block';
   ['f_name','f_tgid','f_header','f_section','f_footer','f_slugs','f_news'].forEach(i=>$(i).value='');
   $('f_template').value='';
   $('f_icon').value='📢'; $('f_sched').value=10; $('f_format').value='chips';
@@ -1966,7 +1990,7 @@ function newChannel(){ EDIT_ID=null; $('form_title').textContent='کانال ج�
   document.querySelectorAll('.pt').forEach(x=>x.checked = x.value==='prices');
   window.scrollTo({top:0,behavior:'smooth'}); }
 function editChannel(id){
-  const c = CHANNELS.find(x=>x.id===id); if(!c) return; EDIT_ID=id;
+  const c = CHANNELS.find(x=>x.id===id); if(!c) return; EDIT_ID=id; refreshCopyFromSelects();
   $('form_title').textContent='ویرایش ' + c.name; $('del_btn').style.display='';
   $('f_name').value=c.name||''; $('f_tgid').value=c.telegram_id||''; $('f_icon').value=c.icon||'';
   $('f_header').value=c.header||''; $('f_section').value=c.section_title||'';
@@ -3290,7 +3314,7 @@ function fillBalePreviewSelect(){
     `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
 }
 
-function baleNewChannel(){
+function baleNewChannel(){ refreshCopyFromSelects();
   BALE_EDIT_ID = null;
   $('bale_form').style.display = 'block';
   $('bale_form_title').textContent = 'کانال بله جدید';
@@ -3307,7 +3331,7 @@ function baleNewChannel(){
   $('bale_form').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function baleEdit(id){
+function baleEdit(id){ refreshCopyFromSelects();
   const c = BALE_CHANNELS.find(x=>x.id===id); if(!c) return;
   BALE_EDIT_ID = id;
   $('bale_form').style.display = 'block';
@@ -3519,7 +3543,7 @@ function fillRubPreviewSelect(){
     `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
 }
 
-function rubNewChannel(){
+function rubNewChannel(){ refreshCopyFromSelects();
   RUB_EDIT_ID = null;
   $('rub_form').style.display = 'block';
   $('rub_form_title').textContent = 'کانال روبیکا جدید';
@@ -3536,7 +3560,7 @@ function rubNewChannel(){
   $('rub_form').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function rubEdit(id){
+function rubEdit(id){ refreshCopyFromSelects();
   const c = RUB_CHANNELS.find(x=>x.id===id); if(!c) return;
   RUB_EDIT_ID = id;
   $('rub_form').style.display = 'block';
@@ -3748,7 +3772,7 @@ function fillEitPreviewSelect(){
     `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
 }
 
-function eitNewChannel(){
+function eitNewChannel(){ refreshCopyFromSelects();
   EIT_EDIT_ID = null;
   $('eit_form').style.display = 'block';
   $('eit_form_title').textContent = 'کانال ایتا جدید';
@@ -3765,7 +3789,7 @@ function eitNewChannel(){
   $('eit_form').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function eitEdit(id){
+function eitEdit(id){ refreshCopyFromSelects();
   const c = EIT_CHANNELS.find(x=>x.id===id); if(!c) return;
   EIT_EDIT_ID = id;
   $('eit_form').style.display = 'block';
@@ -3983,5 +4007,182 @@ function bootDashboard(){
 })();
 
 </script>
+
+<!-- ── Slug picker modal (shared across platforms) ── -->
+<div id="slug_picker" style="display:none;position:fixed;inset:0;background:rgba(8,14,12,.55);z-index:200;padding:30px 16px;overflow:auto">
+  <div style="max-width:760px;margin:auto" class="card">
+    <div class="flex-between">
+      <h2 style="margin:0;border:none">🏷 انتخاب اسلاگ‌ها</h2>
+      <button onclick="closeSlugPicker()">✕</button>
+    </div>
+    <div class="row" style="margin-top:10px;gap:8px">
+      <input id="sp_search" placeholder="جستجو: دلار، طلا، بیتکوین…" style="flex:1;min-width:180px" oninput="renderSlugPicker()">
+      <select id="sp_cat" onchange="renderSlugPicker()" style="max-width:190px;width:auto">
+        <option value="">همه دسته‌ها</option>
+      </select>
+      <span class="muted" id="sp_count"></span>
+    </div>
+    <div id="sp_selected" class="row" style="margin-top:8px"></div>
+    <div id="sp_list" style="max-height:420px;overflow:auto;margin-top:10px;border-top:1px solid var(--border-soft);padding-top:6px"></div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end">
+      <button onclick="spSelectAll(true)" class="small">انتخاب همهٔ نمایش‌داده‌شده</button>
+      <button onclick="spSelectAll(false)" class="small">حذف انتخاب‌ها</button>
+      <button class="primary" onclick="saveSlugPicker()">✅ تأیید</button>
+      <button onclick="closeSlugPicker()">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<script id="slug_picker_js">
+// ── Copy-from-channel helper (works across platforms) ──
+function copySlugsFrom(selectId, targetId){
+  const v = document.getElementById(selectId)?.value;
+  if(!v) return;
+  // value format: "platform:channel_id"
+  const [plat, cid] = v.split(':');
+  let srcCh = null;
+  if(plat==='telegram') srcCh = (CHANNELS||[]).find(c=>c.id===cid);
+  else if(plat==='bale') srcCh = (BALE_CHANNELS||[]).find(c=>c.id===cid);
+  else if(plat==='rubika') srcCh = (RUB_CHANNELS||[]).find(c=>c.id===cid);
+  else if(plat==='eitaa') srcCh = (EIT_CHANNELS||[]).find(c=>c.id===cid);
+  if(!srcCh){ showBanner('⚠️ کانال منبع پیدا نشد'); return; }
+  const slugs = [...new Set(Object.values(srcCh.slug_groups||{}).flat().concat(srcCh.slugs||[]))];
+  const target = document.getElementById(targetId);
+  if(target) target.value = slugs.join(', ');
+  // also copy news categories / analysis tags into sibling fields of same prefix
+  const pfx = targetId.split('_')[0];
+  const newsEl = document.getElementById(pfx==='f' ? 'f_news' : pfx+'_news');
+  const tagsEl = document.getElementById(pfx==='f' ? 'f_tags' : pfx+'_tags');
+  if(newsEl && srcCh.news_categories) newsEl.value = (srcCh.news_categories||[]).join(', ');
+  if(tagsEl && srcCh.analysis_tags) tagsEl.value = (srcCh.analysis_tags||[]).join(', ');
+  showBanner('📋 اسلاگها از «'+(srcCh.name||cid)+'» کپی شد', true);
+}
+// populate every copy-from select when its panel opens
+function refreshCopyFromSelects(){
+  const pools = {
+    telegram: (CHANNELS||[]).map(c=>({id:c.id, name:c.name})),
+    bale: (BALE_CHANNELS||[]).map(c=>({id:c.id, name:c.name})),
+    rubika: (RUB_CHANNELS||[]).map(c=>({id:c.id, name:c.name})),
+    eitaa: (EIT_CHANNELS||[]).map(c=>({id:c.id, name:c.name})),
+  };
+  document.querySelectorAll('select[id$="_copy_from"], #f_copy_from').forEach(sel=>{
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">📋 کپی از کانال…</option>';
+    Object.entries(pools).forEach(([plat, arr])=>{
+      arr.forEach(c=>{
+        const o = document.createElement('option');
+        o.value = plat+':'+c.id;
+        o.textContent = c.name+' ('+plat+')';
+        sel.appendChild(o);
+      });
+    });
+  });
+}
+
+let SP_ALL = [];          // all slugs from /api/slugs
+let SP_TARGET = null;     // input element being filled
+let SP_SELECTED = new Set();
+
+async function openSlugPicker(targetInputId){
+  SP_TARGET = document.getElementById(targetInputId);
+  if(!SP_ALL.length){
+    try{
+      const d = await jget('/api/slugs?scope=all');
+      SP_ALL = (d.slugs||[]).filter(s=>s.slug);
+    }catch(e){ showBanner('❌ خطا در دریافت اسلاگ‌ها'); return; }
+  }
+  // seed selection from the target input
+  SP_SELECTED = new Set((SP_TARGET.value||'').split(',').map(s=>s.trim()).filter(Boolean));
+  buildSpCategories();
+  renderSlugPicker();
+  $('slug_picker').style.display = 'block';
+}
+function closeSlugPicker(){ $('slug_picker').style.display='none'; }
+function buildSpCategories(){
+  const cats = {};
+  SP_ALL.forEach(s=>{
+    // derive a Persian group from unit+name heuristics via slug prefix
+    let c = 'سایر';
+    const p = s.slug;
+    if(p.startsWith('price_')||p.startsWith('bank_')) c='ارز';
+    else if(p.startsWith('crypto')) c='ارز دیجیتال';
+    else if(/^(geram|seke|nim|rob|mesghal|gold|ons|silver|platinum|palladium)/.test(p)) c='طلا و فلزات گرانبها';
+    else if(p.startsWith('oil_')||p.startsWith('energy')) c='انرژی';
+    else if(p.startsWith('bourse')||p.startsWith('indices')) c='شاخصهای جهانی';
+    else if(p.startsWith('base_global')) c='فلزات پایه';
+    else if(p.startsWith('commodity')) c='کالاها';
+    cats[c] = (cats[c]||0)+1;
+  });
+  const sel = $('sp_cat');
+  sel.innerHTML = '<option value="">همه دستهها ('+faNum(SP_ALL.length)+')</option>' +
+    Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,n])=>`<option value="${esc(c)}">${esc(c)} (${faNum(n)})</option>`).join('');
+}
+function spMatches(s){
+  const q = ($('sp_search').value||'').trim().toLowerCase();
+  const cat = $('sp_cat').value;
+  if(cat && spCategoryOf(s.slug)!==cat) return false;
+  if(!q) return true;
+  return s.slug.toLowerCase().includes(q) || String(s.name||'').toLowerCase().includes(q);
+}
+function spCategoryOf(p){
+  if(p.startsWith('price_')||p.startsWith('bank_')) return 'ارز';
+  if(p.startsWith('crypto')) return 'ارز دیجیتال';
+  if(/^(geram|seke|nim|rob|mesghal|gold|ons|silver|platinum|palladium)/.test(p)) return 'طلا و فلزات گرانبها';
+  if(p.startsWith('oil_')||p.startsWith('energy')) return 'انرژی';
+  if(p.startsWith('bourse')||p.startsWith('indices')) return 'شاخصهای جهانی';
+  if(p.startsWith('base_global')) return 'فلزات پایه';
+  if(p.startsWith('commodity')) return 'کالاها';
+  return 'سایر';
+}
+function renderSlugPicker(){
+  const rows = SP_ALL.filter(spMatches);
+  $('sp_count').textContent = faNum(rows.length)+' مورد';
+  const byCat = {};
+  rows.forEach(s=>{ (byCat[spCategoryOf(s.slug)] ||= []).push(s); });
+  let html = '';
+  Object.entries(byCat).sort().forEach(([cat, items])=>{
+    html += `<div style="margin:8px 0 4px;font-weight:800;color:var(--dim);font-size:11.5px">${esc(cat)}</div>`;
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px">';
+    items.forEach(s=>{
+      const on = SP_SELECTED.has(s.slug);
+      html += `<label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 6px;border-radius:8px;cursor:pointer;${on?'background:var(--accent-soft);color:var(--accent-h)':''}">
+        <input type="checkbox" ${on?'checked':''} onchange="spToggle('${esc(s.slug)}', this.checked)" style="accent-color:var(--accent);width:auto">
+        <span>${esc(s.name)}</span>
+        <span class="mono" style="font-size:9.5px;color:var(--faint)">${esc(s.slug)}</span>
+      </label>`;
+    });
+    html += '</div>';
+  });
+  $('sp_list').innerHTML = html || '<div class="muted" style="padding:12px">موردی یافت نشد</div>';
+  renderSpSelected();
+}
+function spToggle(slug, on){
+  if(on) SP_SELECTED.add(slug); else SP_SELECTED.delete(slug);
+  renderSpSelected();
+  // re-render to update highlighting but keep focus in search box
+  const q = $('sp_search').value;
+  renderSlugPicker();
+  $('sp_search').value = q;
+}
+function renderSpSelected(){
+  $('sp_selected').innerHTML = SP_SELECTED.size
+    ? [...SP_SELECTED].map(s=>`<span class="tag">${esc(s)} <a href="javascript:void(0)" onclick="spToggle('${esc(s)}',false)" style="color:var(--bad)">✕</a></span>`).join('')
+    : '<span class="muted">هنوز اسلاگی انتخاب نشده</span>';
+}
+function spSelectAll(on){
+  SP_ALL.filter(spMatches).forEach(s=>{
+    if(on) SP_SELECTED.add(s.slug); else SP_SELECTED.delete(s.slug);
+  });
+  renderSlugPicker();
+}
+function saveSlugPicker(){
+  if(SP_TARGET) SP_TARGET.value = [...SP_SELECTED].join(', ');
+  closeSlugPicker();
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && $('slug_picker').style.display==='block') closeSlugPicker();
+});
+</script>
+
 </body>
 </html>
