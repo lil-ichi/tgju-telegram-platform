@@ -1960,6 +1960,7 @@ async function loadChannels(){
         <div class="row" style="margin-bottom:12px">
           <button class="small" onclick="editChannel('${c.id}')">✏️ ویرایش</button>
           <button class="small" onclick="previewFrom('${c.id}')">👁 پیش‌نمایش</button>
+          <button class="small danger" onclick="deleteChannelConfirm('${c.id}')">🗑 حذف</button>
         </div>
         <div class="muted">اسلاگ‌ها:</div>
         <div>${Object.entries(c.slug_groups||{}).map(([g,sl])=>`<div class="muted" style="margin-top:4px">${esc(g)}:</div><div>${sl.map(s=>`<span class="tag">${esc(s)}</span>`).join('')}</div>`).join('')}
@@ -1970,6 +1971,16 @@ async function loadChannels(){
     </div>`).join('') || '<div class="muted">کانالی ثبت نشده</div>';
 }
 function toggleCh(id){ const el=$('chbody_'+id); el.style.display = el.style.display==='none'?'block':'none'; }
+
+async function deleteChannelConfirm(id){
+  const c = CHANNELS.find(x=>x.id===id);
+  if(!confirm('حذف کانال '+(c?c.name:id)+'؟ این عمل بازگشتپذیر نیست.')) return;
+  try{
+    const r = await jdel('/api/channels/'+encodeURIComponent(id));
+    if(r.ok){ showBanner('🗑 کانال حذف شد', true); loadChannels(); }
+    else showBanner('❌ '+(r.error||'خطا'), false);
+  }catch(e){ showBanner('❌ '+e, false); }
+}
 
 // ── Channel form ──
 let EDIT_ID = null;
