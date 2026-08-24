@@ -1435,7 +1435,7 @@ html[data-mode="light"] .ts-emerald.active {}
           <h1>🟣 کانالهای روبیکا</h1>
           <div class="row">
             <button onclick="rubNewChannel()">➕ کانال جدید</button>
-            <button onclick="loadRubHome()" aria-label="بهروزرسانی">🔄</button>
+            <button onclick="loadRubikaHome()" aria-label="بهروزرسانی">🔄</button>
           </div>
         </div>
         <div class="sub">همان تجربه کامل تلگرام — بهینه برای روبیکا</div>
@@ -1492,7 +1492,7 @@ html[data-mode="light"] .ts-emerald.active {}
       <div id="panel_rub_preview" class="panel">
         <div class="flex-between">
           <h1>📝 پیش‌نمایش و ارسال روبیکا</h1>
-          <div class="row"><button onclick="loadRubHome()" aria-label="به‌روزرسانی">🔄</button></div>
+          <div class="row"><button onclick="loadRubikaHome()" aria-label="به‌روزرسانی">🔄</button></div>
         </div>
         <div class="sub">ساخت و ارسال پست به کانال‌های روبیکا — قیمت، خبر یا تحلیل</div>
         <div class="card">
@@ -1520,7 +1520,7 @@ html[data-mode="light"] .ts-emerald.active {}
       <div id="panel_rub_conn" class="panel">
         <div class="flex-between">
           <h1>🤖 ربات روبیکا</h1>
-          <div class="row"><button onclick="loadRubHome()" aria-label="به‌روزرسانی">🔄</button></div>
+          <div class="row"><button onclick="loadRubikaHome()" aria-label="به‌روزرسانی">🔄</button></div>
         </div>
         <div class="sub">اتصال روبیکا: توکن + ارسال خودکار</div>
         <div class="wa-grid">
@@ -1546,7 +1546,7 @@ html[data-mode="light"] .ts-emerald.active {}
           <h1>🟠 کانالهای ایتا</h1>
           <div class="row">
             <button onclick="eitNewChannel()">➕ کانال جدید</button>
-            <button onclick="loadEitHome()" aria-label="بهروزرسانی">🔄</button>
+            <button onclick="loadEitaaHome()" aria-label="بهروزرسانی">🔄</button>
           </div>
         </div>
         <div class="sub">همان تجربه کامل تلگرام — بهینه برای ایتا</div>
@@ -1603,7 +1603,7 @@ html[data-mode="light"] .ts-emerald.active {}
       <div id="panel_eit_preview" class="panel">
         <div class="flex-between">
           <h1>📝 پیش‌نمایش و ارسال ایتا</h1>
-          <div class="row"><button onclick="loadEitHome()" aria-label="به‌روزرسانی">🔄</button></div>
+          <div class="row"><button onclick="loadEitaaHome()" aria-label="به‌روزرسانی">🔄</button></div>
         </div>
         <div class="sub">ساخت و ارسال پست به کانال‌های ایتا — قیمت، خبر یا تحلیل</div>
         <div class="card">
@@ -1631,7 +1631,7 @@ html[data-mode="light"] .ts-emerald.active {}
       <div id="panel_eit_conn" class="panel">
         <div class="flex-between">
           <h1>🤖 ربات ایتا</h1>
-          <div class="row"><button onclick="loadEitHome()" aria-label="به‌روزرسانی">🔄</button></div>
+          <div class="row"><button onclick="loadEitaaHome()" aria-label="به‌روزرسانی">🔄</button></div>
         </div>
         <div class="sub">اتصال ایتا: توکن + ارسال خودکار</div>
         <div class="wa-grid">
@@ -3271,7 +3271,7 @@ async function loadBaleHome(){
   }
 }
 
-function renderbaleChannels(){
+function renderBaleChannels(){
   const list = $('bale_channels_list');
   if(!list) return;
   if(!BALE_CHANNELS.length){
@@ -3309,11 +3309,6 @@ function toggleBale(id){
   if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
 }
 
-async function baleQuickPreview(cid){
-  const sel = $('bale_pv_chan');
-  if(sel){ await loadBaleHOME(); sel.value = cid; }
-  showPanel('bale_preview');
-}
 function fillBalePreviewSelect(){
   const sel = $('bale_pv_chan');
   if(!sel) return;
@@ -3500,7 +3495,7 @@ let RUB_CHANNELS = [];
 let RUB_EDIT_ID = null;
 const RUB_API = '/api/rubika';
 
-async function loadRubHome(){
+async function loadRubikaHome(){
   try{
     const d = await jget(RUB_API);
     const s = d.settings||{};
@@ -3516,7 +3511,7 @@ async function loadRubHome(){
   }
 }
 
-function renderrubChannels(){
+function renderRubChannels(){
   const list = $('rub_channels_list');
   if(!list) return;
   if(!RUB_CHANNELS.length){
@@ -3554,11 +3549,6 @@ function toggleRub(id){
   if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
 }
 
-async function rubQuickPreview(cid){
-  const sel = $('rub_pv_chan');
-  if(sel){ await loadRubikaHome(); sel.value = cid; }
-  showPanel('rub_preview');
-}
 function fillRubPreviewSelect(){
   const sel = $('rub_pv_chan');
   if(!sel) return;
@@ -3643,7 +3633,7 @@ async function rubSaveChannel(){
     let r;
     if(RUB_EDIT_ID) r = await jput(RUB_API+'/channels/'+RUB_EDIT_ID, body);
     else r = await jpost(RUB_API+'/channels', body);
-    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); rubCloseForm(); loadRubHome(); }
+    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); rubCloseForm(); loadRubikaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3653,7 +3643,7 @@ async function rubDeleteChannel(){
   if(!confirm('حذف این کانال؟')) return;
   try{
     const r = await jdel(RUB_API+'/channels/'+RUB_EDIT_ID);
-    if(r.ok){ showBanner('🗑 حذف شد', true); rubCloseForm(); loadRubHome(); }
+    if(r.ok){ showBanner('🗑 حذف شد', true); rubCloseForm(); loadRubikaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3662,7 +3652,7 @@ async function rubDelete(id){
   if(!confirm('حذف کانال '+id+'؟')) return;
   try{
     const r = await jdel(RUB_API+'/channels/'+id);
-    if(r.ok){ showBanner('🗑 حذف شد', true); loadRubHome(); }
+    if(r.ok){ showBanner('🗑 حذف شد', true); loadRubikaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3677,7 +3667,7 @@ async function rubPreview(cid){
     }catch(e){ out.textContent = '❌ '+e; }
   } else {
     // channels-table quick preview → open preview tab preselected
-    await loadRubHome();
+    await loadRubikaHome();
     const sel = $('rub_pv_chan'); if(sel) sel.value = cid;
     showPanel('rub_preview');
   }
@@ -3685,7 +3675,7 @@ async function rubPreview(cid){
 
 function rubQuickPreview(cid){
   // from the table: jump to the preview panel with this channel selected
-  loadRubHome().then(()=>{
+  loadRubikaHome().then(()=>{
     const sel = $('rub_pv_chan');
     if(sel) sel.value = cid;
     showPanel('rub_preview');
@@ -3714,7 +3704,7 @@ async function rubPost(){
     const r = await jpost(RUB_API+'/post/'+cid, {post_type:type});
     if(r.ok){
       $('rub_pv_result').innerHTML = '✅ ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — message_id: <code dir="ltr">'+esc(r.message_id||'')+'</code>';
-      loadRubHome();
+      loadRubikaHome();
     } else $('rub_pv_result').textContent = '❌ '+(r.error||'خطا');
   }catch(e){ $('rub_pv_result').textContent = '❌ '+e; }
 }
@@ -3726,7 +3716,7 @@ async function rubSaveSettings(){
   };
   try{
     const r = await jpost(RUB_API+'/settings', body);
-    if(r.ok){ showBanner('✅ تنظیمات روبیکا ذخیره شد', true); loadRubHome(); }
+    if(r.ok){ showBanner('✅ تنظیمات روبیکا ذخیره شد', true); loadRubikaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3745,7 +3735,7 @@ let EIT_CHANNELS = [];
 let EIT_EDIT_ID = null;
 const EIT_API = '/api/eitaa';
 
-async function loadEitHome(){
+async function loadEitaaHome(){
   try{
     const d = await jget(EIT_API);
     const s = d.settings||{};
@@ -3799,11 +3789,6 @@ function toggleEit(id){
   if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
 }
 
-async function eitQuickPreview(cid){
-  const sel = $('eit_pv_chan');
-  if(sel){ await loadEitaaHome(); sel.value = cid; }
-  showPanel('eit_preview');
-}
 function fillEitPreviewSelect(){
   const sel = $('eit_pv_chan');
   if(!sel) return;
@@ -3888,7 +3873,7 @@ async function eitSaveChannel(){
     let r;
     if(EIT_EDIT_ID) r = await jput(EIT_API+'/channels/'+EIT_EDIT_ID, body);
     else r = await jpost(EIT_API+'/channels', body);
-    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); eitCloseForm(); loadEitHome(); }
+    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); eitCloseForm(); loadEitaaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3898,7 +3883,7 @@ async function eitDeleteChannel(){
   if(!confirm('حذف این کانال؟')) return;
   try{
     const r = await jdel(EIT_API+'/channels/'+EIT_EDIT_ID);
-    if(r.ok){ showBanner('🗑 حذف شد', true); eitCloseForm(); loadEitHome(); }
+    if(r.ok){ showBanner('🗑 حذف شد', true); eitCloseForm(); loadEitaaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3907,7 +3892,7 @@ async function eitDelete(id){
   if(!confirm('حذف کانال '+id+'؟')) return;
   try{
     const r = await jdel(EIT_API+'/channels/'+id);
-    if(r.ok){ showBanner('🗑 حذف شد', true); loadEitHome(); }
+    if(r.ok){ showBanner('🗑 حذف شد', true); loadEitaaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3922,7 +3907,7 @@ async function eitPreview(cid){
     }catch(e){ out.textContent = '❌ '+e; }
   } else {
     // channels-table quick preview → open preview tab preselected
-    await loadEitHome();
+    await loadEitaaHome();
     const sel = $('eit_pv_chan'); if(sel) sel.value = cid;
     showPanel('eit_preview');
   }
@@ -3930,7 +3915,7 @@ async function eitPreview(cid){
 
 function eitQuickPreview(cid){
   // from the table: jump to the preview panel with this channel selected
-  loadEitHome().then(()=>{
+  loadEitaaHome().then(()=>{
     const sel = $('eit_pv_chan');
     if(sel) sel.value = cid;
     showPanel('eit_preview');
@@ -3959,7 +3944,7 @@ async function eitPost(){
     const r = await jpost(EIT_API+'/post/'+cid, {post_type:type});
     if(r.ok){
       $('eit_pv_result').innerHTML = '✅ ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — message_id: <code dir="ltr">'+esc(r.message_id||'')+'</code>';
-      loadEitHome();
+      loadEitaaHome();
     } else $('eit_pv_result').textContent = '❌ '+(r.error||'خطا');
   }catch(e){ $('eit_pv_result').textContent = '❌ '+e; }
 }
@@ -3971,7 +3956,7 @@ async function eitSaveSettings(){
   };
   try{
     const r = await jpost(EIT_API+'/settings', body);
-    if(r.ok){ showBanner('✅ تنظیمات ایتا ذخیره شد', true); loadEitHome(); }
+    if(r.ok){ showBanner('✅ تنظیمات ایتا ذخیره شد', true); loadEitaaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
