@@ -1671,9 +1671,19 @@ async def api_rubika_new_channel(req: Request):
             "enabled": bool(body.get("enabled", True)),
             "schedule_minutes": int(body.get("schedule_minutes") or 30),
             "icon": (body.get("icon") or "🟣").strip(),
+            "header": (body.get("header") or "").strip(),
+            "section_title": (body.get("section_title") or "قیمت‌ها").strip(),
+            "footer": (body.get("footer") or "به‌روزرسانی: هر ۳۰ دقیقه | منبع: tgju.org").strip(),
+            "with_footer": bool(body.get("with_footer", True)),
+            "with_star": bool(body.get("with_star", True)),
+            "with_analysis": bool(body.get("with_analysis", True)),
+            "format": body.get("format") or "chips",
+            "template": body.get("template") or "",
+            "news_categories": body.get("news_categories") or [],
+            "analysis_tags": body.get("analysis_tags") or [],
             "slug_groups": body.get("slug_groups") or {},
             "slugs": body.get("slugs") or [],
-            "post_types": body.get("post_types") or ["prices"],
+            "post_types": [p for p in (body.get("post_types") or ["prices"]) if p != "poll"],
         })
         chans.append(ch)
         rub.save_channels(chans)
@@ -1691,7 +1701,7 @@ async def api_rubika_update_channel(cid: str, req: Request):
         if not ch:
             return JSONResponse({"ok": False, "error": "unknown channel"}, status_code=404)
         for k in ("name", "chat_id", "icon", "header", "section_title", "footer",
-                  "template", "post_types", "slug_groups", "slugs",
+                  "template", "post_types", "slug_groups", "slugs", "format",
                   "news_categories", "analysis_tags"):
             if k in body:
                 ch[k] = body[k]
@@ -1699,8 +1709,9 @@ async def api_rubika_update_channel(cid: str, req: Request):
             ch["enabled"] = bool(body["enabled"])
         if "schedule_minutes" in body:
             ch["schedule_minutes"] = int(body["schedule_minutes"] or 30)
-        if "with_footer" in body:
-            ch["with_footer"] = bool(body["with_footer"])
+        for b in ("with_footer", "with_star", "with_analysis"):
+            if b in body:
+                ch[b] = bool(body[b])
         rub.save_channels(chans)
         return {"ok": True}
     except Exception as e:
@@ -1802,7 +1813,17 @@ async def api_eitaa_new_channel(req: Request):
             "icon": (body.get("icon") or "🟠").strip(),
             "slug_groups": body.get("slug_groups") or {},
             "slugs": body.get("slugs") or [],
-            "post_types": body.get("post_types") or ["prices"],
+                        "header": (body.get("header") or "").strip(),
+            "section_title": (body.get("section_title") or "قیمت‌ها").strip(),
+            "footer": (body.get("footer") or "به‌روزرسانی: هر ۳۰ دقیقه | منبع: tgju.org").strip(),
+            "with_footer": bool(body.get("with_footer", True)),
+            "with_star": bool(body.get("with_star", True)),
+            "with_analysis": bool(body.get("with_analysis", True)),
+            "format": body.get("format") or "chips",
+            "template": body.get("template") or "",
+            "news_categories": body.get("news_categories") or [],
+            "analysis_tags": body.get("analysis_tags") or [],
+            "post_types": [p for p in (body.get("post_types") or ["prices"]) if p != "poll"],
         })
         chans.append(ch)
         eit.save_channels(chans)
@@ -1820,7 +1841,7 @@ async def api_eitaa_update_channel(cid: str, req: Request):
         if not ch:
             return JSONResponse({"ok": False, "error": "unknown channel"}, status_code=404)
         for k in ("name", "chat_id", "icon", "header", "section_title", "footer",
-                  "template", "post_types", "slug_groups", "slugs",
+                  "template", "post_types", "slug_groups", "slugs", "format",
                   "news_categories", "analysis_tags"):
             if k in body:
                 ch[k] = body[k]
@@ -1828,8 +1849,9 @@ async def api_eitaa_update_channel(cid: str, req: Request):
             ch["enabled"] = bool(body["enabled"])
         if "schedule_minutes" in body:
             ch["schedule_minutes"] = int(body["schedule_minutes"] or 30)
-        if "with_footer" in body:
-            ch["with_footer"] = bool(body["with_footer"])
+        for b in ("with_footer", "with_star", "with_analysis"):
+            if b in body:
+                ch[b] = bool(body[b])
         eit.save_channels(chans)
         return {"ok": True}
     except Exception as e:
@@ -2157,16 +2179,28 @@ async def api_bale_new_channel(req: Request):
         body = await req.json()
         data = bale.load_bale()
         cid = "bale%d" % (len(data["channels"]) + 1)
+        chat_id = (body.get("bale_id") or body.get("chat_id") or "").strip()
         ch = {
             "id": cid,
             "name": (body.get("name") or "").strip() or "کانال بله",
-            "bale_id": (body.get("bale_id") or "").strip(),
+            "bale_id": chat_id,
+            "chat_id": chat_id,
             "enabled": bool(body.get("enabled", True)),
             "schedule_minutes": int(body.get("schedule_minutes") or 30),
             "icon": (body.get("icon") or "🟢").strip(),
+            "header": (body.get("header") or "").strip(),
+            "section_title": (body.get("section_title") or "قیمت‌ها").strip(),
+            "footer": (body.get("footer") or "به‌روزرسانی: هر ۳۰ دقیقه | منبع: tgju.org").strip(),
+            "with_footer": bool(body.get("with_footer", True)),
+            "with_star": bool(body.get("with_star", True)),
+            "with_analysis": bool(body.get("with_analysis", True)),
+            "format": body.get("format") or "chips",
+            "template": body.get("template") or "",
+            "news_categories": body.get("news_categories") or [],
+            "analysis_tags": body.get("analysis_tags") or [],
             "slug_groups": body.get("slug_groups") or {},
             "slugs": body.get("slugs") or [],
-            "post_types": body.get("post_types") or ["prices"],
+            "post_types": [p for p in (body.get("post_types") or ["prices"]) if p != "poll"],
         }
         data["channels"].append(ch)
         bale.save_bale(data)
@@ -2184,10 +2218,17 @@ async def api_bale_update_channel(cid: str, req: Request):
         if not ch:
             return JSONResponse({"ok": False, "error": "unknown bale channel %s" % cid},
                                 status_code=404)
+        if "chat_id" in body and "bale_id" not in body:
+            body["bale_id"] = body["chat_id"]     # UI sends the generic name
         for k in ("name", "bale_id", "enabled", "schedule_minutes", "icon",
-                  "slug_groups", "slugs", "post_types"):
+                  "header", "section_title", "footer", "template", "format",
+                  "slug_groups", "slugs", "post_types",
+                  "news_categories", "analysis_tags"):
             if k in body:
                 ch[k] = body[k]
+        for b in ("with_footer", "with_star", "with_analysis"):
+            if b in body:
+                ch[b] = bool(body[b])
         bale.save_bale(data)
         return {"ok": True, "channel": ch}
     except Exception as e:
