@@ -297,9 +297,10 @@ def api_slugs(scope: str = "all", q: str = ""):
         pass
 
     # ── platform usage map ────────────────────────────────────────────
-    usage = {}          # slug -> {"telegram": [ch...], "whatsapp": [...], "bale": [...]}
+    usage = {}          # slug -> per-platform channel lists
     def _use(s, plat, cid):
-        u = usage.setdefault(s, {"telegram": [], "whatsapp": [], "bale": []})
+        u = usage.setdefault(s, {"telegram": [], "whatsapp": [], "bale": [],
+                                 "rubika": [], "eitaa": []})
         if cid not in u[plat]:
             u[plat].append(cid)
 
@@ -316,6 +317,26 @@ def api_slugs(scope: str = "all", q: str = ""):
             for slugs in (cat.get("slug_groups") or {}).values():
                 for s in slugs:
                     _use(s, "whatsapp", cat.get("label") or cat.get("id", ""))
+    except Exception:
+        pass
+    try:
+        import tgju_engine_rubika as rub
+        for rc in rub.list_channels() or []:
+            for s in list(rc.get("slugs") or []):
+                _use(s, "rubika", rc.get("name") or rc.get("id"))
+            for slugs in (rc.get("slug_groups") or {}).values():
+                for s in slugs:
+                    _use(s, "rubika", rc.get("name") or rc.get("id"))
+    except Exception:
+        pass
+    try:
+        import tgju_engine_eitaa as eit
+        for ec in eit.list_channels() or []:
+            for s in list(ec.get("slugs") or []):
+                _use(s, "eitaa", ec.get("name") or ec.get("id"))
+            for slugs in (ec.get("slug_groups") or {}).values():
+                for s in slugs:
+                    _use(s, "eitaa", ec.get("name") or ec.get("id"))
     except Exception:
         pass
     try:
@@ -349,7 +370,7 @@ def api_slugs(scope: str = "all", q: str = ""):
             price = str(ov["manual_price"]).replace(",", "").strip()
             source = "manual"
         u = usage.get(s) or {}
-        plats = [p for p in ("telegram", "whatsapp", "bale") if u.get(p)]
+        plats = [p for p in ("telegram", "whatsapp", "bale", "rubika", "eitaa") if u.get(p)]
         item = {
             "slug": s,
             "name": name,
@@ -1564,6 +1585,266 @@ def api_approval_action(approval_id: str, action: str):
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
+
+
+# ── Rubika platform (Bot API v3) ──────────────────────────────────────────
+@router.get("/api/rubika")
+def api_rubika_config():
+    """Rubika full config: settings + channels (token masked)."""
+    try:
+        import tgju_engine_rubika as rub
+        data = rub.load_rubika()
+        s = dict(data["settings"])
+        if s.get("access_token"):
+            s["access_token"] = "***"
+        return {"settings": s, "channels": data["channels"], "mock": rub.is_mock()}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/rubika/settings")
+async def api_rubika_settings(req: Request):
+    try:
+        import tgju_engine_rubika as rub
+        body = await req.json()
+        data = rub.load_rubika()
+        s = data["settings"]
+        for k in ("access_token", "auto_post"):
+            if k in body:
+                s[k] = body[k]
+        rub.save_rubika(data)
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/rubika/test")
+async def api_rubika_test():
+    try:
+        import tgju_engine_rubika as rub
+        r = await asyncio.to_thread(rub.test_credentials)
+        if r.get("ok"):
+            bot = r.get("bot") or {}
+            return {"ok": True, "mock": bool(r.get("mock")),
+                    "username": bot.get("username") or "(ثبت شد)"}
+        return JSONResponse({"ok": False, "error": r.get("error", "test failed")},
+                            status_code=400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.get("/api/rubika/preview/{cid}")
+def api_rubika_preview(cid: str, post_type: str = "prices"):
+    try:
+        import tgju_engine_rubika as rub
+        ch = next((c for c in rub.list_channels() if c.get("id") == cid), None)
+        if not ch:
+            return JSONResponse({"ok": False, "error": "unknown rubika channel %s" % cid},
+                                status_code=404)
+        text = rub.preview_channel(ch, post_type)
+        return {"ok": True, "preview": text, "type": post_type}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/rubika/post/{cid}")
+async def api_rubika_post(cid: str, req: Request):
+    try:
+        import tgju_engine_rubika as rub
+        body = await req.json()
+        post_type = (body or {}).get("post_type", "prices")
+        ch = next((c for c in rub.list_channels() if c.get("id") == cid), None)
+        if not ch:
+            return JSONResponse({"ok": False, "error": "unknown rubika channel"}, status_code=404)
+        resp = await asyncio.to_thread(rub.post_channel, ch, post_type)
+        return resp if resp.get("ok") else JSONResponse(resp, status_code=400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/rubika/channels")
+async def api_rubika_new_channel(req: Request):
+    try:
+        import tgju_engine_rubika as rub
+        body = await req.json()
+        chans = rub.list_channels()
+        cid = "r%d" % (len(chans) + 1)
+        ch = rub.normalize_channel({
+            "id": cid,
+            "name": (body.get("name") or "").strip() or "کانال روبیکا",
+            "chat_id": (body.get("chat_id") or "").strip(),
+            "enabled": bool(body.get("enabled", True)),
+            "schedule_minutes": int(body.get("schedule_minutes") or 30),
+            "icon": (body.get("icon") or "🟣").strip(),
+            "slug_groups": body.get("slug_groups") or {},
+            "slugs": body.get("slugs") or [],
+            "post_types": body.get("post_types") or ["prices"],
+        })
+        chans.append(ch)
+        rub.save_channels(chans)
+        return {"ok": True, "channel": ch}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.put("/api/rubika/channels/{cid}")
+async def api_rubika_update_channel(cid: str, req: Request):
+    try:
+        import tgju_engine_rubika as rub
+        body = await req.json()
+        chans = rub.list_channels()
+        ch = next((c for c in chans if c.get("id") == cid), None)
+        if not ch:
+            return JSONResponse({"ok": False, "error": "unknown channel"}, status_code=404)
+        for k in ("name", "chat_id", "icon", "header", "section_title", "footer",
+                  "template", "post_types", "slug_groups", "slugs",
+                  "news_categories", "analysis_tags"):
+            if k in body:
+                ch[k] = body[k]
+        if "enabled" in body:
+            ch["enabled"] = bool(body["enabled"])
+        if "schedule_minutes" in body:
+            ch["schedule_minutes"] = int(body["schedule_minutes"] or 30)
+        if "with_footer" in body:
+            ch["with_footer"] = bool(body["with_footer"])
+        rub.save_channels(chans)
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.delete("/api/rubika/channels/{cid}")
+def api_rubika_delete_channel(cid: str):
+    try:
+        import tgju_engine_rubika as rub
+        chans = [c for c in rub.list_channels() if c.get("id") != cid]
+        rub.save_channels(chans)
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ── Eitaa platform (EitaaYar API) ─────────────────────────────────────────
+@router.get("/api/eitaa")
+def api_eitaa_config():
+    try:
+        import tgju_engine_eitaa as eit
+        data = eit.load_eitaa()
+        s = dict(data["settings"])
+        if s.get("access_token"):
+            s["access_token"] = "***"
+        return {"settings": s, "channels": data["channels"], "mock": eit.is_mock()}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/eitaa/settings")
+async def api_eitaa_settings(req: Request):
+    try:
+        import tgju_engine_eitaa as eit
+        body = await req.json()
+        data = eit.load_eitaa()
+        s = data["settings"]
+        for k in ("access_token", "auto_post"):
+            if k in body:
+                s[k] = body[k]
+        eit.save_eitaa(data)
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/eitaa/test")
+async def api_eitaa_test():
+    try:
+        import tgju_engine_eitaa as eit
+        r = await asyncio.to_thread(eit.test_credentials)
+        if r.get("ok"):
+            bot = r.get("bot") or {}
+            return {"ok": True, "mock": bool(r.get("mock")),
+                    "username": bot.get("username") or "(ثبت شد)"}
+        return JSONResponse({"ok": False, "error": r.get("error", "test failed")},
+                            status_code=400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.get("/api/eitaa/preview/{cid}")
+def api_eitaa_preview(cid: str, post_type: str = "prices"):
+    try:
+        import tgju_engine_eitaa as eit
+        ch = next((c for c in eit.list_channels() if c.get("id") == cid), None)
+        if not ch:
+            return JSONResponse({"ok": False, "error": "unknown eitaa channel %s" % cid},
+                                status_code=404)
+        text = eit.preview_channel(ch, post_type)
+        return {"ok": True, "preview": text, "type": post_type}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/eitaa/post/{cid}")
+async def api_eitaa_post(cid: str, req: Request):
+    try:
+        import tgju_engine_eitaa as eit
+        body = await req.json()
+        post_type = (body or {}).get("post_type", "prices")
+        ch = next((c for c in eit.list_channels() if c.get("id") == cid), None)
+        if not ch:
+            return JSONResponse({"ok": False, "error": "unknown eitaa channel"}, status_code=404)
+        resp = await asyncio.to_thread(eit.post_channel, ch, post_type)
+        return resp if resp.get("ok") else JSONResponse(resp, status_code=400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/eitaa/channels")
+async def api_eitaa_new_channel(req: Request):
+    try:
+        import tgju_engine_eitaa as eit
+        body = await req.json()
+        chans = eit.list_channels()
+        cid = "e%d" % (len(chans) + 1)
+        ch = eit.normalize_channel({
+            "id": cid,
+            "name": (body.get("name") or "").strip() or "کانال ایتا",
+            "chat_id": (body.get("chat_id") or "").strip(),
+            "enabled": bool(body.get("enabled", True)),
+            "schedule_minutes": int(body.get("schedule_minutes") or 30),
+            "icon": (body.get("icon") or "🟠").strip(),
+            "slug_groups": body.get("slug_groups") or {},
+            "slugs": body.get("slugs") or [],
+            "post_types": body.get("post_types") or ["prices"],
+        })
+        chans.append(ch)
+        eit.save_channels(chans)
+        return {"ok": True, "channel": ch}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.put("/api/eitaa/channels/{cid}")
+async def api_eitaa_update_channel(cid: str, req: Request):
+    try:
+        import tgju_engine_eitaa as eit
+        body = await req.json()
+        chans = eit.list_channels()
+        ch = next((c for c in chans if c.get("id") == cid), None)
+        if not ch:
+            return JSONResponse({"ok": False, "error": "unknown channel"}, status_code=404)
+        for k in ("name", "chat_id", "icon", "header", "section_title", "footer",
+                  "template", "post_types", "slug_groups", "slugs",
+                  "news_categories", "analysis_tags"):
+            if k in body:
+                ch[k] = body[k]
+        if "enabled" in body:
+            ch["enabled"] = bool(body["enabled"])
+        if "schedule_minutes" in body:
+            ch["schedule_minutes"] = int(body["schedule_minutes"] or 30)
+        if "with_footer" in body:
+            ch["with_footer"] = bool(body["with_footer"])
+        eit.save_channels(chans)
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.delete("/api/eitaa/channels/{cid}")
+def api_eitaa_delete_channel(cid: str):
+    try:
+        import tgju_engine_eitaa as eit
+        chans = [c for c in eit.list_channels() if c.get("id") != cid]
+        eit.save_channels(chans)
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
 @router.get("/api/platforms")
 def api_platforms():
     """Registry of manageable platforms (for the control center header)."""
@@ -1574,6 +1855,10 @@ def api_platforms():
          "description": "شماره‌ها و ارسال خودکار واتساپ (Meta Cloud API)"},
         {"id": "bale", "name": "بله", "icon": "✅",
          "description": "کانال‌ها و ارسال خودکار بله (Bale)"},
+        {"id": "rubika", "name": "روبیکا", "icon": "🟣",
+         "description": "کانال‌ها و ارسال خودکار روبیکا (Bot API v3)"},
+        {"id": "eitaa", "name": "ایتا", "icon": "🟠",
+         "description": "کانال‌ها و ارسال خودکار ایتا (EitaaYar API)"},
     ]}
 
 # ── WhatsApp interactive bot (Meta Cloud API) ─────────────────────────────

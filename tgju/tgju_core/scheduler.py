@@ -264,8 +264,95 @@ async def scheduler_loop():
             await _bale_scheduler_tick()
         except Exception as e:
             log_line("bale scheduler loop error: %s" % e)
+        try:
+            await _rubika_scheduler_tick()
+        except Exception as e:
+            log_line("rubika scheduler loop error: %s" % e)
+        try:
+            await _eitaa_scheduler_tick()
+        except Exception as e:
+            log_line("eitaa scheduler loop error: %s" % e)
         tick = max(5, int(load_settings().get("scheduler_interval_seconds", 45)))
         await asyncio.sleep(tick)
+
+
+def _generic_platform_tick_sync(engine, platform_name: str):
+    """Shared scheduler tick for Rubika/Eitaa-style platforms.
+
+    Runs synchronously (called via asyncio.to_thread from the loop).
+    engine must expose: load_rubika/load_eitaa, is_mock, list_channels,
+    save_channels, load_channel_state, save_channel_state,
+    preview_channel(channel, post_type), send_rubika/send_eitaa.
+    """
+    loader = getattr(engine, "load_" + platform_name)
+    data = loader()
+    s = data["settings"]
+    if not s.get("auto_post") or engine.is_mock():
+        return  # master kill-switch per platform + never auto-post in mock
+    settings = load_settings()
+    now = datetime.now()
+    for c in engine.list_channels():
+        try:
+            if not c.get("enabled") or not c.get("chat_id"):
+                continue
+            cid = c["id"]
+            st = engine.load_channel_state(cid)
+            min_iv = int(c.get("schedule_minutes") or s.get("schedule_minutes", 30))
+            last = st.get("last_post_at")
+            due = False
+            if not last:
+                due = True
+            else:
+                try:
+                    last_dt = datetime.fromisoformat(last)
+                    due = (now - last_dt) >= timedelta(minutes=min_iv)
+                except Exception:
+                    due = True
+            if not due:
+                continue
+            rows = cached_rows() or {}
+            post_type = _next_post_type(c, now)
+            if post_type == "poll":
+                # polls are Telegram/Bale-native sendPoll — skip elsewhere
+                continue
+            text = engine.preview_channel(c, post_type)
+            if not text or text.startswith("error:"):
+                st["last_error"] = (text or "empty message")[:200]
+                engine.save_channel_state(cid, st)
+                log_line("%s scheduler skipped %s: empty build" % (platform_name, cid))
+                continue
+            send_fn = (engine.send_rubika if platform_name == "rubika"
+                       else engine.send_eitaa)
+            resp = send_fn(c["chat_id"], text)
+            if resp.get("ok"):
+                st["last_post_at"] = now.isoformat(timespec="seconds")
+                st["last_ok"] = st["last_post_at"]
+                st["last_error"] = None
+                st["last_type"] = post_type
+                log_line("%s scheduler posted %s (%s)" % (platform_name, cid, post_type))
+            else:
+                st["last_error"] = (resp.get("error") or "send failed")[:300]
+                log_line("%s scheduler ERROR %s: %s" % (platform_name, cid,
+                                                        st["last_error"]))
+            engine.save_channel_state(cid, st)
+        except Exception as e:
+            log_line("%s scheduler error %s: %s" % (platform_name, c.get("id"), e))
+
+
+async def _rubika_scheduler_tick():
+    try:
+        import tgju_engine_rubika as rub
+        await asyncio.to_thread(_generic_platform_tick_sync, rub, "rubika")
+    except Exception as e:
+        log_line("rubika scheduler loop error: %s" % e)
+
+
+async def _eitaa_scheduler_tick():
+    try:
+        import tgju_engine_eitaa as eit
+        await asyncio.to_thread(_generic_platform_tick_sync, eit, "eitaa")
+    except Exception as e:
+        log_line("eitaa scheduler loop error: %s" % e)
 
 
 async def _bale_scheduler_tick():
