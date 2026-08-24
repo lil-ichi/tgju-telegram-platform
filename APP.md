@@ -633,4 +633,18 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   platforms registry returns 5, mock getMe/test OK, channel create→
   preview→mock post→delete flows pass for both engines; 70/70 tests pass;
   node --check + html balance OK.
+- **2026-08-24 (8)** — Fixed Rubika/Eitaa tab switching. ROOT CAUSE: the JS
+  clone renamed `loadBaleHome` via a Persian replacement producing
+  `loadروبیکاHome` — a LEGAL Unicode identifier, so node --check passed, but
+  the panel hooks called `loadRubHome`/undefined → runtime TypeError killed
+  the switch chain. Fix: proper ASCII names (`loadRubikaHome`/`loadEitaaHome`,
+  `renderRubikaChannels`… ) + thin aliases for generated onclick handlers.
+  Also added: rb-item/et-item click bindings inside loadPlatformMenu,
+  catch-all nav selector excludes them, per-platform landing panels in
+  showPanelForPlatform, brand SVG logos (Rubika purple rounded-hex #7B2D8E,
+  Eitaa orange circle-check #F58220) in PLATFORM_ICONS + static sidebar
+  titles, and deep-link `#p=<platform>` on boot. Verified with headless
+  Chrome DOM probe through an auth-cookie proxy: `#p=rubika` →
+  `panel_rub_channels class="panel active"` + header «مدیریت روبیکا» +
+  rubika_group visible; `#p=eitaa` likewise. 70/70 tests pass.
 

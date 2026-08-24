@@ -174,6 +174,9 @@ def _default_channel(cid: str) -> dict:
         "with_footer": True,
         "footer": "به‌روزرسانی: هر ۳۰ دقیقه | منبع: tgju.org",
         "template": "",
+        "format": "chips",
+        "with_star": True,
+        "with_analysis": True,
         "post_types": ["prices"],
     }
 
