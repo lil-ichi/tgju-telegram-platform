@@ -4022,6 +4022,13 @@ function bootDashboard(){
       </select>
       <span class="muted" id="sp_count"></span>
     </div>
+    <div style="margin-top:10px">
+      <div class="muted" style="font-size:11px;margin-bottom:5px">افزودن دستهای یکجا:</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap" id="sp_presets"></div>
+      <button type="button" class="small" style="margin-top:6px" onclick="toggleSpPaste()">📋 چسباندن فهرست اسلاگ</button>
+      <textarea id="sp_paste" rows="4" dir="ltr" style="display:none;margin-top:6px;width:100%;font-family:monospace;font-size:11.5px;text-align:left" placeholder="هر خط یک اسلاگ یا با ویرگول جدا کنید&#10;price_dollar_rl&#10;price_eur"></textarea>
+      <button type="button" class="small primary" id="sp_paste_apply" style="display:none;margin-top:6px" onclick="spApplyPaste()">➕ افزودن موارد چسباندهشده</button>
+    </div>
     <div id="sp_selected" class="row" style="margin-top:8px"></div>
     <div id="sp_list" style="max-height:420px;overflow:auto;margin-top:10px;border-top:1px solid var(--border-soft);padding-top:6px"></div>
     <div class="row" style="margin-top:14px;justify-content:flex-end">
@@ -4082,6 +4089,7 @@ function refreshCopyFromSelects(){
 let SP_ALL = [];          // all slugs from /api/slugs
 let SP_TARGET = null;     // input element being filled
 let SP_SELECTED = new Set();
+let SP_CAT_SLUGS = {};
 
 async function openSlugPicker(targetInputId){
   SP_TARGET = document.getElementById(targetInputId);
@@ -4094,10 +4102,53 @@ async function openSlugPicker(targetInputId){
   // seed selection from the target input
   SP_SELECTED = new Set((SP_TARGET.value||'').split(',').map(s=>s.trim()).filter(Boolean));
   buildSpCategories();
+  renderSpPresets();
   renderSlugPicker();
   $('slug_picker').style.display = 'block';
 }
 function closeSlugPicker(){ $('slug_picker').style.display='none'; }
+const SP_PRESETS = [
+  {label:'💵 ارز آزاد', slugs:['price_dollar_rl','price_eur','price_gbp','price_aed','price_try','price_cny','price_rub']},
+  {label:'🏦 ارز بانکی', slugs:['bank_usd','bank_eur','bank_gbp','bank_aed','bank_chf','bank_cny']},
+  {label:'🥇 طلا و سکه', slugs:['geram18','geram24','mesghal','gold_futures','sekee','sekeb','nim','rob','gerami']},
+  {label:'₿ ارز دیجیتال اصلی', slugs:['crypto-bitcoin','crypto-ethereum','crypto-tether','crypto-litecoin','crypto-ripple','crypto-solana']},
+  {label:'🌍 شاخصهای جهانی', slugs:['bourse_sp-500','indices-dji-indx','bourse_nasdaq','bourse_dax','bourse_ftse-100','bourse_nikkei-225']},
+  {label:'⛽ نفت و انرژی', slugs:['oil_brent','oil_opec','energy_natural_gas']},
+];
+function renderSpPresets(){
+  $('sp_presets').innerHTML = SP_PRESETS.map((p,i)=>
+    `<button type="button" class="small" onclick="spApplyPreset(${i})">${esc(p.label)} <span class="muted">(${faNum(p.slugs.length)})</span></button>`).join('');
+}
+function spApplyPreset(i){
+  SP_PRESETS[i].slugs.forEach(s=>SP_SELECTED.add(s));
+  renderSlugPicker();
+}
+function toggleSpPaste(){
+  const ta=$('sp_paste'), btn=$('sp_paste_apply');
+  const show = ta.style.display==='none';
+  ta.style.display = show?'block':'none';
+  btn.style.display = show?'inline-flex':'none';
+  if(show) ta.focus();
+}
+function spApplyPaste(){
+  const raw = $('sp_paste').value||'';
+  const items = raw.split(/[\n,;]+/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+  let added=0, missing=[];
+  items.forEach(item=>{
+    // match by slug OR Persian name
+    const hit = SP_ALL.find(s=>s.slug.toLowerCase()===item) ||
+                SP_ALL.find(s=>String(s.name).trim()===item);
+    if(hit){ SP_SELECTED.add(hit.slug); added++; }
+    else missing.push(item);
+  });
+  renderSlugPicker();
+  if(missing.length){
+    showBanner('⚠️ '+faNum(added)+' اضافه شد — '+faNum(missing.length)+' مورد پیدا نشد: '+missing.slice(0,5).join('، '), false);
+  } else {
+    showBanner('✅ '+faNum(added)+' اسلاگ اضافه شد', true);
+  }
+}
+
 function buildSpCategories(){
   const cats = {};
   SP_ALL.forEach(s=>{
@@ -4141,7 +4192,13 @@ function renderSlugPicker(){
   rows.forEach(s=>{ (byCat[spCategoryOf(s.slug)] ||= []).push(s); });
   let html = '';
   Object.entries(byCat).sort().forEach(([cat, items])=>{
-    html += `<div style="margin:8px 0 4px;font-weight:800;color:var(--dim);font-size:11.5px">${esc(cat)}</div>`;
+    const catSlugs = items.map(x=>x.slug);
+    const allOn = catSlugs.every(s=>SP_SELECTED.has(s));
+    SP_CAT_SLUGS[cat] = catSlugs;
+    html += `<div style="margin:8px 0 4px;display:flex;align-items:center;gap:6px">
+      <input type="checkbox" ${allOn?'checked':''} onchange="spToggleCat('${esc(cat)}', this.checked)" style="accent-color:var(--accent);width:auto">
+      <span style="font-weight:800;color:var(--dim);font-size:11.5px">${esc(cat)} (${faNum(items.length)})</span>
+    </div>`;
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px">';
     items.forEach(s=>{
       const on = SP_SELECTED.has(s.slug);
@@ -4156,6 +4213,13 @@ function renderSlugPicker(){
   $('sp_list').innerHTML = html || '<div class="muted" style="padding:12px">موردی یافت نشد</div>';
   renderSpSelected();
 }
+function spToggleCat(cat, on){
+  (SP_CAT_SLUGS[cat]||[]).forEach(s=>{ if(on) SP_SELECTED.add(s); else SP_SELECTED.delete(s); });
+  const q = $('sp_search').value;
+  renderSlugPicker();
+  $('sp_search').value = q;
+}
+
 function spToggle(slug, on){
   if(on) SP_SELECTED.add(slug); else SP_SELECTED.delete(slug);
   renderSpSelected();
