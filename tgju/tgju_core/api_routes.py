@@ -2061,7 +2061,12 @@ def api_bale_config():
         s = dict(data["settings"])
         if s.get("access_token"):
             s["access_token"] = "***"
-        return {"settings": s, "channels": data["channels"],
+        chans = []
+        for c in data["channels"]:
+            cc = dict(c)
+            cc.setdefault("chat_id", c.get("bale_id", ""))
+            chans.append(cc)
+        return {"settings": s, "channels": chans,
                 "mock": bale.is_mock()}
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
