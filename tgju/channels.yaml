@@ -1,7 +1,5 @@
 # TGJU Telegram Platform — channel definitions
 # Edit here OR via the webapp UI (localhost:8791).
-# Fill in your telegram_id for each channel: add your bot to the channel as
-# admin, then use @RawDataBot or the dashboard Connections tab to find the ID.
 
 channels:
   - id: "ch1"
@@ -9,7 +7,7 @@ channels:
     telegram_id: ""
     enabled: true
     icon: "💰"
-    header: ""
+    header: "نرخ ارز"
     section_title: "قیمتها"
     slug_groups:
       "ارز آزاد":
@@ -25,132 +23,22 @@ channels:
         - "bank_gbp"
         - "bank_aed"
     slugs:
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
-      - "price_dollar_rl"
-      - "price_eur"
-      - "price_gbp"
-      - "price_aed"
-      - "price_try"
-      - "crypto-tether"
-      - "bank_usd"
-      - "bank_eur"
-      - "bank_gbp"
-      - "bank_aed"
+        - "price_dollar_rl"
+        - "price_eur"
+        - "price_gbp"
+        - "price_aed"
+        - "price_try"
+        - "crypto-tether"
+        - "bank_usd"
+        - "bank_eur"
+        - "bank_gbp"
+        - "bank_aed"
     news_categories:
-      - "اخبار-ارزی"
+        - "اخبار-ارزی"
     analysis_tags:
-      - "تحلیل-تکنیکال-دلار"
-      - "تحلیل-تکنیکال-نرخ-ارز-آزاد"
-    schedule_minutes: 10
+        - "تحلیل-تکنیکال-دلار"
+        - "تحلیل-تکنیکال-نرخ-ارز-آزاد"
+    schedule_minutes: 2
     poll_enabled: true
     with_star: true
     with_analysis: true
@@ -158,8 +46,8 @@ channels:
     footer: ""
     format: "chips"
     post_types:
-      - "prices"
-      - "news"
+        - "prices"
+        - "poll"
     custom_data:
       "report_link": "https://example.com/report"
       "note": "Important channel"
@@ -177,29 +65,25 @@ channels:
         - "geram18"
         - "geram24"
     slugs:
-      - "gold_futures"
-      - "mesghal"
-      - "geram18"
-      - "geram24"
-      - "gold_futures"
-      - "mesghal"
-      - "geram18"
-      - "geram24"
+        - "gold_futures"
+        - "mesghal"
+        - "geram18"
+        - "geram24"
     news_categories:
-      - "اخبار-طلا-و-سکه"
+        - "اخبار-طلا-و-سکه"
     analysis_tags:
-      - "تحلیل-تکنیکال-طلا"
-      - "تحلیل-تکنیکال-مثقال"
+        - "تحلیل-تکنیکال-طلا"
+        - "تحلیل-تکنیکال-مثقال"
     schedule_minutes: 10
     poll_enabled: true
     with_star: true
     with_analysis: true
     with_footer: true
-    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
+    footer: "???????????: ?? ?? ????? | ????: tgju.org"
     format: "chips"
     post_types:
-      - "prices"
-      - "news"
+        - "prices"
+        - "news"
   - id: "ch3"
     name: "قیمت فلزات"
     telegram_id: ""
@@ -220,9 +104,9 @@ channels:
         - "base_global_tin"
         - "base_global_zinc"
     news_categories:
-      - "اخبار-جهان"
+        - "اخبار-جهان"
     analysis_tags:
-      - "تحلیل-تکنیکال-فلزات-گرانبها"
+        - "تحلیل-تکنیکال-فلزات-گرانبها"
     schedule_minutes: 10
     poll_enabled: false
     with_star: true
@@ -251,9 +135,9 @@ channels:
         - "retail_rob"
         - "retail_gerami"
     news_categories:
-      - "اخبار-طلا-و-سکه"
+        - "اخبار-طلا-و-سکه"
     analysis_tags:
-      - "تحلیل-تکنیکال-سکه"
+        - "تحلیل-تکنیکال-سکه"
     schedule_minutes: 10
     poll_enabled: false
     with_star: true
@@ -289,28 +173,28 @@ channels:
         - "crypto-toncoin"
         - "crypto-tron"
     slugs:
-      - "crypto-bitcoin"
-      - "crypto-ethereum"
-      - "crypto-litecoin"
-      - "crypto-ripple"
-      - "crypto-solana"
-      - "crypto-cardano"
-      - "crypto-dogecoin"
-      - "crypto-tether"
-      - "crypto-avalanche"
-      - "crypto-binance-coin"
-      - "crypto-bitcoin-cash"
-      - "crypto-dash"
-      - "crypto-polkadot"
-      - "crypto-shiba-inu"
-      - "crypto-stellar"
-      - "crypto-toncoin"
-      - "crypto-tron"
+        - "crypto-bitcoin"
+        - "crypto-ethereum"
+        - "crypto-litecoin"
+        - "crypto-ripple"
+        - "crypto-solana"
+        - "crypto-cardano"
+        - "crypto-dogecoin"
+        - "crypto-tether"
+        - "crypto-avalanche"
+        - "crypto-binance-coin"
+        - "crypto-bitcoin-cash"
+        - "crypto-dash"
+        - "crypto-polkadot"
+        - "crypto-shiba-inu"
+        - "crypto-stellar"
+        - "crypto-toncoin"
+        - "crypto-tron"
     news_categories:
-      - "اخبار-ارزهای-دیجیتال"
+        - "اخبار-ارزهای-دیجیتال"
     analysis_tags:
-      - "تحلیل-تکنیکال-بیت-کوین"
-      - "تحلیل-تکنیکال-اتریوم"
+        - "تحلیل-تکنیکال-بیت-کوین"
+        - "تحلیل-تکنیکال-اتریوم"
     schedule_minutes: 10
     poll_enabled: false
     with_star: true
@@ -340,21 +224,21 @@ channels:
         - "bourse_nikkei-225"
         - "bourse_hang-seng"
     slugs:
-      - "ons"
-      - "silver"
-      - "platinum"
-      - "palladium"
-      - "bourse_sp-500"
-      - "indices-dji-indx"
-      - "bourse_nasdaq"
-      - "bourse_dax"
-      - "bourse_ftse-100"
-      - "bourse_nikkei-225"
-      - "bourse_hang-seng"
+        - "ons"
+        - "silver"
+        - "platinum"
+        - "palladium"
+        - "bourse_sp-500"
+        - "indices-dji-indx"
+        - "bourse_nasdaq"
+        - "bourse_dax"
+        - "bourse_ftse-100"
+        - "bourse_nikkei-225"
+        - "bourse_hang-seng"
     news_categories:
-      - "اخبار-جهان"
+        - "اخبار-جهان"
     analysis_tags:
-      - "تحلیل-تکنیکال-شاخص-های-جهانی"
+        - "تحلیل-تکنیکال-شاخص-های-جهانی"
     schedule_minutes: 10
     poll_enabled: true
     with_star: true
@@ -380,9 +264,9 @@ channels:
         - "commodity_us_wheat"
         - "commodity_soybeans"
     news_categories:
-      - "اخبار-نفت-و-انرژی"
+        - "اخبار-نفت-و-انرژی"
     analysis_tags:
-      - "تحلیل-تکنیکال-نفت-و-انرژی"
+        - "تحلیل-تکنیکال-نفت-و-انرژی"
     schedule_minutes: 10
     poll_enabled: false
     with_star: true
@@ -398,12 +282,12 @@ channels:
     header: "اخبار گزارش و تحلیل ها"
     section_title: "اخبار و گزارش‌ها"
     news_categories:
-      - "اخبار-ویژه"
-      - "اخبار-قیمت-ها"
-      - "اخبار-جهان"
-      - "اخبار-بورس"
+        - "اخبار-ویژه"
+        - "اخبار-قیمت-ها"
+        - "اخبار-جهان"
+        - "اخبار-بورس"
     analysis_tags:
-      - "تحلیل-تکنیکال"
+        - "تحلیل-تکنیکال"
     schedule_minutes: 30
     poll_enabled: false
     with_star: false
@@ -495,9 +379,9 @@ channels:
         - "bourse_nasdaq"
         - "oil_brent"
     news_categories:
-      - "اخبار-قیمت-ها"
+        - "اخبار-قیمت-ها"
     analysis_tags:
-      - "تحلیل-تکنیکال"
+        - "تحلیل-تکنیکال"
     schedule_minutes: 30
     poll_enabled: true
     with_star: true

@@ -250,42 +250,139 @@ def api_categories_del(name: str):
 
 # ── Slug data & manual overrides (دادهها و لینکها) ────────────────────────
 
-@router.get("/api/slugs")
-def api_slugs():
-    """Inventory of every slug used by any channel + current data status.
 
-    rows = live homepage cache; overrides = manual config; aliases =
-    slug->working-slug map for slugs that 404 on their own profile path.
+def _clean_display_name(raw: str) -> str:
+    """Extract the Persian display name from a TGJU <th> cell.
+
+    Some homepage rows (bank_aud, bank_cad, …) embed onclick JS inside the
+    <th>, so the scraped 'name' arrives as a JS blob with the real name at
+    the end. Strategy: drop {...} blocks, treat tags as separators, keep the
+    longest chunk that is purely Persian/space.
     """
-    chans = get_channels()
-    used = {}
-    for c in chans:
-        for s in list(c.get("slugs") or []):
-            used.setdefault(s, []).append(c["id"])
-        for slugs in (c.get("slug_groups") or {}).values():
-            for s in slugs:
-                used.setdefault(s, []).append(c["id"])
-    rows = cached_rows()
+    raw = raw or ""
+    if "<" not in raw and "{" not in raw and '"' not in raw:
+        return raw.strip()
+    txt = re.sub(r"\{[^}]*\}", " ", raw)
+    txt = re.sub(r"<[^>]+>", "\n", txt)
+    chunks = re.split(r"[^\u0600-\u06FF\u200c ]+", txt)
+    fa = [c.strip() for c in chunks if len(c.strip()) >= 2]
+    if fa:
+        return re.sub(r"\s+", " ", max(fa, key=len)).strip()
+    return raw.strip()
+
+@router.get("/api/slugs")
+def api_slugs(scope: str = "all", q: str = ""):
+    """Full slug inventory (scope=all, default) or channel-used only (scope=used).
+
+    scope=all merges three sources into ONE table — the single source of
+    truth for every messaging platform (Telegram/WhatsApp/Bale):
+      1. live homepage rows  (RUNTIME cache — what tgju.org publishes now)
+      2. channel slug pools  (channels.yaml + WhatsApp categories + Bale channels)
+      3. manual overrides    (state/slug_overrides.json — win over both)
+
+    Every row reports WHERE it is used across platforms and whether its
+    value comes from the homepage, a profile backfill cache, disk fallback,
+    or a manual override.
+    """
     from tgju_engine_scrape import SLUG_ALIASES
     overrides = load_slug_overrides()
+    rows = cached_rows()
+    profile_cache = {}
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))), "state", "profile_cache.json"),
+                  encoding="utf-8") as f:
+            profile_cache = json.load(f) or {}
+    except Exception:
+        pass
+
+    # ── platform usage map ────────────────────────────────────────────
+    usage = {}          # slug -> {"telegram": [ch...], "whatsapp": [...], "bale": [...]}
+    def _use(s, plat, cid):
+        u = usage.setdefault(s, {"telegram": [], "whatsapp": [], "bale": []})
+        if cid not in u[plat]:
+            u[plat].append(cid)
+
+    chans = get_channels()
+    for c in chans:
+        for s in list(c.get("slugs") or []):
+            _use(s, "telegram", c["id"])
+        for slugs in (c.get("slug_groups") or {}).values():
+            for s in slugs:
+                _use(s, "telegram", c["id"])
+    try:
+        from tgju_engine_whatsapp import list_categories
+        for cat in list_categories() or []:
+            for slugs in (cat.get("slug_groups") or {}).values():
+                for s in slugs:
+                    _use(s, "whatsapp", cat.get("label") or cat.get("id", ""))
+    except Exception:
+        pass
+    try:
+        from tgju_engine_bale import load_config as bale_load
+        for bc in ((bale_load() or {}).get("channels") or []):
+            for s in list(bc.get("slugs") or []):
+                _use(s, "bale", bc.get("id") or bc.get("name", ""))
+            for slugs in (bc.get("slug_groups") or {}).values():
+                for s in slugs:
+                    _use(s, "bale", bc.get("id") or bc.get("name", ""))
+    except Exception:
+        pass
+
+    # ── merged universe of slugs ──────────────────────────────────────
+    universe = set(rows.keys()) | set(usage.keys()) | set(overrides.keys())
+    if scope == "used":
+        universe = set(usage.keys())
+
+    needle = (q or "").strip().lower()
     out = []
-    for s in sorted(used):
+    for s in sorted(universe):
         row = rows.get(s) or {}
         ov = overrides.get(s) or {}
-        out.append({
-            "slug": s, "name": ov.get("name") or row.get("name") or s,
-            "channels": sorted(set(used[s])),
+        pc = profile_cache.get(s) or {}
+        name = ov.get("name") or row.get("name") or pc.get("name") or s
+        name = _clean_display_name(name)
+        price = row.get("price") or pc.get("price") or ""
+        source = "homepage" if row.get("price") else (
+            "profile" if pc.get("price") else "missing")
+        if ov.get("manual_price"):
+            price = str(ov["manual_price"]).replace(",", "").strip()
+            source = "manual"
+        u = usage.get(s) or {}
+        plats = [p for p in ("telegram", "whatsapp", "bale") if u.get(p)]
+        item = {
+            "slug": s,
+            "name": name,
             "homepage_price": row.get("price") or "",
+            "price": price,
             "change_pct": row.get("change_pct") or "",
             "dir": row.get("dir") or "",
+            "source": source,
             "manual": bool(ov.get("manual_price")),
             "manual_price": ov.get("manual_price") or "",
             "override": ov,
-            "unit": ov.get("unit", ""),   # manual unit override (auto if empty)
-            "profile_url": (ov.get("profile_url") or ""),
+            "unit": ov.get("unit", ""),
+            "unit_auto": _auto_unit(s),
+            "profile_url": ov.get("profile_url") or "",
             "alias": SLUG_ALIASES.get(s, ""),
-        })
-    return {"slugs": out, "overrides": overrides}
+            "platforms": plats,
+            "usage": u,
+        }
+        if needle and needle not in s.lower() and needle not in str(name).lower():
+            continue
+        out.append(item)
+    used_count = sum(1 for s in universe if s in usage)
+    return {"slugs": out, "overrides": overrides,
+            "total": len(out), "used": used_count,
+            "with_price": sum(1 for i in out if i["price"])}
+
+def _auto_unit(slug: str) -> str:
+    """Convention unit for a slug (what fmt/slug_unit would pick with no override)."""
+    try:
+        from tgju_engine_format import slug_unit
+        return slug_unit(slug, {}) or ""
+    except Exception:
+        return ""
 
 @router.put("/api/slugs/{slug}")
 async def api_slug_override(slug: str, req: Request):
@@ -1131,7 +1228,7 @@ async def api_ai_job_save(job_id: str, req: Request):
         return JSONResponse({"error": "unknown job"}, status_code=404)
     job = data["jobs"][job_id]
     for k in ("enabled", "provider", "model", "max_tokens", "timeout_s",
-              "default_count", "channels"):
+              "default_count", "channels", "effort"):
         if k in body:
             job[k] = body[k]
     save_ai_jobs({"jobs": data["jobs"], "activity": data["activity"]})
@@ -1211,6 +1308,198 @@ def api_events():
         return {"events": [e.to_dict() for e in events]}
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+
+# ── Unified activity feed (all platforms) ─────────────────────────────────
+ACTIVITY_PATTERNS = [
+    # (regex, category, icon)
+    (r"scheduler posted (\S+) \((\w+)\)", "telegram", "📤"),
+    (r"webapp posted (\S+) \((\w+)\)", "telegram", "📤"),
+    (r"scheduler skipped (\S+) \((\w+)\)", "skip", "⏭"),
+    (r"scheduler ERROR (\S+) \((\w+)\): (.*)", "error", "❌"),
+    (r"scheduler ERROR (\S+): (.*)", "error", "❌"),
+    (r"bale scheduler posted (\S+) \((\w+)\)", "bale", "🟢"),
+    (r"bale scheduler ERROR (\S+) \((\w+)\): (.*)", "error", "❌"),
+    (r"whatsapp sent to (\S+)", "whatsapp", "💬"),
+    (r"whatsapp broadcast.*?(\d+) users?", "whatsapp", "💬"),
+    (r"slug override saved: (\S+)", "config", "✏️"),
+    (r"slug renamed: (\S+) -> (\S+)", "config", "🔄"),
+    (r"channel (\S+) saved", "config", "💾"),
+    (r"TGJU unreachable.*?(\d+) fallback prices", "data", "⚠️"),
+    (r"refresh failed: (.*)", "data", "⚠️"),
+]
+
+def _classify_log(msg: str):
+    """Map a platform.log line to (category, icon, action, channel_id, detail).
+
+    action is a short machine-readable verb for the UI (post/skip/error/…);
+    detail carries the regex captures (channel, post_type, error text).
+    """
+    for pat, cat, icon in ACTIVITY_PATTERNS:
+        m = re.search(pat, msg)
+        if m:
+            g = m.groups()
+            cid = ""
+            action = cat
+            detail = ""
+            first = str(g[0]) if g else ""
+            if re.match(r"(ch\d+|wa\d+|bale\w*|\+\d+)", first):
+                cid = first
+                if len(g) > 1 and isinstance(g[1], str):
+                    action = {"prices": "قیمت", "news": "خبر", "poll": "نظرسنجی",
+                              "analysis": "تحلیل", "all": "همه"}.get(g[1], g[1])
+                    if len(g) > 2 and g[2]:
+                        detail = str(g[2])[:200]
+            elif "unreachable" in msg or "refresh failed" in msg:
+                detail = msg[:200]
+            return cat, icon, action, cid, detail
+    if "auth:" in msg:
+        return None, "", "", "", ""      # auth noise → hide
+    return "system", "•", "log", "", msg[:200]
+
+@router.get("/api/activity")
+def api_activity(limit: int = 150, category: str = ""):
+    """Unified activity feed across ALL platforms.
+
+    Merges three sources, newest first:
+      1. structured events  (tgju_core event bus — runs with full pipeline)
+      2. run records        (orchestrated posts)
+      3. platform.log       (scheduler/webapp/bale/whatsapp/AI/config lines)
+    Filterable by category: telegram|whatsapp|bale|ai|config|data|error|skip.
+    """
+    items = []
+    # 1) structured events (in-memory bus)
+    try:
+        import tgju_core_integration as ci
+        ci.init_core()
+        from tgju_core.events import get_event_bus
+        for e in get_event_bus().query_events(limit=100):
+            payload = getattr(e, "payload", None) or {}
+            pay_str = ""
+            try:
+                pay_str = json.dumps(payload, ensure_ascii=False)[:300]
+            except Exception:
+                pass
+            items.append({
+                "ts": e.timestamp.isoformat(timespec="seconds"),
+                "source": "core",
+                "category": "event",
+                "icon": "⚡",
+                "action": str(getattr(e.event_type, "value", e.event_type)),
+                "title": str(getattr(e.event_type, "value", e.event_type)) +
+                         (f" — {e.channel_id}" if e.channel_id and e.channel_id != "*" else ""),
+                "raw": pay_str,
+                "channel_id": e.channel_id or "",
+                "detail": e.error or (f"مدت: {e.duration_ms}ms" if getattr(e, 'duration_ms', None) else ""),
+                "status": e.status or "",
+            })
+    except Exception:
+        pass
+
+    # 2) platform.log — the complete cross-platform history
+    try:
+        from tgju_engine_config import LOG_PATH
+        import os as _os
+        max_bytes = 400_000
+        with open(LOG_PATH, encoding="utf-8", errors="replace") as f:
+            f.seek(0, 2)
+            size = f.tell()
+            f.seek(max(0, size - max_bytes))
+            lines = f.read().splitlines()
+        for line in reversed(lines):                      # newest first
+            m = re.match(r"\[([^\]]+)\] (.*)", line)
+            if not m:
+                continue
+            ts, msg = m.group(1), m.group(2).strip()
+            cat, icon, action, cid, extra = _classify_log(msg)
+            if cat is None:
+                continue
+            title = msg
+            if len(title) > 140:
+                title = title[:137] + "…"
+            items.append({
+                "ts": ts.replace("T", " "),
+                "source": "log",
+                "category": cat,
+                "icon": icon,
+                "action": action,
+                "title": title,
+                "raw": msg,
+                "channel_id": cid,
+                "detail": extra,
+                "status": "failed" if cat == "error" else ("skipped" if cat == "skip" else "success"),
+            })
+    except Exception:
+        pass
+
+    if category:
+        items = [i for i in items if i["category"] == category]
+    items.sort(key=lambda i: i["ts"], reverse=True)
+
+    # dedupe identical consecutive entries (log repeats from retries)
+    seen = set()
+    out = []
+    for i in items:
+        key = (i["ts"], i["title"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(i)
+    return {"activity": out[:limit], "total": len(out)}
+
+
+
+@router.get("/api/channels/{cid}/style")
+def api_channel_style_get(cid: str):
+    """Current tag-style templates for a channel (merged with defaults)."""
+    ch = next((c for c in get_channels() if c["id"] == cid), None)
+    if not ch:
+        return JSONResponse({"error": "channel not found"}, status_code=404)
+    from tgju_engine_format import get_style, STYLE_DEFAULTS
+    return {"style": get_style(ch), "defaults": STYLE_DEFAULTS,
+            "footer": ch.get("footer") or "", "with_footer": ch.get("with_footer", True)}
+
+@router.put("/api/channels/{cid}/style")
+async def api_channel_style_put(cid: str, req: Request):
+    """Save tag-style templates onto the channel (style:{...} in channels.yaml).
+
+    Only the five editable keys are accepted: rows/weekday/time/sep/star.
+    Empty strings reset that tag to its default. news style stays global
+    for now (news_line is built platform-wide).
+    """
+    try:
+        body = await req.json()
+    except Exception:
+        body = {}
+    chans = get_channels()
+    ch = next((c for c in chans if c["id"] == cid), None)
+    if not ch:
+        return JSONResponse({"error": "channel not found"}, status_code=404)
+    from tgju_engine_format import STYLE_DEFAULTS
+    user_style = dict(ch.get("style") or {})
+    changed = False
+    for k in ("rows", "weekday", "time", "sep", "star"):
+        if k in body:
+            v = str(body[k] or "").strip()
+            if not v or v == STYLE_DEFAULTS[k]:
+                user_style.pop(k, None)          # reset to default
+            else:
+                # basic sanity: must keep the required sub-var so output isn't blank
+                need = {"rows": "{price}", "weekday": "{weekday}", "time": "{time}",
+                        "star": "{star_name}"}.get(k)
+                if need and need not in v:
+                    return JSONResponse(
+                        {"error": f"الگوی {{ {k} }} باید شامل {need} باشد"},
+                        status_code=400)
+                user_style[k] = v
+            changed = True
+    if changed:
+        ch["style"] = user_style
+        save_channels(get_channels())
+        reload_channels()
+        log_line(f"channel style saved: {cid} keys={sorted(user_style.keys())}")
+    return {"ok": True, "style": ch.get("style") or {}}
 
 @router.post("/api/simulate/{cid}")
 def api_simulate(cid: str):

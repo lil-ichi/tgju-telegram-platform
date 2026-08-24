@@ -20,25 +20,34 @@
 }
 
 :root{
-  /* porcelain neutrals */
+  /* ══ Theme system v2 «Multi-Skin» — 2026-08-24 ══
+     3 hue families × light/dark = 6 skins, switched via
+     <html data-theme="emerald|ocean|amber" data-mode="light|dark">
+     persisted in localStorage (tgju_theme / tgju_mode). */
+  /* ── default: EMERALD · LIGHT (porcelain canvas) ── */
   --bg:#f6f6f2;
   --surface:#ffffff;
   --surface-2:#fafaf7;
   --border:#e6e6df;
   --border-soft:#efefe9;
+  --border-hover:#dcdcd3;
+  --input-hover:#cfcfc5;
   --txt:#1a2624;
   --dim:#5f6f6b;
   --faint:#98a5a0;
-  /* emerald accent */
   --accent:#0d8a72;
   --accent-h:#0a6e5b;
   --accent-soft:#e8f5f0;
   --accent-line:#bfe3d7;
+  --on-accent:#ffffff;
   --gold:#b8860b;
-  --ok:#0d8a72;
-  --warn:#d97706;
-  --bad:#dc2626;
-  /* depth: two-layer light */
+  --ok:#0d8a72;   --ok-bg:#e8f5f0;   --ok-fg:#0a6e5b;   --ok-line:#bfe3d7;
+  --bad:#dc2626;  --bad-bg:#fdeaea;  --bad-fg:#b91c1c;  --bad-line:#f6c8c8;
+  --warn:#d97706; --warn-bg:#fdf3e3; --warn-fg:#b45309; --warn-line:#f3ddb0;
+  --track:#d8d8cf;
+  --row-hover:rgba(232,245,240,.45);
+  --glow-1:rgba(13,138,114,.06);
+  --glow-2:rgba(184,134,11,.05);
   --shadow-sm:0 1px 2px rgba(26,38,36,.05), 0 1px 3px rgba(26,38,36,.07);
   --shadow-md:0 2px 4px rgba(26,38,36,.04), 0 12px 24px -6px rgba(26,38,36,.10);
   --shadow-lg:0 4px 10px rgba(26,38,36,.05), 0 24px 48px -8px rgba(26,38,36,.14);
@@ -47,11 +56,110 @@
   --spring:cubic-bezier(.34,1.56,.64,1);
 }
 
+/* ── EMERALD · DARK — deep pine ── */
+[data-theme="emerald"][data-mode="dark"]{
+  --bg:#0a1310; --surface:#111d19; --surface-2:#152420;
+  --border:#23342e; --border-soft:#1c2b26; --border-hover:#2c4038; --input-hover:#33493f;
+  --txt:#e4efe9; --dim:#9db4ab; --faint:#6d837a;
+  --accent:#2fbf9d; --accent-h:#43d1af;
+  --accent-soft:rgba(47,191,157,.12); --accent-line:rgba(47,191,157,.35);
+  --on-accent:#071310;
+  --gold:#caa64a;
+  --ok:#2fbf9d;   --ok-bg:rgba(47,191,157,.14);  --ok-fg:#7fdcc2;  --ok-line:rgba(47,191,157,.40);
+  --bad:#f05252;  --bad-bg:rgba(220,38,38,.16);  --bad-fg:#f19999; --bad-line:rgba(220,38,38,.45);
+  --warn:#e89b3c; --warn-bg:rgba(217,119,6,.16); --warn-fg:#ecb464; --warn-line:rgba(217,119,6,.45);
+  --track:#24352f;
+  --row-hover:rgba(47,191,157,.08);
+  --glow-1:rgba(47,191,157,.07);
+  --glow-2:rgba(202,166,74,.05);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.30);
+  --shadow-md:0 2px 4px rgba(0,0,0,.30), 0 12px 24px -6px rgba(0,0,0,.45);
+  --shadow-lg:0 4px 10px rgba(0,0,0,.30), 0 24px 48px -8px rgba(0,0,0,.55);
+}
+
+/* ── OCEAN · LIGHT — crisp paper + blue ── */
+[data-theme="ocean"]{
+  --bg:#f4f7fb; --surface:#ffffff; --surface-2:#f7fafd;
+  --border:#dde5ef; --border-soft:#e9eff7; --border-hover:#c9d6e6; --input-hover:#b9c9dd;
+  --txt:#13202e; --dim:#5a6b80; --faint:#94a3b6;
+  --accent:#2563eb; --accent-h:#1d4ed8;
+  --accent-soft:#e8effd; --accent-line:#bfd4fa;
+  --on-accent:#ffffff;
+  --gold:#a16207;
+  --ok:#059669;   --ok-bg:#e7f6ef;   --ok-fg:#047857;   --ok-line:#b5e3cd;
+  --bad:#dc2626;  --bad-bg:#fdeaea;  --bad-fg:#b91c1c;  --bad-line:#f6c8c8;
+  --warn:#d97706; --warn-bg:#fdf3e3; --warn-fg:#b45309; --warn-line:#f3ddb0;
+  --track:#d7e0ec;
+  --row-hover:rgba(37,99,235,.05);
+  --glow-1:rgba(37,99,235,.07);
+  --glow-2:rgba(13,148,136,.05);
+}
+
+/* ── OCEAN · DARK — midnight navy ── */
+[data-theme="ocean"][data-mode="dark"]{
+  --bg:#0a1020; --surface:#111a30; --surface-2:#16203a;
+  --border:#24314f; --border-soft:#1d2842; --border-hover:#31426a; --input-hover:#3a4d78;
+  --txt:#e2e9f5; --dim:#9aa9c2; --faint:#66748f;
+  --accent:#60a5fa; --accent-h:#93c5fd;
+  --accent-soft:rgba(96,165,250,.14); --accent-line:rgba(96,165,250,.38);
+  --on-accent:#0a1020;
+  --gold:#d3b25f;
+  --ok:#34d399;   --ok-bg:rgba(52,211,153,.13);  --ok-fg:#8ce8c5;  --ok-line:rgba(52,211,153,.40);
+  --bad:#f05252;  --bad-bg:rgba(220,38,38,.16);  --bad-fg:#f19999; --bad-line:rgba(220,38,38,.45);
+  --warn:#e89b3c; --warn-bg:rgba(217,119,6,.16); --warn-fg:#ecb464; --warn-line:rgba(217,119,6,.45);
+  --track:#26334f;
+  --row-hover:rgba(96,165,250,.08);
+  --glow-1:rgba(96,165,250,.08);
+  --glow-2:rgba(52,211,153,.05);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.30);
+  --shadow-md:0 2px 4px rgba(0,0,0,.30), 0 12px 24px -6px rgba(0,0,0,.45);
+  --shadow-lg:0 4px 10px rgba(0,0,0,.30), 0 24px 48px -8px rgba(0,0,0,.55);
+}
+
+/* ── AMBER · LIGHT — warm paper + bronze ── */
+[data-theme="amber"]{
+  --bg:#faf6ee; --surface:#fffdf8; --surface-2:#f8f3e8;
+  --border:#e8dfcc; --border-soft:#f0e9da; --border-hover:#d9cbae; --input-hover:#cbbc9c;
+  --txt:#292018; --dim:#756754; --faint:#a4977f;
+  --accent:#b45309; --accent-h:#92400e;
+  --accent-soft:#f7ecd9; --accent-line:#ecd9b4;
+  --on-accent:#ffffff;
+  --gold:#8a6d1f;
+  --ok:#15803d;   --ok-bg:#e9f5ec;   --ok-fg:#166534;   --ok-line:#bfe3c8;
+  --bad:#dc2626;  --bad-bg:#fbe9e7;  --bad-fg:#b91c1c;  --bad-line:#f6c8c0;
+  --warn:#b45309; --warn-bg:#f7ecd9; --warn-fg:#92400e; --warn-line:#ecd9b4;
+  --track:#e0d4ba;
+  --row-hover:rgba(180,83,9,.05);
+  --glow-1:rgba(180,83,9,.06);
+  --glow-2:rgba(138,109,31,.06);
+}
+
+/* ── AMBER · DARK — espresso ── */
+[data-theme="amber"][data-mode="dark"]{
+  --bg:#14100b; --surface:#1d1710; --surface-2:#241c14;
+  --border:#372c1e; --border-soft:#2c2318; --border-hover:#4a3b28; --input-hover:#57462f;
+  --txt:#f0e7d8; --dim:#b3a58d; --faint:#7d7060;
+  --accent:#e09b3d; --accent-h:#ebaf5c;
+  --accent-soft:rgba(224,155,61,.14); --accent-line:rgba(224,155,61,.40);
+  --on-accent:#1d1206;
+  --gold:#e5c05b;
+  --ok:#4ade80;   --ok-bg:rgba(74,222,128,.12);  --ok-fg:#93e6b3;  --ok-line:rgba(74,222,128,.38);
+  --bad:#f05252;  --bad-bg:rgba(220,38,38,.16);  --bad-fg:#f19999; --bad-line:rgba(220,38,38,.45);
+  --warn:#e09b3d; --warn-bg:rgba(224,155,61,.15); --warn-fg:#eec182; --warn-line:rgba(224,155,61,.45);
+  --track:#3a2f20;
+  --row-hover:rgba(224,155,61,.08);
+  --glow-1:rgba(224,155,61,.07);
+  --glow-2:rgba(229,192,91,.05);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.30);
+  --shadow-md:0 2px 4px rgba(0,0,0,.30), 0 12px 24px -6px rgba(0,0,0,.45);
+  --shadow-lg:0 4px 10px rgba(0,0,0,.30), 0 24px 48px -8px rgba(0,0,0,.55);
+}
+
 html { background:var(--bg); }
 body {
   background:
-    radial-gradient(1200px 500px at 85% -10%, rgba(13,138,114,.06), transparent 60%),
-    radial-gradient(900px 420px at 0% 110%, rgba(184,134,11,.05), transparent 55%),
+    radial-gradient(1200px 500px at 85% -10%, var(--glow-1), transparent 60%),
+    radial-gradient(900px 420px at 0% 110%, var(--glow-2), transparent 55%),
     var(--bg);
   color:var(--txt);
   font-family:'Vazirmatn','Segoe UI',Tahoma,'Iranian Sans',sans-serif;
@@ -59,20 +167,20 @@ body {
   min-height:100vh; }
 ::selection { background:var(--accent-line); color:var(--txt); }
 *::-webkit-scrollbar { width:10px; height:10px; }
-*::-webkit-scrollbar-thumb { background:#d5d5cc; border-radius:8px; border:2px solid var(--bg); }
+*::-webkit-scrollbar-thumb { background:var(--border); border-radius:8px; border:2px solid var(--bg); }
 *::-webkit-scrollbar-thumb:hover { background:var(--faint); }
 
 .layout { display:flex; min-height:100vh; }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */
 .sidebar { width:240px; min-width:240px;
-  background:linear-gradient(180deg,#ffffff, #fbfbf8);
+  background:var(--surface);
   border-left:1px solid var(--border);
   padding:20px 14px;
   position:sticky; top:0; height:100vh; overflow-y:auto; }
 .brand { display:flex; align-items:center; gap:10px; padding:6px 8px 16px;
   border-bottom:1px solid var(--border-soft); margin-bottom:12px; }
-.brand .logo { font-size:26px; filter:drop-shadow(0 2px 4px rgba(13,138,114,.25)); }
+.brand .logo { font-size:26px;  }
 .brand .t { font-weight:800; font-size:15px; color:var(--txt); letter-spacing:-.01em; }
 .brand .s { color:var(--dim); font-size:10.5px; display:block; }
 
@@ -100,7 +208,7 @@ body {
 .platform-header { position:relative; overflow:hidden;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:12px; flex-wrap:wrap; margin-bottom:18px;
-  background:#fff;
+  background:var(--surface);
   border:none; border-bottom:1px solid var(--border); border-radius:0;
   padding:18px 24px 14px; box-shadow:none; text-align:center; }
 .platform-header::before { content:none; }
@@ -127,7 +235,7 @@ body {
 
 /* ── WhatsApp panel ──────────────────────────────────────────── */
 .wa-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; width:100%; margin-top:16px; }
-.wa-card { background:#fff; border:1px solid var(--border); border-radius:var(--r-md);
+.wa-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
   padding:18px 20px; box-shadow:var(--shadow-sm); transition:box-shadow var(--trans); }
 .wa-card:hover { box-shadow:var(--shadow-md); }
 .wa-card h3 { font-size:14.5px; margin-bottom:10px; color:var(--txt); display:flex; align-items:center; gap:8px; }
@@ -167,23 +275,23 @@ h2 { font-size:15px; margin:26px 0 12px; color:var(--accent-h);
 .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:6px 20px; width:100%; }
 .grid.cards > .card, .card { min-width:0; }
 
-.card { background:#fff;
+.card { background:var(--surface);
   border:1px solid var(--border);
   border-radius:var(--r-md);
   padding:20px 24px;
   box-shadow:var(--shadow-sm);
   transition:transform var(--trans), box-shadow var(--trans), border-color var(--trans); }
-.card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); border-color:#dcdcd3; }
+.card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); border-color:var(--border-hover); }
 .card h4 { color:var(--dim); font-size:11px; font-weight:700; margin-bottom:8px;
   text-transform:uppercase; letter-spacing:.06em; }
 .big { font-size:28px; font-weight:800; color:var(--txt); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
 .big.gold { color:var(--gold); }
 
 .pill { display:inline-block; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
-.pill-ok   { background:#e8f5f0; color:#0a6e5b; border:1px solid #bfe3d7; }
+.pill-ok   { background:var(--ok-bg); color:var(--ok-fg); border:1px solid var(--ok-line); }
 .pill-err,
-.pill-bad  { background:#fdeaea; color:#b91c1c; border:1px solid #f6c8c8; }
-.pill-warn { background:#fdf3e3; color:#b45309; border:1px solid #f3ddb0; }
+.pill-bad  { background:var(--bad-bg); color:var(--bad-fg); border:1px solid var(--bad-line); }
+.pill-warn { background:var(--warn-bg); color:var(--warn-fg); border:1px solid var(--warn-line); }
 .pill-dim  { background:var(--surface-2); color:var(--dim); border:1px solid var(--border); }
 .set-h { margin:0 0 6px; font-size:16px; font-weight:800; color:var(--accent-h);
   border-bottom:2px solid var(--accent-line); padding-bottom:8px; }
@@ -193,11 +301,11 @@ h2 { font-size:15px; margin:26px 0 12px; color:var(--accent-h);
 /* toggle switch — silk spring */
 .switch { position:relative; display:inline-block; width:44px; height:24px; margin:0; }
 .switch input { opacity:0; width:0; height:0; }
-.switch span { position:absolute; cursor:pointer; inset:0; background:#d8d8cf;
+.switch span { position:absolute; cursor:pointer; inset:0; background:var(--track);
   border-radius:24px; transition:background var(--trans);
   box-shadow:inset 0 1px 2px rgba(26,38,36,.10); }
 .switch span:before { content:""; position:absolute; height:20px; width:20px; left:2px; top:2px;
-  background:#fff; border-radius:50%;
+  background:var(--surface); border-radius:50%;
   box-shadow:0 1px 3px rgba(26,38,36,.25);
   transition:transform 260ms var(--spring); }
 .switch input:checked + span { background:var(--accent); }
@@ -209,7 +317,7 @@ thead th { position:sticky; top:0; background:var(--surface-2); z-index:1; }
 th { color:var(--dim); text-align:right; font-weight:700; padding:10px 12px;
   border-bottom:2px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:.03em; }
 td { padding:10px 12px; border-bottom:1px solid var(--border-soft); transition:background 140ms ease; }
-tr:hover td { background:rgba(232,245,240,.45); }
+tr:hover td { background:var(--row-hover); }
 .mono { font-family:Consolas,Menlo,monospace; font-size:11.5px; color:var(--dim); direction:ltr; display:inline-block; }
 
 /* ── Buttons ─────────────────────────────────────────────────── */
@@ -227,27 +335,27 @@ button:hover { border-color:transparent; color:var(--accent-h); background:var(-
 button:active { transform:scale(.97); transition-duration:80ms; }
 button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 button.primary { background:var(--accent);
-  color:#fff; border-color:transparent;
+  color:var(--on-accent); border-color:transparent;
   box-shadow:none; }
 button.primary:hover { background:var(--accent-h);
-  color:#fff; border-color:transparent;
+  color:var(--on-accent); border-color:transparent;
   box-shadow:none; transform:none; }
 button.primary:active { transform:translateY(0) scale(.95); }
-button.danger { background:#fff; color:#dc2626; border-color:#f3b4b4; }
-button.danger:hover { background:#fdeaea; color:#b91c1c; border-color:#ec9999; }
-button.warning { background:#fff; color:#d97706; border-color:#f3ddb0; }
-button.warning:hover { background:#fdf3e3; color:#b45309; border-color:#eec87e; }
+button.danger { background:var(--surface); color:#dc2626; border-color:#f3b4b4; }
+button.danger:hover { background:var(--bad-bg); color:var(--bad-fg); border-color:var(--bad-line); }
+button.warning { background:var(--surface); color:#d97706; border-color:#f3ddb0; }
+button.warning:hover { background:var(--warn-bg); color:var(--warn-fg); border-color:var(--warn-line); }
 button.small { padding:0 12px; min-height:30px; font-size:11.5px; border-radius:7px; }
 button:disabled { opacity:.5; cursor:not-allowed; transform:none !important; }
 
-input,select,textarea { background:#fff;
+input,select,textarea { background:var(--surface);
   border:1px solid var(--border); border-radius:9px;
   padding:10px 14px; font-size:13px; color:var(--txt);
   width:100%; font-family:inherit;
   transition:border-color var(--trans), box-shadow var(--trans), background var(--trans); }
-input:hover,select:hover,textarea:hover { border-color:#cfcfc5; }
+input:hover,select:hover,textarea:hover { border-color:var(--input-hover); }
 input:focus,select:focus,textarea:focus { outline:none; border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(13,138,114,.13); background:#fff; }
+  box-shadow:0 0 0 3px var(--accent-soft); background:var(--surface); }
 label { display:block; font-size:12px; color:var(--dim); margin:14px 0 6px; font-weight:600; }
 pre { background:var(--surface-2); border:1px solid var(--border);
   border-radius:12px; padding:14px; font-size:12.5px;
@@ -271,22 +379,22 @@ pre { background:var(--surface-2); border:1px solid var(--border);
   border-radius:11px; padding:12px 18px; font-size:12.5px; margin-bottom:16px;
   display:none; box-shadow:var(--shadow-sm); }
 
-.ch { background:#fff; border:1px solid var(--border);
+.ch { background:var(--surface); border:1px solid var(--border);
   border-radius:var(--r-md); margin-bottom:12px; overflow:hidden;
   box-shadow:var(--shadow-sm);
   transition:box-shadow var(--trans), border-color var(--trans); }
 .ch:hover { box-shadow:var(--shadow-md); }
-.ch-head { display:flex; align-items:center; gap:12px; padding:16px 20px; cursor:pointer; background:#fff; }
+.ch-head { display:flex; align-items:center; gap:12px; padding:16px 20px; cursor:pointer; background:var(--surface); }
 .ch-head .icon { font-size:22px; }
 .ch-body { padding:16px 20px; border-top:1px solid var(--border); background:var(--surface-2); }
-.preview-box { background:#fff; border:1px dashed var(--accent-line);
+.preview-box { background:var(--surface); border:1px dashed var(--accent-line);
   border-radius:var(--r-md); padding:16px; }
 
 #modal { display:none; position:fixed; inset:0;
-  background:rgba(26,38,36,.40);
+  background:rgba(8,14,12,.55);
   z-index:99; padding:40px 20px; overflow:auto;
   animation:fadeIn 200ms ease; }
-#modal > div { background:#fff; max-width:700px; margin:auto;
+#modal > div { background:var(--surface); max-width:700px; margin:auto;
   border-radius:var(--r-lg); box-shadow:var(--shadow-lg);
   padding:28px; animation:modalIn 260ms var(--spring); }
 #modal h2 { margin-top:4px; }
@@ -328,32 +436,32 @@ button + button { margin-inline-start:10px; }
 .auth-gate { position:fixed; inset:0; z-index:1000;
   display:flex; align-items:center; justify-content:center;
   background:
-    radial-gradient(900px 420px at 80% 0%, rgba(13,138,114,.07), transparent 60%),
-    radial-gradient(700px 380px at 10% 100%, rgba(184,134,11,.06), transparent 55%),
+    radial-gradient(900px 420px at 80% 0%, var(--glow-1), transparent 60%),
+    radial-gradient(700px 380px at 10% 100%, var(--glow-2), transparent 55%),
     var(--bg);
   padding:20px; }
 .auth-card { width:100%; max-width:400px;
-  background:#fff; border:1px solid var(--border);
+  background:var(--surface); border:1px solid var(--border);
   border-radius:var(--r-lg); padding:30px 28px 22px;
   box-shadow:var(--shadow-lg);
   animation:authIn .35s var(--spring); }
 .auth-logo { display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
-.auth-logo .logo { font-size:38px; filter:drop-shadow(0 3px 6px rgba(13,138,114,.28)); }
+.auth-logo .logo { font-size:38px;  }
 .auth-title { text-align:center; font-size:19px; font-weight:800; color:var(--txt); }
 .auth-sub { text-align:center; color:var(--dim); font-size:12.5px; margin:4px 0 22px; line-height:1.7; }
-.auth-err { display:none; background:#fdeaea; border:1px solid #f3b4b4; color:#991b1b;
+.auth-err { display:none; background:var(--bad-bg); border:1px solid var(--bad-line); color:var(--bad-fg);
   border-radius:var(--r-sm); padding:9px 12px; font-size:12.5px; margin-bottom:14px; line-height:1.6; }
 .auth-err.show { display:block; }
 .auth-field { margin-bottom:14px; }
 .auth-field label { display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--txt); }
 .auth-field input { width:100%; padding:10px 12px; font-size:14px;
   border:1px solid var(--border); border-radius:var(--r-sm);
-  font-family:inherit; background:#fff; color:var(--txt);
+  font-family:inherit; background:var(--surface); color:var(--txt);
   transition:border-color var(--trans), box-shadow var(--trans); }
 .auth-field input:focus { outline:none; border-color:var(--accent);
   box-shadow:0 0 0 3px var(--accent-soft); }
 .auth-btn { width:100%; padding:11px; margin-top:4px; font-size:14.5px; font-weight:800;
-  background:var(--accent); color:#fff; border:none; border-radius:var(--r-sm);
+  background:var(--accent); color:var(--on-accent); border:none; border-radius:var(--r-sm);
   cursor:pointer; font-family:inherit;
   transition:background var(--trans), transform var(--trans), box-shadow var(--trans); }
 .auth-btn:hover { background:var(--accent-h); box-shadow:var(--shadow-md); }
@@ -392,6 +500,64 @@ button + button { margin-inline-start:10px; }
   #stat_cards .card { animation:none; }
   .platform-header::before { animation:none; }
 }
+
+/* ── Theme switcher (header) ─────────────────────────────────── */
+.theme-switcher { display:flex; align-items:center; gap:10px; margin-top:10px;
+  padding:7px 12px; background:var(--surface); border:1px solid var(--border);
+  border-radius:999px; box-shadow:var(--shadow-sm); }
+.ts-themes { display:flex; gap:6px; align-items:center; }
+.ts-swatch { width:22px; height:22px; min-height:22px; padding:0; border-radius:50%;
+  cursor:pointer; border:2px solid var(--border); position:relative; overflow:hidden;
+  transition:transform var(--trans), border-color var(--trans), box-shadow var(--trans); }
+.ts-swatch:hover { transform:scale(1.12); }
+.ts-swatch:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ts-swatch.active { border-color:var(--txt); box-shadow:0 0 0 2px var(--surface), 0 0 0 3.5px var(--txt); }
+.ts-swatch::after { content:""; position:absolute; inset:0; }
+.ts-emerald::after { background:linear-gradient(135deg,#0d8a72 50%, #073b31 50%); }
+.ts-ocean::after   { background:linear-gradient(135deg,#2563eb 50%, #0a1020 50%); }
+.ts-amber::after   { background:linear-gradient(135deg,#e09b3d 50%, #241c14 50%); }
+.ts-swatch[aria-checked], .ts-swatch[data-active="true"] {}
+html:not([data-mode]) .ts-emerald,
+html[data-mode="light"] .ts-emerald.active {}
+.ts-mode { display:inline-flex; align-items:center; gap:6px;
+  min-height:26px; padding:0 12px; border-radius:999px;
+  border:1px solid var(--border); background:var(--surface-2);
+  color:var(--dim); font-size:11.5px; font-weight:700; font-family:inherit; cursor:pointer;
+  transition:color var(--trans), border-color var(--trans), background var(--trans); }
+.ts-mode:hover { color:var(--accent-h); border-color:var(--accent-line); background:var(--accent-soft); }
+.ts-mode:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ts-mode-icon { font-size:13px; line-height:1; }
+/* login gate gets a floating switcher too */
+.auth-theme-float { position:fixed; top:18px; left:18px; z-index:1001; }
+@media (max-width:900px){
+  .theme-switcher { margin-top:8px; }
+}
+
+/* ── Platform usage chips (داده‌ها و لینک‌ها) ────────────────── */
+.pf-chip { display:inline-flex; align-items:center; gap:5px;
+  padding:2px 9px; border-radius:999px; font-size:10.5px; font-weight:700;
+  border:1px solid var(--border); background:var(--surface-2); color:var(--dim);
+  white-space:nowrap; line-height:1.6; }
+.pf-dot { width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; }
+.pf-tg   .pf-dot { background:#229ED9; }
+.pf-wa   .pf-dot { background:#25D366; }
+.pf-bale .pf-dot { background:#00A886; }
+.pf-tg:hover, .pf-wa:hover, .pf-bale:hover { border-color:var(--accent-line); color:var(--txt); }
+
+/* source pills keep semantic colors readable in dark mode */
+.pill-ok, .pill-warn, .pill-bad, .pill-dim { border-radius:999px; }
+
+/* ── Template tag chips ──────────────────────────────────────── */
+.tpl-tag { display:inline-flex; align-items:center; gap:4px;
+  padding:4px 11px; border-radius:999px; font-size:11.5px; font-weight:600;
+  font-family:Consolas,Menlo,monospace; direction:ltr;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--dim); cursor:pointer; min-height:28px;
+  transition:border-color var(--trans), color var(--trans), background var(--trans); }
+.tpl-tag:hover { border-color:var(--accent); color:var(--accent-h); background:var(--accent-soft); }
+.tpl-tag:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.tpl-tag-editable { border-style:dashed; }
+.tpl-tag-editable:hover { border-color:var(--gold); color:var(--gold); }
 </style>
 </head>
 <body>
@@ -406,7 +572,6 @@ button + button { margin-inline-start:10px; }
         <div class="nav-item tg-item" data-panel="channels">📂 کانال‌ها</div>
         <div class="nav-item tg-item" data-panel="preview">📝 پیش‌نمایش و ارسال</div>
         <div class="nav-item tg-item" data-panel="polls">🗳 نظرسنجی‌ها</div>
-        <div class="nav-item tg-item" data-panel="data">🔗 داده‌ها و لینک‌ها</div>
         <div class="nav-item tg-item" data-panel="custom_data">📝 داده‌های سفارشی</div>
         <div class="nav-item tg-item" data-panel="bot">🤖 ربات</div>
       </div>
@@ -424,6 +589,7 @@ button + button { margin-inline-start:10px; }
       </div>
       <div class="nav-group" id="sys_group">
         <div class="nav-group-title">⚙️ سامانه</div>
+        <div class="nav-item sys-item" data-panel="data">🔗 داده‌ها و لینک‌ها</div>
         <div class="nav-item sys-item" data-panel="ai">🧠 هوش مصنوعی</div>
         <div class="nav-item sys-item" data-panel="functions">⚙️ وظایف</div>
         <div class="nav-item sys-item" data-panel="settings">تنظیمات سامانه</div>
@@ -445,6 +611,18 @@ button + button { margin-inline-start:10px; }
           </div>
         </div>
         <div class="platform-menu" id="platform_menu"></div>
+        <div class="theme-switcher" id="theme_switcher" role="group" aria-label="پوسته و حالت نمایش">
+          <div class="ts-themes" role="radiogroup" aria-label="انتخاب پوسته رنگی">
+            <button type="button" class="ts-swatch ts-emerald" data-set-theme="emerald" title="زمرد" aria-label="پوسته زمرد"></button>
+            <button type="button" class="ts-swatch ts-ocean"   data-set-theme="ocean"   title="اقیانوس" aria-label="پوسته اقیانوس"></button>
+            <button type="button" class="ts-swatch ts-amber"   data-set-theme="amber"   title="کهربا" aria-label="پوسته کهربا"></button>
+          </div>
+          <button type="button" class="ts-mode" id="ts_mode_btn" aria-label="تغییر حالت روشن و تیره">
+            <span class="ts-mode-icon" id="ts_mode_icon" aria-hidden="true">🌙</span>
+            <span id="ts_mode_label">تیره</span>
+          </button>
+        </div>
+
       </div>
 
       <div id="banner" class="banner"></div>
@@ -543,12 +721,91 @@ button + button { margin-inline-start:10px; }
         <div style="margin-top:10px">
           <label>قالب (خالی = پیش‌فرض)</label>
           <textarea id="tpl_text" rows="7" style="width:100%;font-family:monospace;direction:ltr;text-align:left" oninput="onTemplateChanged()" placeholder=""></textarea>
-          <div class="muted" style="margin-top:4px;font-size:11.5px">متغیرها: <code>{icon}</code> <code>{header}</code> <code>{weekday}</code> <code>{time}</code> <code>{sep}</code> <code>{gname}</code> <code>{star}</code> <code>{rows}</code> <code>{news}</code> <code>{footer}</code> — خط‌های خالی حذف می‌شوند</div>
-          <div class="muted" style="margin-top:2px;font-size:11.5px">پیش‌فرض: <code>{icon} {header} | {weekday} {time}\n{sep}\n{star}\n{gname}\n{rows}\n{sep}\n{news}\n{footer}</code></div>
+        <div style="margin-top:8px">
+          <div class="muted" style="font-size:11.5px;margin-bottom:6px">برای درج، روی متغیر کلیک کن — خط‌های خالی حذف می‌شوند:</div>
+          <div class="row" style="gap:6px" id="tpl_tags">
+            <button type="button" class="tpl-tag" data-tag="{icon}" title="آیکون کانال">{icon} آیکون</button>
+            <button type="button" class="tpl-tag" data-tag="{header}" title="سربرگ کانال (از کارت کانال)">{header} سربرگ</button>
+            <button type="button" class="tpl-tag" data-tag="{weekday}" title="روز هفته فارسی">{weekday} روز</button>
+            <button type="button" class="tpl-tag" data-tag="{time}" title="ساعت ارسال">{time} ساعت</button>
+            <button type="button" class="tpl-tag" data-tag="{sep}" title="خط جداکننده ۶۶ تایی">{sep} جداکننده</button>
+            <button type="button" class="tpl-tag" data-tag="{star}" title="بیشترین نوسانات روز">{star} نوسان</button>
+            <button type="button" class="tpl-tag" data-tag="{gname}" title="نام گروه قیمت‌ها">{gname} گروه</button>
+            <button type="button" class="tpl-tag" data-tag="{rows}" title="ردیف‌های قیمت">{rows} ردیف‌ها</button>
+            <button type="button" class="tpl-tag" data-tag="{news}" title="لینک خبر تحلیل tgju">{news} خبر</button>
+            <button type="button" class="tpl-tag tpl-tag-editable" data-tag="{footer}" id="tpl_tag_footer" title="متن پاورقی — مقدارش را همین‌جا ویرایش کن">✏️ {footer} پاورقی</button>
+          </div>
+          <!-- inline footer editor opens right under the tag -->
+          <div id="tpl_footer_editor" class="card" style="display:none;margin-top:10px;background:var(--surface-2)">
+            <label>متن {footer} برای این کانال</label>
+            <input id="tpl_footer_value" placeholder="مثلاً: به‌روزرسانی هر ۱۰ دقیقه | منبع: tgju.org">
+            <div class="check-row">
+              <label><input type="checkbox" id="tpl_footer_enabled"> نمایش پاورقی ({footer} فعال باشد)</label>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="primary small" onclick="saveFooterValue()">💾 ذخیره پاورقی</button>
+              <button class="small" onclick="$('tpl_footer_editor').style.display='none'">بستن</button>
+            </div>
+            <div id="tpl_footer_result" class="muted" style="margin-top:6px"></div>
+          </div>
+          <details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:11.5px">قالب پیش‌فرض</summary>
+            <pre style="font-size:11px;margin-top:6px">{icon} {header} | {weekday} {time}
+{sep}
+{star}
+{gname}
+{rows}
+{sep}
+{news}
+{footer}</pre>
+          </details>
+        </div>
         </div>
         <div id="tpl_meta" class="muted" style="margin-top:8px"></div>
         <div id="tpl_box" class="preview-box" style="margin-top:8px;display:none"><pre id="tpl_text_preview"></pre></div>
         <div id="tpl_result" style="margin-top:8px"></div>
+      </div>
+
+      <!-- ── Tag style editor (per-tag templates) ── -->
+      <div class="card" style="margin-top:14px">
+        <div class="flex-between">
+          <h3 style="margin:0">🎨 استایل تگ‌ها — شکل خودِ متغیرها</h3>
+          <div class="row">
+            <button class="small" onclick="loadStyleEditor()">↻</button>
+            <button class="small primary" onclick="saveStyleEditor()">💾 ذخیره استایل</button>
+          </div>
+        </div>
+        <div class="sub" style="margin-top:6px">هر تگ الگوی مخصوص خودش را دارد و می‌توانی متنش را عوض کنی. خالی بگذاری = پیش‌فرض. متغیرها داخل هر الگو:</div>
+        <div class="row" style="margin:8px 0 4px">
+          <select id="style_chan" onchange="loadStyleEditor()" style="max-width:220px;width:auto"></select>
+        </div>
+        <div class="form-grid" style="margin-top:10px">
+          <div style="grid-column:1/-1">
+            <label>شکل هر ردیف قیمت — متغیرها: {name} {link_name} {url} {price} {unit} {arrow} {pct} {change}</label>
+            <input id="st_rows" dir="ltr" style="text-align:left;font-family:monospace;font-size:12px">
+          </div>
+          <div>
+            <label>فرمت روز هفته — متغیر: {weekday}</label>
+            <input id="st_weekday" dir="ltr" style="font-family:monospace">
+          </div>
+          <div>
+            <label>فرمت ساعت — متغیر: {time}</label>
+            <input id="st_time" dir="ltr" style="font-family:monospace">
+          </div>
+          <div>
+            <label>جداکننده ({sep})</label>
+            <input id="st_sep" dir="ltr" style="font-family:monospace;font-size:11px">
+          </div>
+          <div style="grid-column:1/-1">
+            <label>بلوک بیشترین نوسانات — متغیرها: {star_name} {star_pct} {star_arrow} (خالی = حذف)</label>
+            <textarea id="st_star" rows="3" dir="ltr" style="text-align:left;font-family:monospace;font-size:12px"></textarea>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;align-items:flex-end">
+          <button class="small" onclick="stylePreview()">👁 پیش‌نمایش زنده با این استایل</button>
+          <button class="small warning" onclick="resetStyle()">↺ بازگشت به پیش‌فرض</button>
+        </div>
+        <div id="style_preview_box" class="preview-box" style="display:none;margin-top:8px"><pre id="style_preview"></pre></div>
+        <div id="style_result" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -603,14 +860,29 @@ button + button { margin-inline-start:10px; }
     <!-- ── داده‌ها و لینک‌ها ── -->
     <div id="panel_data" class="panel">
       <h1>🔗 داده‌ها و لینک‌ها</h1>
-      <div class="sub">مدیریت دستی اسلاگ‌ها: اصلاح لینک پروفایل، قیمت دستی و نام نمایشی برای اسلاگ‌هایی که tgju.org خالی یا اشتباه می‌فرستد.</div>
-      <div class="row" style="margin:12px 0">
+      <div class="sub">فهرست کامل اسلاگ‌های tgju.org — یک منبع واحد برای همه پلتفرم‌ها (تلگرام، واتساپ، بله). اصلاح لینک پروفایل، قیمت دستی یا نام نمایشی اینجا روی <b>همه</b> پلتفرم‌ها اعمال می‌شود.</div>
+      <div class="row" style="margin:12px 0;gap:8px">
         <button onclick="loadSlugData()">🔄 به‌روزرسانی</button>
+        <input id="slug_search" placeholder="جستجو: نام یا اسلاگ…" style="max-width:260px" oninput="renderSlugTable()">
+        <select id="slug_filter_source" onchange="renderSlugTable()" style="max-width:200px;width:auto">
+          <option value="">همه منابع</option>
+          <option value="homepage">صفحه اصلی</option>
+          <option value="profile">بک‌فیل پروفایل</option>
+          <option value="manual">قیمت دستی</option>
+          <option value="missing">بدون قیمت</option>
+        </select>
+        <select id="slug_filter_platform" onchange="renderSlugTable()" style="max-width:190px;width:auto">
+          <option value="">همه پلتفرم‌ها</option>
+          <option value="telegram">تلگرام</option>
+          <option value="whatsapp">واتساپ</option>
+          <option value="bale">بله</option>
+          <option value="_unused">بدون استفاده (کل tgju)</option>
+        </select>
         <span class="muted" id="slug_summary"></span>
       </div>
       <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>اسلاگ</th><th>نام</th><th>کانال‌ها</th><th>قیمت صفحه اصلی</th><th>واحد</th><th>لینک پروفایل</th><th>دستی</th><th></th></tr></thead>
+        <thead><tr><th>اسلاگ</th><th>نام</th><th>پلتفرم‌ها</th><th>قیمت فعلی</th><th>منبع</th><th>واحد</th><th>لینک پروفایل</th><th></th></tr></thead>
         <tbody id="slugs_table"></tbody>
       </table>
       </div>
@@ -675,13 +947,21 @@ button + button { margin-inline-start:10px; }
           </div>
 
           <h2>🤖 جاب‌ها (وظایف هوش مصنوعی)</h2>
+          <div class="row" style="margin-bottom:10px">
+            <input id="ai_job_search" placeholder="فیلتر جاب‌ها…" style="max-width:220px;width:auto" oninput="filterAiJobs()">
+          </div>
           <div id="ai_jobs"></div>
 
           <h2>📡 فعالیت‌های زنده</h2>
           <div class="card">
-            <div id="ai_activity" class="muted">—</div>
+            <div id="ai_activity" style="max-height:340px;overflow:auto">—</div>
             <div class="row" style="margin-top:10px">
               <button class="small" onclick="loadAiOrchestrator()">🔄 به‌روزرسانی</button>
+              <select id="ai_act_limit" onchange="renderAiActivity()" style="width:auto;max-width:150px">
+                <option value="10">۱۰ مورد آخر</option>
+                <option value="25" selected>۲۵ مورد آخر</option>
+                <option value="50">۵۰ مورد آخر</option>
+              </select>
             </div>
           </div>
 
@@ -895,22 +1175,41 @@ button + button { margin-inline-start:10px; }
       <div id="bot_list"></div>
     </div>
 
-    <!-- ── فعالیت‌ها ── -->
+    <!-- ── فعالیت‌ها (unified cross-platform feed) ── -->
     <div id="panel_activity" class="panel">
       <h1>📋 فعالیت‌ها</h1>
-      <div class="row" style="margin:12px 0">
-        <button class="small" onclick="loadRuns()">🔄 به‌روزرسانی</button>
-        <span class="muted">اجراها، نظرسنجی‌ها و سلامت سیستم</span>
+      <div class="sub">جریان زندهٔ همه پلتفرم‌ها: تلگرام، واتساپ، بله، هوش مصنوعی و تغییرات تنظیمات — جدیدترین در بالا.</div>
+      <div class="row" style="margin:12px 0;gap:8px">
+        <button class="small" onclick="loadActivity(true)">🔄 به‌روزرسانی</button>
+        <input id="act_search" placeholder="جستجو در فعالیت‌ها…" style="max-width:220px;width:auto" oninput="renderActivity()">
+        <select id="act_filter" onchange="renderActivity()" style="max-width:210px;width:auto">
+          <option value="">همه دسته‌ها</option>
+          <option value="telegram">✈️ تلگرام</option>
+          <option value="whatsapp">💬 واتساپ</option>
+          <option value="bale">🟢 بله</option>
+          <option value="config">⚙️ تنظیمات</option>
+          <option value="data">🌐 داده tgju</option>
+          <option value="error">❌ خطاها</option>
+          <option value="skip">⏭ رد شده‌ها</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--dim);cursor:pointer">
+          <input type="checkbox" id="act_live" checked style="accent-color:var(--accent);width:auto"> زنده (هر ۱۵ ثانیه)
+        </label>
+        <span class="muted" id="act_summary"></span>
       </div>
-      <h2>🏃 اجراهای اخیر</h2>
-      <div style="overflow-x:auto"><table>
-        <thead><tr><th>Run ID</th><th>کانال</th><th>ترigger</th><th>وضعیت</th><th>مدت</th><th></th></tr></thead>
-        <tbody id="runs_table"></tbody>
-      </table></div>
-      <h2>🩺 سلامت</h2>
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))" id="health_cards"></div>
-      <h2>⚡ رویدادهای اخیر</h2>
-      <div id="events_list" style="max-height:300px;overflow:auto"></div>
+
+      <div id="activity_feed" style="max-height:520px;overflow:auto"></div>
+
+      <details style="margin-top:18px">
+        <summary style="cursor:pointer;font-weight:700;color:var(--dim);font-size:13px">🩺 سلامت سیستم و اجراهای کامل (پیشرفته)</summary>
+        <h2>🩺 سلامت</h2>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))" id="health_cards"></div>
+        <h2>🏃 اجراهای اخیر (core)</h2>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Run ID</th><th>کانال</th><th>Trigger</th><th>وضعیت</th><th>مدت</th><th></th></tr></thead>
+          <tbody id="runs_table"></tbody>
+        </table></div>
+      </details>
     </div>
 
   <!-- ── واتساپ: اتصال ── -->
@@ -1349,7 +1648,7 @@ function refresh(){
   if(p==='panel_functions') loadFunctions();
   if(p==='panel_settings') loadSettings();
   if(p==='panel_bot') loadBot();
-  if(p==='panel_activity') { loadRuns(); loadHealth(); loadEvents(); }
+  if(p==='panel_activity'){ loadActivity(); loadRuns(); loadHealth(); actLiveToggle(); }
   if(p.startsWith('panel_wa_')) loadWaHome();
   if(p.startsWith('panel_bale_')) loadBaleHome();
 }
@@ -1648,27 +1947,54 @@ async function sendPollNow(){
   else $('poll_result').innerHTML=`<span class="err">❌ ${esc(r.error||'خطا')}</span>`;
 }
 
-// ── Slug data & overrides ──
+// ── Slug data & overrides (full tgju.org inventory, cross-platform) ──
 let SLUG_ROWS = [];
 async function loadSlugData(){
-  try{ const d = await jget('/api/slugs'); SLUG_ROWS = d.slugs||[]; }
+  try{ const d = await jget('/api/slugs?scope=all'); SLUG_ROWS = d.slugs||[]; }
   catch(e){ SLUG_ROWS=[]; }
+  renderSlugTable();
+}
+const SOURCE_PILL = {
+  homepage:['pill-ok','صفحه اصلی'],
+  profile:['pill-warn','پروفایل'],
+  manual:['','دستی'],
+  missing:['pill-bad','بدون قیمت']
+};
+function platformChips(u){
+  const out = [];
+  const mk = (arr,label,cls)=> arr&&arr.length ? `<span class="pf-chip ${cls}" title="${esc(label)}: ${esc(arr.join('، '))}"><span class="pf-dot"></span>${faNum(arr.length)}</span>` : '';
+  out.push(mk(u.telegram,'تلگرام','pf-tg'));
+  out.push(mk(u.whatsapp,'واتساپ','pf-wa'));
+  out.push(mk(u.bale,'بله','pf-bale'));
+  return out.join(' ') || '<span class="muted">—</span>';
+}
+function renderSlugTable(){
+  const q = ($('slug_search')?.value||'').trim().toLowerCase();
+  const fs = $('slug_filter_source')?.value||'';
+  const fp = $('slug_filter_platform')?.value||'';
+  let rows = SLUG_ROWS;
+  if(q) rows = rows.filter(s=> s.slug.toLowerCase().includes(q) || String(s.name).toLowerCase().includes(q));
+  if(fs) rows = rows.filter(s=> s.source===fs);
+  if(fp===' _unused'||fp==='_unused') rows = rows.filter(s=> !(s.platforms||[]).length);
+  else if(fp) rows = rows.filter(s=> (s.platforms||[]).includes(fp));
   const manual = SLUG_ROWS.filter(s=>s.manual).length;
-  $('slug_summary').textContent = faNum(SLUG_ROWS.length) + ' اسلاگ • ' + faNum(manual) + ' دستی';
-  $('slugs_table').innerHTML = SLUG_ROWS.map(s=>{
-      const empty = !s.homepage_price;
-      return `<tr>
-        <td class="mono">${esc(s.slug)}</td>
-        <td>${esc(s.name)} ${s.alias?`<span class="pill pill-dim">→ ${esc(s.alias)}</span>`:''}</td>
-        <td class="muted">${esc(s.channels.join('، '))}</td>
-        <td>${empty?'<span class="err">خالی</span>':faNum(s.homepage_price)}</td>
-        <td>${s.unit?`<span class="pill pill-en">${esc(s.unit)}</span>`:'<span class="muted">خودکار</span>'}</td>
-        <td class="mono" style="font-size:11px;direction:ltr;text-align:left">${esc(s.profile_url||'—')}</td>
-        <td>${s.manual?pill('enabled'):'—'}</td>
-        <td><button class="small" onclick="openSlugEditorInline('${esc(s.slug)}', this)">✏️ ویرایش</button></td>
-      </tr>
-      <tr id="editor_${esc(s.slug)}" class="slug-editor-inline" style="display:none"><td colspan="8"></td></tr>`;
-    }).join('') || '<tr><td colspan="8" class="muted">—</td></tr>';
+  const withPrice = SLUG_ROWS.filter(s=>s.price).length;
+  $('slug_summary').textContent = faNum(SLUG_ROWS.length)+' اسلاگ از tgju.org • '+faNum(withPrice)+' دارای قیمت • '+faNum(manual)+' دستی • نمایش '+faNum(rows.length);
+  $('slugs_table').innerHTML = rows.map(s=>{
+    const [pillCls,pillTxt] = SOURCE_PILL[s.source]||SOURCE_PILL.missing;
+    const unit = s.unit || s.unit_auto || '';
+    return `<tr>
+      <td class="mono">${esc(s.slug)}</td>
+      <td>${esc(s.name)} ${s.alias?`<span class="pill pill-dim">→ ${esc(s.alias)}</span>`:''}</td>
+      <td>${platformChips(s.usage||{})}</td>
+      <td>${s.price?`<b>${faNum(s.price)}</b>`:'<span class="err">—</span>'}</td>
+      <td><span class="pill ${pillCls}">${pillTxt}</span></td>
+      <td>${unit?`<span class="pill pill-dim">${esc(unit)}</span>`:'<span class="muted">خودکار</span>'}</td>
+      <td class="mono" style="font-size:11px;direction:ltr;text-align:left">${esc(s.profile_url||'—')}</td>
+      <td><button class="small" onclick="openSlugEditorInline('${esc(s.slug)}', this)">✏️ ویرایش</button></td>
+    </tr>
+    <tr id="editor_${esc(s.slug)}" class="slug-editor-inline" style="display:none"><td colspan="8"></td></tr>`;
+    }).join('') || '<tr><td colspan="8" class="muted">— موردی یافت نشد</td></tr>';
 }
 function openSlugEditor(slug){
   const s = SLUG_ROWS.find(x=>x.slug===slug); if(!s) return;
@@ -1701,7 +2027,7 @@ function openSlugEditorInline(slug, btn){
   
   // Build the inline editor HTML
   editorRow.querySelector('td').innerHTML = `
-    <div class="card" style="margin:8px 16px;padding:16px;background:#fafafa;border:1px solid var(--line-soft)">
+    <div class="card" style="margin:8px 16px;padding:16px;background:var(--surface-2)">
       <div class="form-grid" style="margin-bottom:12px">
         <div><label>اسلاگ</label><input id="ise_slug_${slug}" value="${esc(s.slug)}" disabled></div>
         <div><label>اسلاگ جدید (تغییر کلید)</label><input id="ise_new_slug_${slug}" placeholder="مثلاً dow_jones_us"></div>
@@ -1907,9 +2233,16 @@ async function loadAiOrchestrator(){
   $('ai_jobs').innerHTML = Object.entries(jobs).map(([jid,j])=>{
     const provs = d.providers||[];
     const provOpts = `<option value="">— پیش‌فرض —</option>` + provs.map(p=>`<option value="${esc(p.name)}" ${j.provider===p.name?'selected':''}>${esc(p.label||p.name)}</option>`).join('');
-    return `<div class="card" style="margin-top:10px">
+    const chCount = (j.channels||[]).length;
+    const effSel = jid==='analysis' ? `<div><label>عمق تحلیل</label>
+      <select onchange="saveJob('${esc(jid)}',{effort:this.value})">
+        <option value="standard" ${j.effort!=='deep'?'selected':''}>استاندارد (۳–۵ جمله)</option>
+        <option value="deep" ${j.effort==='deep'?'selected':''}>عمیق (۸–۱۲ جمله)</option>
+      </select></div>` : '';
+    return `<div class="card ai-job-card" data-jid="${esc(jid)}" style="margin-top:10px" data-label="${esc(j.label+' '+jid+' '+(j.desc||'')).toLowerCase()}">
       <div class="row flex-between">
         <div><b>${esc(j.label)}</b> <span class="mono">(${esc(jid)})</span>
+          ${chCount?`<span class="pill pill-ok">${faNum(chCount)} کانال</span>`:'<span class="pill pill-dim">همه/غیرفعال</span>'}
           <div class="muted">${esc(j.desc||'')}</div></div>
         <div class="row">
           <label class="switch"><input type="checkbox" id="job_${esc(jid)}" ${j.enabled?'checked':''} onchange="saveJob('${esc(jid)}',{enabled:this.checked})"><span></span></label>
@@ -1919,8 +2252,9 @@ async function loadAiOrchestrator(){
       <div class="form-grid" style="margin-top:10px">
         <div><label>پرووایدر</label><select id="jobprov_${esc(jid)}" onchange="saveJob('${esc(jid)}',{provider:this.value}); loadModels(this.value,'jobmodel_${esc(jid)}')">${provOpts}</select></div>
         <div><label>مدل</label><select id="jobmodel_${esc(jid)}" onchange="saveJob('${esc(jid)}',{model:this.value})"><option value="">${esc(j.model||'')}</option></select></div>
-        <div><label>حداکثر توکن</label><input id="jobtok_${esc(jid)}" type="number" value="${esc(j.max_tokens||'')}" onchange="saveJob('${esc(jid)}',{max_tokens:parseInt(this.value)||500})"></div>
-        <div><label>مهلت (ثانیه)</label><input id="jobto_${esc(jid)}" type="number" value="${esc(j.timeout_s||'')}" onchange="saveJob('${esc(jid)}',{timeout_s:parseInt(this.value)||30})"></div>
+        <div><label>حداکثر توکن</label><input id="jobtok_${esc(jid)}" type="number" min="200" step="100" value="${esc(j.max_tokens||'')}" onchange="saveJob('${esc(jid)}',{max_tokens:parseInt(this.value)||500})"></div>
+        <div><label>مهلت (ثانیه)</label><input id="jobto_${esc(jid)}" type="number" min="10" value="${esc(j.timeout_s||'')}" onchange="saveJob('${esc(jid)}',{timeout_s:parseInt(this.value)||30})"></div>
+        ${effSel}
       </div>
       <div id="jobres_${esc(jid)}" style="margin-top:8px"></div>
     </div>`;
@@ -1934,17 +2268,40 @@ async function loadAiOrchestrator(){
       if(!pid) pid = firstProv;
       if(pid) loadModels(pid, 'jobmodel_'+jid, j.model||'');
     });
-  // activity feed
-  $('ai_activity').innerHTML = act.map(a=>{
+  // activity feed (stored; rendered by renderAiActivity with limit)
+  AI_ACT = act||[];
+  renderAiActivity();
+}
+let AI_ACT = [];
+function renderAiActivity(){
+  const lim = parseInt($('ai_act_limit')?.value||'25');
+  const rows = (AI_ACT||[]).slice(0, lim);
+  $('ai_activity').innerHTML = rows.map(a=>{
     const ok = a.status==='ok';
-    return `<div class="row flex-between" style="padding:6px 0;border-bottom:1px solid var(--line-soft)">
-      <div><span class="pill ${ok?'pill-ok':'pill-err'}">${ok?'✓':'✗'}</span> <b>${esc(a.job||'')}</b>
-        ${a.channel?`<span class="muted">• ${esc(a.channel)}</span>`:''}
-        <span class="muted">• ${esc(a.provider||'')} ${a.model?`(${esc(a.model)})`:''}</span></div>
-      <div class="muted">${esc(a.ts||'')} ${a.latency_ms?`• ${faNum(a.latency_ms)}ms`:''} ${a.error?`<span class="err">• ${esc(a.error)}</span>`:''}</div>
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 2px;border-bottom:1px solid var(--border-soft);font-size:12px">
+      <span class="pill ${ok?'pill-ok':'pill-bad'}" style="flex-shrink:0">${ok?'✓':'✗'}</span>
+      <div style="flex:1;line-height:1.7">
+        <b>${esc(a.job||'')}</b>
+        ${a.channel?`<span class="pill pill-dim" style="margin-inline-start:4px">${esc(a.channel)}</span>`:''}
+        <div class="muted">${esc(a.provider||'')} ${a.model?`(${esc(a.model)})`:''} • ${esc(a.ts||'')}
+          ${a.latency_ms?`• ${faNum(a.latency_ms)}ms`:''}
+          ${a.chars?`• ${faNum(a.chars)} نویسه`:''}
+          ${a.question?`<div style="margin-top:3px">«${esc(a.question)}»</div>`:''}
+          ${a.error?`<span class="err">• ${esc(a.error)}</span>`:''}
+        </div>
+      </div>
     </div>`;
   }).join('') || '<div class="muted">هنوز فعالیتی ثبت نشده</div>';
 }
+
+function filterAiJobs(){
+  const q = ($('ai_job_search')?.value||'').trim().toLowerCase();
+  document.querySelectorAll('.ai-job-card').forEach(card=>{
+    const hay = card.getAttribute('data-label')||'';
+    card.style.display = (!q || hay.includes(q)) ? '' : 'none';
+  });
+}
+
 async function saveJob(jid, body){
   const r = await jpost('/api/ai/jobs/'+encodeURIComponent(jid), body);
   if(!r.ok) showBanner('⚠️ ' + (r.error||'خطا'));
@@ -2140,6 +2497,157 @@ async function saveSettingsGroup(group){
 }
 
 // ── Activity: runs ──
+// ── Activity: unified cross-platform feed ──
+let ACTIVITY = [];
+let ACT_TIMER = null;
+const ACT_CAT = {
+  telegram:['✈️','تلگرام'], whatsapp:['💬','واتساپ'], bale:['🟢','بله'],
+  ai:['🧠','هوش مصنوعی'], config:['⚙️','تنظیمات'], data:['🌐','داده'],
+  error:['❌','خطا'], skip:['⏭','ردشده'], system:['•','سیستم'], event:['⚡','رویداد']
+};
+async function loadActivity(manual){
+  try{ const d = await jget('/api/activity?limit=200'); ACTIVITY = d.activity||[]; }
+  catch(e){ /* keep old data on transient failure */ }
+  renderActivity();
+  if(manual) showBanner('🔄 فعالیت‌ها به‌روزرسانی شد', true);
+}
+const ACT_STATUS_PILL = { failed:'pill-bad', skipped:'pill-warn', success:'pill-ok', started:'pill-warn' };
+function renderActivity(){
+  const cat = $('act_filter')?.value||'';
+  let rows = ACTIVITY;
+  if(cat) rows = rows.filter(a=>a.category===cat);
+  // search box
+  const q = ($('act_search')?.value||'').trim().toLowerCase();
+  if(q) rows = rows.filter(a=> (a.title||'').toLowerCase().includes(q) || (a.channel_id||'').toLowerCase().includes(q));
+  $('act_summary').textContent = faNum(ACTIVITY.length)+' رویداد • نمایش '+faNum(rows.length);
+  $('activity_feed').innerHTML = rows.map((a,idx)=>{
+    const [ico,label] = ACT_CAT[a.category]||['•',a.category];
+    const sp = ACT_STATUS_PILL[a.status]||'';
+    const hasDetail = a.raw || a.detail;
+    return `<div class="act-row" data-idx="${faNum(idx)}" style="border-bottom:1px solid var(--border-soft)">
+      <div onclick="${hasDetail?`toggleActDetail(${idx})`:''}" style="display:flex;align-items:flex-start;gap:10px;padding:8px 4px;font-size:12.5px;cursor:${hasDetail?'pointer':'default'}">
+        <span style="flex-shrink:0;font-size:14px" title="${esc(label)}">${a.icon||ico}</span>
+        <span class="mono" style="flex-shrink:0;color:var(--faint);font-size:11px;padding-top:2px">${esc(a.ts||'')}</span>
+        <span style="flex:1;line-height:1.7">
+          ${esc(a.title)}
+          ${a.channel_id?`<span class="pill pill-dim" style="margin-inline-start:6px">${esc(a.channel_id)}</span>`:''}
+          ${a.action && a.action!==a.title?`<span class="muted" style="margin-inline-start:6px">${esc(a.action)}</span>`:''}
+          ${a.status!=='success'?`<span class="pill ${sp}" style="margin-inline-start:6px">${a.status==='failed'?'خطا':a.status==='skipped'?'ردشده':esc(a.status)}</span>`:''}
+        </span>
+        ${hasDetail?'<span class="muted" style="flex-shrink:0">▾</span>':''}
+      </div>
+      ${hasDetail?`<div id="act_detail_${idx}" style="display:none;padding:0 28px 10px 4px">
+        <div class="card" style="padding:12px 14px;background:var(--surface-2)">
+          ${a.detail?`<div style="margin-bottom:6px"><b>جزئیات:</b> <span class="muted">${esc(a.detail)}</span></div>`:''}
+          ${a.raw?`<pre style="margin:6px 0 0;max-height:180px;font-size:11px">${esc(a.raw)}</pre>`:''}
+        </div>
+      </div>`:''}
+    </div>`;
+  }).join('') || '<div class="muted" style="padding:20px 0">— فعالیتی ثبت نشده</div>';
+}
+function toggleActDetail(idx){
+  const el = $('act_detail_'+idx);
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+function actLiveToggle(){
+  const on = $('act_live')?.checked;
+  if(ACT_TIMER){ clearInterval(ACT_TIMER); ACT_TIMER=null; }
+  if(on) ACT_TIMER = setInterval(()=>{ if($('panel_activity')?.classList.contains('active')) loadActivity(); }, 15000);
+}
+document.addEventListener('change', e=>{ if(e.target && e.target.id==='act_live') actLiveToggle(); });
+
+
+// ── Template tag chips: click to insert at cursor; {footer} opens its editor ──
+document.addEventListener('click', function(ev){
+  const tag = ev.target.closest('.tpl-tag');
+  if(!tag) return;
+  ev.preventDefault();
+  const ta = $('tpl_text');
+  if(!ta) return;
+  const tagText = tag.getAttribute('data-tag');
+  if(tagText === '{footer}' && tag.id === 'tpl_tag_footer'){
+    openFooterEditor(); return;
+  }
+  // insert at cursor position
+  const start = ta.selectionStart ?? ta.value.length;
+  const end = ta.selectionEnd ?? ta.value.length;
+  ta.value = ta.value.slice(0,start) + tagText + ta.value.slice(end);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = start + tagText.length;
+  onTemplateChanged();
+});
+let TPL_CURRENT_CHAN = '';
+function tplChanId(){ return $('tpl_chan')?.value || ''; }
+function openFooterEditor(){
+  const c = (CHANNELS||[]).find(x=>x.id===tplChanId());
+  if(!c){ showBanner('⚠️ اول کانال را انتخاب کن'); return; }
+  $('tpl_footer_value').value = c.footer || '';
+  $('tpl_footer_enabled').checked = c.with_footer !== false;
+  $('tpl_footer_result').textContent = '';
+  $('tpl_footer_editor').style.display = 'block';
+  $('tpl_footer_value').focus();
+}
+async function saveFooterValue(){
+  const cid = tplChanId();
+  if(!cid) return;
+  const body = { footer: $('tpl_footer_value').value, with_footer: $('tpl_footer_enabled').checked };
+  const r = await jput('/api/channels/'+encodeURIComponent(cid), body);
+  if(r.ok){
+    $('tpl_footer_result').innerHTML = '<span class="ok">✓ پاورقی ذخیره شد — در پست بعدی اعمال می‌شود</span>';
+    await loadChannelsData();
+    showBanner('✅ مقدار {footer} کانال ذخیره شد', true);
+  } else {
+    $('tpl_footer_result').innerHTML = '<span class="err">✗ ' + esc(r.error||'خطا') + '</span>';
+  }
+}
+
+
+// ── Tag style editor ──
+const STYLE_FIELDS = ['rows','weekday','time','sep','star'];
+async function loadStyleEditor(){
+  const cid = $('style_chan')?.value || tplChanId();
+  // populate channel dropdown once
+  const sel = $('style_chan');
+  if(sel && !sel.options.length){
+    (CHANNELS||[]).forEach(c=>{
+      const o=document.createElement('option'); o.value=c.id; o.textContent=(c.icon||'')+' '+(c.name||c.id);
+      sel.appendChild(o);
+    });
+  }
+  const target = sel?.value || cid;
+  if(!target) return;
+  try{
+    const d = await jget('/api/channels/'+encodeURIComponent(target)+'/style');
+    STYLE_FIELDS.forEach(k=>{ const el=$('st_'+k); if(el) el.value=d.style[k]||''; });
+  }catch(e){}
+}
+async function saveStyleEditor(){
+  const cid = $('style_chan')?.value || tplChanId();
+  if(!cid){ showBanner('⚠️ کانال را انتخاب کن'); return; }
+  const body={};
+  STYLE_FIELDS.forEach(k=>{ const el=$('st_'+k); if(el) body[k]=el.value.trim(); });
+  const r = await jput('/api/channels/'+encodeURIComponent(cid)+'/style', body);
+  const res = $('style_result');
+  if(r.ok){
+    res.innerHTML='<span class="ok">✓ استایل ذخیره شد — از پست بعدی اعمال می‌شود</span>';
+    showBanner('✅ استایل تگ‌های '+cid+' ذخیره شد', true);
+  } else {
+    res.innerHTML='<span class="err">✗ '+esc(r.error||'خطا')+'</span>';
+  }
+}
+async function resetStyle(){
+  const cid = $('style_chan')?.value || tplChanId();
+  if(!cid) return;
+  if(!confirm('همه استایل‌های این کانال به پیش‌فرض برگردد؟')) return;
+  const r = await jput('/api/channels/'+encodeURIComponent(cid)+'/style', {rows:'',weekday:'',time:'',sep:'',star:''});
+  if(r.ok){ showBanner('↺ استایل به پیش‌فرض برگشت', true); loadStyleEditor(); }
+}
+async function stylePreview(){
+  const d = await jget('/api/preview/'+encodeURIComponent($('style_chan').value||'ch1')+'?type=prices&template='+encodeURIComponent($('tpl_text')?.value||''));
+  $('style_preview_box').style.display='block';
+  $('style_preview').textContent = d.error ? ('خطا: '+d.error) : (d.preview||'—');
+}
+
 async function loadRuns(){
   const d = await jget('/api/runs');
   $('runs_table').innerHTML = (d.runs||[]).slice(0,30).map(r=>`
@@ -2621,6 +3129,46 @@ async function balePost(){
     }else $('bale_pv_result').textContent = '❌ '+(r.error||'خطا');
   }catch(e){ $('bale_pv_result').textContent = '❌ '+e; }
 }
+
+
+// ── Theme engine (multi-skin + dark/light) ──
+const THEMES = ['emerald','ocean','amber'];
+function applyTheme(theme, mode){
+  if(!THEMES.includes(theme)) theme = 'emerald';
+  if(mode !== 'dark' && mode !== 'light') mode = 'light';
+  const root = document.documentElement;
+  root.setAttribute('data-theme', theme);
+  root.setAttribute('data-mode', mode);
+  try{ localStorage.setItem('tgju_theme', theme); localStorage.setItem('tgju_mode', mode); }catch(e){}
+  // swatch active state
+  document.querySelectorAll('.ts-swatch').forEach(b=>{
+    const on = b.getAttribute('data-set-theme') === theme;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  // mode button label
+  const lbl = $('ts_mode_label'), ico = $('ts_mode_icon');
+  if(lbl) lbl.textContent = mode === 'dark' ? 'روشن' : 'تیره';
+  if(ico) ico.textContent = mode === 'dark' ? '☀️' : '🌙';
+}
+(function themeBoot(){
+  let t='emerald', m='light';
+  try{
+    t = localStorage.getItem('tgju_theme') || 'emerald';
+    m = localStorage.getItem('tgju_mode') || 'light';
+  }catch(e){}
+  // respect OS preference on first visit only
+  if(!localStorage.getItem('tgju_theme') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){ m='dark'; }
+  applyTheme(t, m);
+})();
+document.addEventListener('click', function(ev){
+  const sw = ev.target.closest('[data-set-theme]');
+  if(sw){ applyTheme(sw.getAttribute('data-set-theme'), document.documentElement.getAttribute('data-mode')); return; }
+  if(ev.target.closest('#ts_mode_btn')){
+    const cur = document.documentElement.getAttribute('data-mode');
+    applyTheme(document.documentElement.getAttribute('data-theme'), cur==='dark'?'light':'dark');
+  }
+});
 
 // ── Init ──
 function bootDashboard(){
