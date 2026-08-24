@@ -705,4 +705,14 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   button (confirm → DELETE /api/channels/{cid} → reload), matching the
   Bale/Rubika/Eitaa cards. E2E: create temp channel → exists → delete →
   gone. 70/70 tests pass.
+- **2026-08-24 (15)** — Fixed missing profile hyperlinks in Telegram posts.
+  ROOT CAUSE: `slug_profile()` in tgju_engine_format.py had lost its final
+  `return "profile/" + alias` statement (file truncated), so every
+  non-crypto slug returned None → render_row_line built plain names with no
+  `<a href>`. Restored the return; also fixed the crypto URL pattern to
+  `/crypto/currency/{name}` (the old `/profile/crypto/...` 404s). Verified:
+  sample message renders `▸ <a href="...">دلار</a> : [ ... ]` rows; 12
+  sampled links across ارز/طلا/سکه/کریپتو/نفت/شاخص all HTTP 200 on
+  tgju.org; all 233 known slugs produce a profile path (zero without).
+  Committed separately so the user's runtime telegram_id stays out of git.
 
