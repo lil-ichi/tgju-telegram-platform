@@ -581,6 +581,18 @@ html[data-mode="light"] .ts-emerald.active {}
         <div class="nav-item bale-item" data-panel="bale_preview">📝 پیش‌نمایش و ارسال</div>
         <div class="nav-item bale-item" data-panel="bale_conn">🤖 ربات</div>
       </div>
+      <div class="nav-group" id="rubika_group" style="display:none">
+        <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="#8e44ad" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6a6 6 0 100 12 6 6 0 000-12zm0 2a4 4 0 110 8 4 4 0 010-8z" fill="#fff"/></svg></span> روبیکا</div>
+        <div class="nav-item rb-item" data-panel="rub_channels">📂 کانال‌ها</div>
+        <div class="nav-item rb-item" data-panel="rub_preview">📝 پیش‌نمایش و ارسال</div>
+        <div class="nav-item rb-item" data-panel="rub_conn">🤖 ربات</div>
+      </div>
+      <div class="nav-group" id="eitaa_group" style="display:none">
+        <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="#f39c12" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4z"/></svg></span> ایتا</div>
+        <div class="nav-item et-item" data-panel="eit_channels">📂 کانال‌ها</div>
+        <div class="nav-item et-item" data-panel="eit_preview">📝 پیش‌نمایش و ارسال</div>
+        <div class="nav-item et-item" data-panel="eit_conn">🤖 ربات</div>
+      </div>
       <div class="nav-group" id="wa_group" style="display:none">
         <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></span> واتساپ</div>
         <div class="nav-item wa-item" data-panel="wa_conn">🤖 اتصال و ربات</div>
@@ -1393,6 +1405,190 @@ html[data-mode="light"] .ts-emerald.active {}
         </div>
       </div>
 
+      <div id="panel_rub_channels" class="panel">
+        <div class="flex-between">
+          <h1>🟣 کانال‌های روبیکا</h1>
+          <div class="row"><button onclick="loadRubHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">یک بات به کانال‌ها متصل می‌شود و پست‌ها از همان منبع tgju.org ساخته می‌شوند</div>
+        <div class="wa-grid">
+          <div class="wa-card">
+            <h3>📡 کانال‌های روبیکا</h3>
+            <div class="muted" style="font-size:11.5px;margin-bottom:8px">ربات باید ادمین کانال باشد. شناسه کانال (chat_id) مثلاً <code dir="ltr">@channel</code> یا عددی.</div>
+            <table class="wa-table">
+              <thead><tr><th>نام</th><th>شناسه</th><th>وضعیت</th><th>زمان‌بندی</th><th>آخرین ارسال</th><th>خطا</th><th></th></tr></thead>
+              <tbody id="rub_channels_table"></tbody>
+            </table>
+            <div class="row" style="margin-top:10px">
+              <button onclick="rubNewChannel()">➕ کانال جدید</button>
+            </div>
+          </div>
+        </div>
+        <div id="bale_form" style="display:none;margin-top:16px">
+          <h2 id="rub_form_title">کانال روبیکا جدید</h2>
+          <div class="form-grid">
+            <div><label>نام</label><input id="rub_f_name"></div>
+            <div><label>شناسه کانال (chat_id)</label><input id="rub_f_id" placeholder="@channel"></div>
+            <div><label>آیکون</label><input id="rub_f_icon" value="🟣"></div>
+            <div><label>زمان‌بندی (دقیقه)</label><input id="rub_f_sched" type="number" value="30"></div>
+            <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label><input id="rub_f_slugs" placeholder="price_dollar_rl, price_eur, crypto-tether"></div>
+            <div style="grid-column:1/-1"><label>نوع پست (با ویرگول؛ prices, news, poll, analysis)</label><input id="rub_f_types" value="prices"></div>
+          </div>
+          <div class="check-row">
+            <label><input type="checkbox" id="rub_f_enabled" checked> فعال</label>
+          </div>
+          <div class="row" style="margin-top:18px">
+            <button class="primary" onclick="rubSaveChannel()">💾 ذخیره</button>
+            <button onclick="rubCloseForm()">انصراف</button>
+          </div>
+        </div>
+      </div>
+
+<!-- ── بله: پیش‌نمایش و ارسال ── -->
+      <div id="panel_rub_preview" class="panel">
+        <div class="flex-between">
+          <h1>📝 پیش‌نمایش و ارسال روبیکا</h1>
+          <div class="row"><button onclick="loadRubHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">ساخت و ارسال پست به کانال‌های روبیکا — قیمت، خبر یا تحلیل</div>
+        <div class="card">
+          <div class="row form-row">
+            <div style="min-width:180px;flex:1"><label>کانال</label><select id="rub_pv_chan"></select></div>
+            <div style="min-width:160px"><label>نوع پست</label>
+              <select id="rub_pv_type">
+                <option value="prices">📊 جدول قیمت</option>
+                <option value="news">📰 خبر</option>
+                <option value="analysis">📈 تحلیل</option>
+                <option value="poll">🗳 نظرسنجی</option>
+              </select>
+            </div>
+            <div class="btn-group">
+              <button onclick="rubPreview()">👁 پیش‌نمایش</button>
+              <button class="primary" onclick="rubPost()">📤 ارسال</button>
+            </div>
+          </div>
+          <div id="rub_pv_box" class="preview-box" style="margin-top:12px;display:none"><pre id="rub_pv_text"></pre></div>
+          <div id="rub_pv_result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+<!-- ── بله: ربات ── -->
+      <div id="panel_rub_conn" class="panel">
+        <div class="flex-between">
+          <h1>🤖 ربات روبیکا</h1>
+          <div class="row"><button onclick="loadRubHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">اتصال روبیکا: توکن + ارسال خودکار</div>
+        <div class="wa-grid">
+          <div class="wa-card">
+            <h3>🔑 اتصال روبیکا</h3>
+            <div class="wa-field"><label>توکن روبیکا (از BotFather@ روبیکا)</label><input id="rub_token" type="password" placeholder="123456789:AA..."></div>
+            <div class="check-row" style="margin-top:6px">
+              <label><input type="checkbox" id="rub_auto_post"> ارسال خودکار (مانند زمان‌بندی تلگرام)</label>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <button class="primary" onclick="rubSaveSettings()">💾 ذخیره</button>
+              <button onclick="rubTest()">🔌 تست اتصال</button>
+            </div>
+            <div id="rub_conn_result" class="wa-status-line"></div>
+            <div class="wa-status-line" id="rub_mode_line"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="panel_eit_channels" class="panel">
+        <div class="flex-between">
+          <h1>🟠 کانال‌های ایتا</h1>
+          <div class="row"><button onclick="loadEitHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">یک بات به کانال‌ها متصل می‌شود و پست‌ها از همان منبع tgju.org ساخته می‌شوند</div>
+        <div class="wa-grid">
+          <div class="wa-card">
+            <h3>📡 کانال‌های ایتا</h3>
+            <div class="muted" style="font-size:11.5px;margin-bottom:8px">ربات باید ادمین کانال باشد. آیدی کانال ایتا (@username یا عددی) مثلاً <code dir="ltr">@channel</code> یا عددی.</div>
+            <table class="wa-table">
+              <thead><tr><th>نام</th><th>شناسه</th><th>وضعیت</th><th>زمان‌بندی</th><th>آخرین ارسال</th><th>خطا</th><th></th></tr></thead>
+              <tbody id="eit_channels_table"></tbody>
+            </table>
+            <div class="row" style="margin-top:10px">
+              <button onclick="eitNewChannel()">➕ کانال جدید</button>
+            </div>
+          </div>
+        </div>
+        <div id="bale_form" style="display:none;margin-top:16px">
+          <h2 id="eit_form_title">کانال ایتا جدید</h2>
+          <div class="form-grid">
+            <div><label>نام</label><input id="eit_f_name"></div>
+            <div><label>آیدی کانال ایتا (@username یا عددی)</label><input id="eit_f_id" placeholder="@channel"></div>
+            <div><label>آیکون</label><input id="eit_f_icon" value="🟠"></div>
+            <div><label>زمان‌بندی (دقیقه)</label><input id="eit_f_sched" type="number" value="30"></div>
+            <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label><input id="eit_f_slugs" placeholder="price_dollar_rl, price_eur, crypto-tether"></div>
+            <div style="grid-column:1/-1"><label>نوع پست (با ویرگول؛ prices, news, poll, analysis)</label><input id="eit_f_types" value="prices"></div>
+          </div>
+          <div class="check-row">
+            <label><input type="checkbox" id="eit_f_enabled" checked> فعال</label>
+          </div>
+          <div class="row" style="margin-top:18px">
+            <button class="primary" onclick="eitSaveChannel()">💾 ذخیره</button>
+            <button onclick="eitCloseForm()">انصراف</button>
+          </div>
+        </div>
+      </div>
+
+<!-- ── بله: پیش‌نمایش و ارسال ── -->
+      <div id="panel_eit_preview" class="panel">
+        <div class="flex-between">
+          <h1>📝 پیش‌نمایش و ارسال ایتا</h1>
+          <div class="row"><button onclick="loadEitHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">ساخت و ارسال پست به کانال‌های ایتا — قیمت، خبر یا تحلیل</div>
+        <div class="card">
+          <div class="row form-row">
+            <div style="min-width:180px;flex:1"><label>کانال</label><select id="eit_pv_chan"></select></div>
+            <div style="min-width:160px"><label>نوع پست</label>
+              <select id="eit_pv_type">
+                <option value="prices">📊 جدول قیمت</option>
+                <option value="news">📰 خبر</option>
+                <option value="analysis">📈 تحلیل</option>
+                <option value="poll">🗳 نظرسنجی</option>
+              </select>
+            </div>
+            <div class="btn-group">
+              <button onclick="eitPreview()">👁 پیش‌نمایش</button>
+              <button class="primary" onclick="eitPost()">📤 ارسال</button>
+            </div>
+          </div>
+          <div id="eit_pv_box" class="preview-box" style="margin-top:12px;display:none"><pre id="eit_pv_text"></pre></div>
+          <div id="eit_pv_result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+<!-- ── بله: ربات ── -->
+      <div id="panel_eit_conn" class="panel">
+        <div class="flex-between">
+          <h1>🤖 ربات ایتا</h1>
+          <div class="row"><button onclick="loadEitHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">اتصال ایتا: توکن + ارسال خودکار</div>
+        <div class="wa-grid">
+          <div class="wa-card">
+            <h3>🔑 اتصال ایتا</h3>
+            <div class="wa-field"><label>توکن ایتایار (از eitaayar.ir)</label><input id="eit_token" type="password" placeholder="123456789:AA..."></div>
+            <div class="check-row" style="margin-top:6px">
+              <label><input type="checkbox" id="eit_auto_post"> ارسال خودکار (مانند زمان‌بندی تلگرام)</label>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <button class="primary" onclick="eitSaveSettings()">💾 ذخیره</button>
+              <button onclick="eitTest()">🔌 تست اتصال</button>
+            </div>
+            <div id="eit_conn_result" class="wa-status-line"></div>
+            <div class="wa-status-line" id="eit_mode_line"></div>
+          </div>
+        </div>
+      </div>
+
+
 </main>
     </div>
 
@@ -1545,7 +1741,7 @@ const pfIcon = (id, w) => (PLATFORM_ICONS[id]||'').replace('width="18" height="1
 // ── Nav (platform control center) ──
 let CURRENT_PLATFORM = 'telegram';
 
-function isPlatformPanel(id){ return id.startsWith('wa_') || id.startsWith('bale_'); }
+function isPlatformPanel(id){ return id.startsWith('wa_') || id.startsWith('bale_') || id.startsWith('rub_') || id.startsWith('eit_'); }
 
 function showPanel(id){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
@@ -1570,7 +1766,7 @@ function setPlatform(p){
     x.classList.toggle('active', x.dataset.platform===p);
   });
   // Platform groups: show only the active platform's group; sys_group always visible
-  const groups = {'telegram':'tg_group','bale':'bale_group','whatsapp':'wa_group'};
+  const groups = {'telegram':'tg_group','bale':'bale_group','whatsapp':'wa_group','rubika':'rubika_group','eitaa':'eitaa_group'};
   Object.entries(groups).forEach(([plat, gid])=>{
     const g = $(gid);
     if(g) g.style.display = (plat===p) ? '' : 'none';
@@ -1581,6 +1777,8 @@ function setPlatform(p){
   document.querySelectorAll('.tg-item').forEach(x=>x.style.display = (p==='telegram')?'':'none');
   document.querySelectorAll('.bale-item').forEach(x=>x.style.display = (p==='bale')?'':'none');
   document.querySelectorAll('.wa-item').forEach(x=>x.style.display = (p==='whatsapp')?'':'none');
+  document.querySelectorAll('.rb-item').forEach(x=>x.style.display = (p==='rubika')?'':'none');
+  document.querySelectorAll('.et-item').forEach(x=>x.style.display = (p==='eitaa')?'':'none');
   document.querySelectorAll('.sys-item').forEach(x=>x.style.display = '');
 }
 
@@ -1588,10 +1786,16 @@ function platformHeaderFor(panelId){
   const meta = {
     telegram:{icon:'✈️', title:'مدیریت تلگرام', sub:'کانالها، پیشنمایش، نظرسنجی، وظایف و ربات'},
     whatsapp:{icon:'💬', title:'مدیریت واتساپ', sub:'شمارهها و ارسال خودکار پیام قیمت (Meta Cloud API)'},
-    bale:{icon:'✅', title:'مدیریت بله', sub:'کانالها و ارسال خودکار بله (Bale)'}
+    bale:{icon:'✅', title:'مدیریت بله', sub:'کانالها و ارسال خودکار بله (Bale)'},
+    rubika:{icon:'🟣', title:'مدیریت روبیکا', sub:'کانالها و ارسال خودکار روبیکا (Bot API v3)'},
+    eitaa:{icon:'🟠', title:'مدیریت ایتا', sub:'کانالها و ارسال خودکار ایتا (EitaaYar)'}
   };
-  const m = meta[panelId.startsWith('wa_')?'whatsapp':(panelId.startsWith('bale_')?'bale':'telegram')];
-  $('ph_icon').innerHTML = pfIcon(panelId.startsWith('wa_')?'whatsapp':(panelId.startsWith('bale_')?'bale':'telegram'), 26);
+  const platFor = panelId.startsWith('wa_')?'whatsapp':
+                  panelId.startsWith('bale_')?'bale':
+                  panelId.startsWith('rub_')?'rubika':
+                  panelId.startsWith('eit_')?'eitaa':'telegram';
+  const m = meta[platFor];
+  $('ph_icon').innerHTML = pfIcon(platFor, 26);
   $('ph_title').textContent = m.title;
   $('ph_sub').textContent = m.sub;
 }
@@ -1651,8 +1855,15 @@ function refresh(){
   if(p==='panel_activity'){ loadActivity(); loadRuns(); loadHealth(); actLiveToggle(); }
   if(p.startsWith('panel_wa_')) loadWaHome();
   if(p.startsWith('panel_bale_')) loadBaleHome();
+  if(p.startsWith('panel_rub_')) loadRubHome();
+  if(p.startsWith('panel_eit_')) loadEitHome();
 }
-setInterval(()=>{ if(document.querySelector('.panel.active').id.startsWith('panel_wa_')) loadWaHome(); if(document.querySelector('.panel.active').id.startsWith('panel_bale_')) loadBaleHome(); }, 15000);
+setInterval(()=>{ const act = document.querySelector('.panel.active'); if(!act) return; const id=act.id;
+  if(id.startsWith('panel_wa_')) loadWaHome();
+  else if(id.startsWith('panel_bale_')) loadBaleHome();
+  else if(id.startsWith('panel_rub_')) loadRubHome();
+  else if(id.startsWith('panel_eit_')) loadEitHome();
+}, 15000);
 
 // ── Channels data ──
 async function loadChannelsData(){
@@ -3132,6 +3343,340 @@ async function balePost(){
 
 
 // ── Theme engine (multi-skin + dark/light) ──
+// ── روبیکا (روبیکا — Telegram-compatible) ──
+let RUB_CHANNELS = [];
+let RUB_EDIT_ID = null;
+
+async function loadروبیکاHome(){
+  try{
+    const d = await jget('/api/rubika');
+    const s = d.settings||{};
+    RUB_CHANNELS = d.channels||[];
+    $('rub_token').value = s.access_token||'';
+    $('rub_auto_post').checked = !!s.auto_post;
+    const mode = d.mock ? '🧪 حالت آزمایشی (mock) — بدون ارسال واقعی' : '🔴 حالت واقعی — پیامها از طریق Bot API روبیکا ارسال میشوند';
+    $('rub_mode_line').textContent = mode;
+    renderروبیکاChannels();
+    fillروبیکاPreviewSelect();
+  }catch(e){
+    $('rub_conn_result').textContent = '❌ ' + e;
+  }
+}
+
+function renderروبیکاChannels(){
+  const tb = $('rub_channels_table');
+  if(!RUB_CHANNELS.length){
+    tb.innerHTML = '<tr><td colspan="7" class="muted">— کانالی ثبت نشده —</td></tr>';
+    return;
+  }
+  tb.innerHTML = RUB_CHANNELS.map(c=>`
+    <tr>
+      <td><b>${esc(c.icon||'🟢')} ${esc(c.name)}</b></td>
+      <td class="mono">${esc(c.rub_id||'—')}</td>
+      <td>${(String(c.rub_id||'').trim())?(c.enabled?pill('enabled'):pill('disabled')):pill('disabled')}</td>
+      <td>هر ${faNum(c.schedule_minutes)} دقیقه</td>
+      <td class="muted">${esc(c.last_post||'—')}</td>
+      <td class="err">${esc(c.last_error||'')}</td>
+      <td>
+        <button class="small" onclick="rubEdit('${c.id}')">✏️</button>
+        <button class="small" onclick="rubPreview('${c.id}')">👁</button>
+        <button class="small danger" onclick="rubDelete('${c.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function fillروبیکاPreviewSelect(){
+  const sel = $('rub_pv_chan');
+  sel.innerHTML = '<option value="">— انتخاب کانال —</option>' + RUB_CHANNELS.map(c=>
+    `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+}
+
+async function rubSaveSettings(){
+  const body = {
+    access_token: $('rub_token').value.trim(),
+    auto_post: $('rub_auto_post').checked,
+  };
+  try{
+    const r = await jpost('/api/rubika/settings', body);
+    if(r.ok){ showBanner('✅ تنظیمات روبیکا ذخیره شد', true); loadروبیکاHome(); }
+    else showBanner('❌ '+(r.error||'خطا'), false);
+  }catch(e){ showBanner('❌ '+e, false); }
+}
+
+async function rubTest(){
+  $('rub_conn_result').textContent = '⏳ …';
+  try{
+    const r = await jpost('/api/rubika/test', {});
+    if(r.ok) $('rub_conn_result').innerHTML = '✅ '+(r.mock?'حالت آزمایشی':'ربات @'+esc(r.username||''))+' متصل است';
+    else $('rub_conn_result').textContent = '❌ '+(r.error||'خطا');
+  }catch(e){ $('rub_conn_result').textContent = '❌ '+e; }
+}
+
+function rubNewChannel(){
+  RUB_EDIT_ID = null;
+  $('rub_form').style.display = 'block';
+  $('rub_form_title').textContent = 'کانال روبیکا جدید';
+  $('rub_f_name').value = ''; $('rub_f_id').value = '';
+  $('rub_f_icon').value = '🟢'; $('rub_f_sched').value = '30';
+  $('rub_f_slugs').value = ''; $('rub_f_types').value = 'prices';
+  $('rub_f_enabled').checked = true;
+  $('rub_form').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function rubEdit(id){
+  const c = RUB_CHANNELS.find(x=>x.id===id); if(!c) return;
+  RUB_EDIT_ID = id;
+  $('rub_form').style.display = 'block';
+  $('rub_form_title').textContent = 'ویرایش کانال ' + c.name;
+  $('rub_f_name').value = c.name||'';
+  $('rub_f_id').value = c.rub_id||'';
+  $('rub_f_icon').value = c.icon||'🟢';
+  $('rub_f_sched').value = c.schedule_minutes||30;
+  const slugs = Object.values(c.slug_groups||{}).flat().concat(c.slugs||[]);
+  $('rub_f_slugs').value = [...new Set(slugs)].join(', ');
+  $('rub_f_types').value = (c.post_types||['prices']).join(', ');
+  $('rub_f_enabled').checked = !!c.enabled;
+  $('rub_form').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function rubCloseForm(){ $('rub_form').style.display = 'none'; RUB_EDIT_ID = null; }
+
+async function rubSaveChannel(){
+  const body = {
+    name: $('rub_f_name').value.trim(),
+    rub_id: $('rub_f_id').value.trim(),
+    icon: $('rub_f_icon').value.trim()||'🟢',
+    schedule_minutes: parseInt($('rub_f_sched').value)||30,
+    enabled: $('rub_f_enabled').checked,
+    post_types: $('rub_f_types').value.split(',').map(s=>s.trim()).filter(Boolean),
+  };
+  const slugs = $('rub_f_slugs').value.split(',').map(s=>s.trim()).filter(Boolean);
+  body.slug_groups = slugs.length ? {'قیمتها': slugs} : {};
+  body.slugs = slugs;
+  try{
+    let r;
+    if(RUB_EDIT_ID) r = await jput('/api/rubika/channels/'+RUB_EDIT_ID, body);
+    else r = await jpost('/api/rubika/channels', body);
+    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); rubCloseForm(); loadروبیکاHome(); }
+    else showBanner('❌ '+(r.error||'خطا'), false);
+  }catch(e){ showBanner('❌ '+e, false); }
+}
+
+async function rubDelete(id){
+  if(!confirm('حذف کانال '+id+'؟')) return;
+  try{
+    const r = await jdel('/api/rubika/channels/'+id);
+    if(r.ok){ showBanner('🗑 حذف شد', true); loadروبیکاHome(); }
+    else showBanner('❌ '+(r.error||'خطا'), false);
+  }catch(e){ showBanner('❌ '+e, false); }
+}
+
+async function rubPreview(cid){
+  const type = $('rub_pv_type').value;
+  const r = await jget('/api/rubika/preview/'+cid+'?post_type='+type);
+  if(r.ok){
+    $('rub_pv_text').textContent = r.preview;
+    $('rub_pv_box').style.display = 'block';
+    $('rub_pv_result').textContent = '';
+  }else $('rub_pv_result').textContent = '❌ '+(r.error||'خطا');
+}
+
+async function rubPreviewAll(){
+  $('rub_pv_result').textContent = '⏳ …';
+  let out = '';
+  for(const c of RUB_CHANNELS){
+    const r = await jget('/api/rubika/preview/'+c.id+'?post_type=prices');
+    out += '═══ '+c.name+' ═══\n'+(r.preview||r.error||'')+'\n\n';
+  }
+  $('rub_pv_text').textContent = out;
+  $('rub_pv_box').style.display = 'block';
+  $('rub_pv_result').textContent = '';
+}
+
+async function rubPost(){
+  const cid = $('rub_pv_chan').value;
+  const type = $('rub_pv_type').value;
+  if(!cid){ $('rub_pv_result').textContent = 'کانال را انتخاب کنید'; return; }
+  $('rub_pv_result').textContent = '⏳ …';
+  try{
+    const r = await jpost('/api/rubika/post/'+cid, {post_type: type});
+    if(r.ok){
+      $('rub_pv_result').innerHTML = '✅ ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — message_id: <code dir="ltr">'+esc(r.message_id||'')+'</code>';
+      loadروبیکاHome();
+    }else $('rub_pv_result').textContent = '❌ '+(r.error||'خطا');
+  }catch(e){ $('rub_pv_result').textContent = '❌ '+e; }
+}
+
+
+// ── Theme engine (multi-skin + dark/light) ──
+
+// ── ایتا (ایتا — Telegram-compatible) ──
+let EIT_CHANNELS = [];
+let EIT_EDIT_ID = null;
+
+async function loadایتاHome(){
+  try{
+    const d = await jget('/api/eitaa');
+    const s = d.settings||{};
+    EIT_CHANNELS = d.channels||[];
+    $('eit_token').value = s.access_token||'';
+    $('eit_auto_post').checked = !!s.auto_post;
+    const mode = d.mock ? '🧪 حالت آزمایشی (mock) — بدون ارسال واقعی' : '🔴 حالت واقعی — پیامها از طریق Bot API ایتا ارسال میشوند';
+    $('eit_mode_line').textContent = mode;
+    renderایتاChannels();
+    fillایتاPreviewSelect();
+  }catch(e){
+    $('eit_conn_result').textContent = '❌ ' + e;
+  }
+}
+
+function renderایتاChannels(){
+  const tb = $('eit_channels_table');
+  if(!EIT_CHANNELS.length){
+    tb.innerHTML = '<tr><td colspan="7" class="muted">— کانالی ثبت نشده —</td></tr>';
+    return;
+  }
+  tb.innerHTML = EIT_CHANNELS.map(c=>`
+    <tr>
+      <td><b>${esc(c.icon||'🟢')} ${esc(c.name)}</b></td>
+      <td class="mono">${esc(c.eit_id||'—')}</td>
+      <td>${(String(c.eit_id||'').trim())?(c.enabled?pill('enabled'):pill('disabled')):pill('disabled')}</td>
+      <td>هر ${faNum(c.schedule_minutes)} دقیقه</td>
+      <td class="muted">${esc(c.last_post||'—')}</td>
+      <td class="err">${esc(c.last_error||'')}</td>
+      <td>
+        <button class="small" onclick="eitEdit('${c.id}')">✏️</button>
+        <button class="small" onclick="eitPreview('${c.id}')">👁</button>
+        <button class="small danger" onclick="eitDelete('${c.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function fillایتاPreviewSelect(){
+  const sel = $('eit_pv_chan');
+  sel.innerHTML = '<option value="">— انتخاب کانال —</option>' + EIT_CHANNELS.map(c=>
+    `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+}
+
+async function eitSaveSettings(){
+  const body = {
+    access_token: $('eit_token').value.trim(),
+    auto_post: $('eit_auto_post').checked,
+  };
+  try{
+    const r = await jpost('/api/eitaa/settings', body);
+    if(r.ok){ showBanner('✅ تنظیمات ایتا ذخیره شد', true); loadایتاHome(); }
+    else showBanner('❌ '+(r.error||'خطا'), false);
+  }catch(e){ showBanner('❌ '+e, false); }
+}
+
+async function eitTest(){
+  $('eit_conn_result').textContent = '⏳ …';
+  try{
+    const r = await jpost('/api/eitaa/test', {});
+    if(r.ok) $('eit_conn_result').innerHTML = '✅ '+(r.mock?'حالت آزمایشی':'ربات @'+esc(r.username||''))+' متصل است';
+    else $('eit_conn_result').textContent = '❌ '+(r.error||'خطا');
+  }catch(e){ $('eit_conn_result').textContent = '❌ '+e; }
+}
+
+function eitNewChannel(){
+  EIT_EDIT_ID = null;
+  $('eit_form').style.display = 'block';
+  $('eit_form_title').textContent = 'کانال ایتا جدید';
+  $('eit_f_name').value = ''; $('eit_f_id').value = '';
+  $('eit_f_icon').value = '🟢'; $('eit_f_sched').value = '30';
+  $('eit_f_slugs').value = ''; $('eit_f_types').value = 'prices';
+  $('eit_f_enabled').checked = true;
+  $('eit_form').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function eitEdit(id){
+  const c = EIT_CHANNELS.find(x=>x.id===id); if(!c) return;
+  EIT_EDIT_ID = id;
+  $('eit_form').style.display = 'block';
+  $('eit_form_title').textContent = 'ویرایش کانال ' + c.name;
+  $('eit_f_name').value = c.name||'';
+  $('eit_f_id').value = c.eit_id||'';
+  $('eit_f_icon').value = c.icon||'🟢';
+  $('eit_f_sched').value = c.schedule_minutes||30;
+  const slugs = Object.values(c.slug_groups||{}).flat().concat(c.slugs||[]);
+  $('eit_f_slugs').value = [...new Set(slugs)].join(', ');
+  $('eit_f_types').value = (c.post_types||['prices']).join(', ');
+  $('eit_f_enabled').checked = !!c.enabled;
+  $('eit_form').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function eitCloseForm(){ $('eit_form').style.display = 'none'; EIT_EDIT_ID = null; }
+
+async function eitSaveChannel(){
+  const body = {
+    name: $('eit_f_name').value.trim(),
+    eit_id: $('eit_f_id').value.trim(),
+    icon: $('eit_f_icon').value.trim()||'🟢',
+    schedule_minutes: parseInt($('eit_f_sched').value)||30,
+    enabled: $('eit_f_enabled').checked,
+    post_types: $('eit_f_types').value.split(',').map(s=>s.trim()).filter(Boolean),
+  };
+  const slugs = $('eit_f_slugs').value.split(',').map(s=>s.trim()).filter(Boolean);
+  body.slug_groups = slugs.length ? {'قیمتها': slugs} : {};
+  body.slugs = slugs;
+  try{
+    let r;
+    if(EIT_EDIT_ID) r = await jput('/api/eitaa/channels/'+EIT_EDIT_ID, body);
+    else r = await jpost('/api/eitaa/channels', body);
+    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); eitCloseForm(); loadایتاHome(); }
+    else showBanner('❌ '+(r.error||'خطا'), false);
+  }catch(e){ showBanner('❌ '+e, false); }
+}
+
+async function eitDelete(id){
+  if(!confirm('حذف کانال '+id+'؟')) return;
+  try{
+    const r = await jdel('/api/eitaa/channels/'+id);
+    if(r.ok){ showBanner('🗑 حذف شد', true); loadایتاHome(); }
+    else showBanner('❌ '+(r.error||'خطا'), false);
+  }catch(e){ showBanner('❌ '+e, false); }
+}
+
+async function eitPreview(cid){
+  const type = $('eit_pv_type').value;
+  const r = await jget('/api/eitaa/preview/'+cid+'?post_type='+type);
+  if(r.ok){
+    $('eit_pv_text').textContent = r.preview;
+    $('eit_pv_box').style.display = 'block';
+    $('eit_pv_result').textContent = '';
+  }else $('eit_pv_result').textContent = '❌ '+(r.error||'خطا');
+}
+
+async function eitPreviewAll(){
+  $('eit_pv_result').textContent = '⏳ …';
+  let out = '';
+  for(const c of EIT_CHANNELS){
+    const r = await jget('/api/eitaa/preview/'+c.id+'?post_type=prices');
+    out += '═══ '+c.name+' ═══\n'+(r.preview||r.error||'')+'\n\n';
+  }
+  $('eit_pv_text').textContent = out;
+  $('eit_pv_box').style.display = 'block';
+  $('eit_pv_result').textContent = '';
+}
+
+async function eitPost(){
+  const cid = $('eit_pv_chan').value;
+  const type = $('eit_pv_type').value;
+  if(!cid){ $('eit_pv_result').textContent = 'کانال را انتخاب کنید'; return; }
+  $('eit_pv_result').textContent = '⏳ …';
+  try{
+    const r = await jpost('/api/eitaa/post/'+cid, {post_type: type});
+    if(r.ok){
+      $('eit_pv_result').innerHTML = '✅ ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — message_id: <code dir="ltr">'+esc(r.message_id||'')+'</code>';
+      loadایتاHome();
+    }else $('eit_pv_result').textContent = '❌ '+(r.error||'خطا');
+  }catch(e){ $('eit_pv_result').textContent = '❌ '+e; }
+}
+
+
+// ── Theme engine (multi-skin + dark/light) ──
+
 const THEMES = ['emerald','ocean','amber'];
 function applyTheme(theme, mode){
   if(!THEMES.includes(theme)) theme = 'emerald';
@@ -3169,6 +3714,7 @@ document.addEventListener('click', function(ev){
     applyTheme(document.documentElement.getAttribute('data-theme'), cur==='dark'?'light':'dark');
   }
 });
+
 
 // ── Init ──
 function bootDashboard(){

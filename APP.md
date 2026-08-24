@@ -610,4 +610,27 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   preview button, reset-to-default; validation errors shown in Persian.
   Verified E2E: PUT «امروز {weekday}» + custom sep → preview showed
   «امروز دوشنبه» + ━ separator → reset restored defaults.
+- **2026-08-24 (7)** — TWO NEW PLATFORMS: Rubika (روبیکا) + Eitaa (ایتا).
+  Research verdict: of the Iranian messengers, these two have real, usable
+  bot/channel APIs. Rubika: official Bot API v3 at
+  `https://botapi.rubika.ir/v3/{token}/{method}` (Telegram-style; bots via
+  Rubika @BotFather; responses wrapped {"status":"OK","data":...}).
+  Eitaa: EitaaYar channel API `https://eitaayar.ir/api/{token}/{method}`
+  with urlencoded sendmessage/sendfile (chat_id = @username). Soroush Plus
+  and iGap were evaluated and skipped (weak/undocumented bot APIs).
+  Engines `tgju_engine_rubika.py` / `tgju_engine_eitaa.py` follow the Bale
+  pattern exactly (bale.json-shaped state, mock mode by default, shared
+  TGJU builders — plain-text delivery, HTML stripped). New endpoints:
+  /api/rubika{,/settings,/test,/preview/{cid},/post/{cid},/channels CRUD}
+  and the same set for /api/eitaa. Generic scheduler tick
+  `_generic_platform_tick_sync()` runs both platforms off the main loop
+  (auto_post per platform, poll type skipped — Telegram-native).
+  UI: header platform menu now 5 entries (registry-driven), sidebar groups
+  rubika_group/eitaa_group each with کانال‌ها/پیش‌نمایش/ربات panels,
+  per-platform JS cloned from Bale with renamed ids/fns, auto-refresh
+  hooks. /api/slugs usage map extended to 5 platforms. Backup:
+  D:\_wayback-TGJU-Telegram-RubikaEitaa-20260824-132654. Verified live:
+  platforms registry returns 5, mock getMe/test OK, channel create→
+  preview→mock post→delete flows pass for both engines; 70/70 tests pass;
+  node --check + html balance OK.
 
