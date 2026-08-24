@@ -384,4 +384,6 @@ def slug_profile(slug: str) -> str:
         return purl
     alias = SLUG_ALIASES.get(slug, slug)
     if slug.startswith("crypto-"):
+        # crypto profiles live at /crypto/currency/{name} (no profile/ prefix)
         return "crypto/currency/" + alias.replace("crypto-", "")
+    return "profile/" + alias
