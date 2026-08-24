@@ -682,4 +682,13 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   JS identifiers (`loadبلهHome`→`loadBaleHome`); Bale config API exposes
   `chat_id` mirror of `bale_id` so the generic UI reads one field name.
   70/70 tests pass; node --check + html balance OK.
+- **2026-08-24 (12)** — Fixed «channels gone after refresh». ROOT CAUSE: the
+  compact rebuild accidentally dropped `panel_bale_preview` and
+  `panel_bale_conn` entirely while the sidebar still pointed at them, so
+  switching tabs hit missing elements and the channel list appeared empty
+  after any reload. Restored both panels, fixed remaining mangled JS names
+  (`rendereitChannels`→`renderEitChannels`, `loadEitHOME`/`loadRubHOME`),
+  verified all 9 platform panels + element ids exist. Persistence E2E:
+  create → GET → on-disk state all consistent (channels were never lost
+  server-side; the UI just failed to render them). 70/70 tests pass.
 
