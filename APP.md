@@ -691,4 +691,18 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   verified all 9 platform panels + element ids exist. Persistence E2E:
   create → GET → on-disk state all consistent (channels were never lost
   server-side; the UI just failed to render them). 70/70 tests pass.
+- **2026-08-24 (13)** — FINAL root cause of invisible channel lists: the
+  platform JS generator emitted lowercase-pfx function names
+  (`renderbaleChannels`/`renderrubChannels`) while callers used CamelCase,
+  and loaders were `loadRubHome`/`loadEitHome` while every hook called
+  `loadRubikaHome`/`loadEitaaHome` → ReferenceError killed rendering on tab
+  switch. Unified all names, removed duplicate QuickPreview defs. Verified
+  with headless DOM probes through auth-cookie proxy: #p=bale renders the
+  user's 'taes' card, #p=rubika renders 'اصلی', eitaa shows the proper
+  empty-state message. Lesson recorded: ALWAYS grep for the exact set of
+  generated identifiers after any codegen step (def + call-site match).
+- **2026-08-24 (14)** — Telegram channel cards now have a 🗑 حذف delete
+  button (confirm → DELETE /api/channels/{cid} → reload), matching the
+  Bale/Rubika/Eitaa cards. E2E: create temp channel → exists → delete →
+  gone. 70/70 tests pass.
 
