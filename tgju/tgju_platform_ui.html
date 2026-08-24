@@ -582,13 +582,13 @@ html[data-mode="light"] .ts-emerald.active {}
         <div class="nav-item bale-item" data-panel="bale_conn">🤖 ربات</div>
       </div>
       <div class="nav-group" id="rubika_group" style="display:none">
-        <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="#8e44ad" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6a6 6 0 100 12 6 6 0 000-12zm0 2a4 4 0 110 8 4 4 0 010-8z" fill="#fff"/></svg></span> روبیکا</div>
+        <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" fill="#7B2D8E"/><path d="M12 5.5l5.2 3v6.9L12 18.5l-5.2-3.1V8.5z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.1" fill="#fff"/></svg></span> روبیکا</div>
         <div class="nav-item rb-item" data-panel="rub_channels">📂 کانال‌ها</div>
         <div class="nav-item rb-item" data-panel="rub_preview">📝 پیش‌نمایش و ارسال</div>
         <div class="nav-item rb-item" data-panel="rub_conn">🤖 ربات</div>
       </div>
       <div class="nav-group" id="eitaa_group" style="display:none">
-        <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="#f39c12" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4z"/></svg></span> ایتا</div>
+        <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F58220"/><path d="M6.5 12.4l3.6 3.4 7.4-7.2-6.9 5.1-1.9-1.2z" fill="#fff"/></svg></span> ایتا</div>
         <div class="nav-item et-item" data-panel="eit_channels">📂 کانال‌ها</div>
         <div class="nav-item et-item" data-panel="eit_preview">📝 پیش‌نمایش و ارسال</div>
         <div class="nav-item et-item" data-panel="eit_conn">🤖 ربات</div>
@@ -1735,6 +1735,8 @@ const PLATFORM_ICONS = {
   telegram: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#229ED9" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>`,
   whatsapp: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`,
   bale: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#00A886" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,
+  rubika: `<svg viewBox="0 0 24 24" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" fill="#7B2D8E"/><path d="M12 5.5l5.2 3v6.9L12 18.5l-5.2-3.1V8.5z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.1" fill="#fff"/></svg>`,
+  eitaa: `<svg viewBox="0 0 24 24" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F58220"/><path d="M6.5 12.4l3.6 3.4 7.4-7.2-6.9 5.1-1.9-1.2z" fill="#fff"/></svg>`,
 };
 const pfIcon = (id, w) => (PLATFORM_ICONS[id]||'').replace('width="18" height="18"', `width="${w}" height="${w}"`);
 
@@ -1823,6 +1825,12 @@ async function loadPlatformMenu(){
     document.querySelectorAll('.wa-item').forEach(n=>{
       n.addEventListener('click', ()=>{ setPlatform('whatsapp'); showPanel(n.dataset.panel); });
     });
+    document.querySelectorAll('.rb-item').forEach(n=>{
+      n.addEventListener('click', ()=>{ setPlatform('rubika'); showPanel(n.dataset.panel); });
+    });
+    document.querySelectorAll('.et-item').forEach(n=>{
+      n.addEventListener('click', ()=>{ setPlatform('eitaa'); showPanel(n.dataset.panel); });
+    });
     document.querySelectorAll('.sys-item').forEach(n=>{
       n.addEventListener('click', ()=>{ showPanel(n.dataset.panel); });
     });
@@ -1833,11 +1841,13 @@ function showPanelForPlatform(p){
   setPlatform(p);
   if(p==='whatsapp') showPanel('wa_conn');
   else if(p==='bale') showPanel('bale_channels');
+  else if(p==='rubika') showPanel('rub_channels');
+  else if(p==='eitaa') showPanel('eit_channels');
   else showPanel('channels');
 }
 
 // keep the original nav-item handler for non-grouped items
-document.querySelectorAll('.nav-item:not(.platform-nav):not(.tg-item):not(.bale-item):not(.wa-item):not(.sys-item)').forEach(n=>n.addEventListener('click',()=>{
+document.querySelectorAll('.nav-item:not(.platform-nav):not(.tg-item):not(.bale-item):not(.wa-item):not(.rb-item):not(.et-item):not(.sys-item)').forEach(n=>n.addEventListener('click',()=>{
   showPanel(n.dataset.panel);
 }));
 
@@ -1855,14 +1865,14 @@ function refresh(){
   if(p==='panel_activity'){ loadActivity(); loadRuns(); loadHealth(); actLiveToggle(); }
   if(p.startsWith('panel_wa_')) loadWaHome();
   if(p.startsWith('panel_bale_')) loadBaleHome();
-  if(p.startsWith('panel_rub_')) loadRubHome();
-  if(p.startsWith('panel_eit_')) loadEitHome();
+  if(p.startsWith('panel_rub_')) loadRubikaHome();
+  if(p.startsWith('panel_eit_')) loadEitaaHome();
 }
 setInterval(()=>{ const act = document.querySelector('.panel.active'); if(!act) return; const id=act.id;
   if(id.startsWith('panel_wa_')) loadWaHome();
   else if(id.startsWith('panel_bale_')) loadBaleHome();
-  else if(id.startsWith('panel_rub_')) loadRubHome();
-  else if(id.startsWith('panel_eit_')) loadEitHome();
+  else if(id.startsWith('panel_rub_')) loadRubikaHome();
+  else if(id.startsWith('panel_eit_')) loadEitaaHome();
 }, 15000);
 
 // ── Channels data ──
@@ -3347,7 +3357,11 @@ async function balePost(){
 let RUB_CHANNELS = [];
 let RUB_EDIT_ID = null;
 
-async function loadروبیکاHome(){
+// aliases for generated panel onclick handlers
+function loadRubHome(){ return loadRubikaHome(); }
+function loadEitHome(){ return loadEitaaHome(); }
+
+async function loadRubikaHome(){
   try{
     const d = await jget('/api/rubika');
     const s = d.settings||{};
@@ -3356,14 +3370,14 @@ async function loadروبیکاHome(){
     $('rub_auto_post').checked = !!s.auto_post;
     const mode = d.mock ? '🧪 حالت آزمایشی (mock) — بدون ارسال واقعی' : '🔴 حالت واقعی — پیامها از طریق Bot API روبیکا ارسال میشوند';
     $('rub_mode_line').textContent = mode;
-    renderروبیکاChannels();
-    fillروبیکاPreviewSelect();
+    renderRubikaChannels();
+    fillRubikaPreviewSelect();
   }catch(e){
     $('rub_conn_result').textContent = '❌ ' + e;
   }
 }
 
-function renderروبیکاChannels(){
+function renderRubikaChannels(){
   const tb = $('rub_channels_table');
   if(!RUB_CHANNELS.length){
     tb.innerHTML = '<tr><td colspan="7" class="muted">— کانالی ثبت نشده —</td></tr>';
@@ -3385,7 +3399,7 @@ function renderروبیکاChannels(){
     </tr>`).join('');
 }
 
-function fillروبیکاPreviewSelect(){
+function fillRubikaPreviewSelect(){
   const sel = $('rub_pv_chan');
   sel.innerHTML = '<option value="">— انتخاب کانال —</option>' + RUB_CHANNELS.map(c=>
     `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
@@ -3398,7 +3412,7 @@ async function rubSaveSettings(){
   };
   try{
     const r = await jpost('/api/rubika/settings', body);
-    if(r.ok){ showBanner('✅ تنظیمات روبیکا ذخیره شد', true); loadروبیکاHome(); }
+    if(r.ok){ showBanner('✅ تنظیمات روبیکا ذخیره شد', true); loadRubikaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3457,7 +3471,7 @@ async function rubSaveChannel(){
     let r;
     if(RUB_EDIT_ID) r = await jput('/api/rubika/channels/'+RUB_EDIT_ID, body);
     else r = await jpost('/api/rubika/channels', body);
-    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); rubCloseForm(); loadروبیکاHome(); }
+    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); rubCloseForm(); loadRubikaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3466,7 +3480,7 @@ async function rubDelete(id){
   if(!confirm('حذف کانال '+id+'؟')) return;
   try{
     const r = await jdel('/api/rubika/channels/'+id);
-    if(r.ok){ showBanner('🗑 حذف شد', true); loadروبیکاHome(); }
+    if(r.ok){ showBanner('🗑 حذف شد', true); loadRubikaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3502,7 +3516,7 @@ async function rubPost(){
     const r = await jpost('/api/rubika/post/'+cid, {post_type: type});
     if(r.ok){
       $('rub_pv_result').innerHTML = '✅ ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — message_id: <code dir="ltr">'+esc(r.message_id||'')+'</code>';
-      loadروبیکاHome();
+      loadRubikaHome();
     }else $('rub_pv_result').textContent = '❌ '+(r.error||'خطا');
   }catch(e){ $('rub_pv_result').textContent = '❌ '+e; }
 }
@@ -3514,7 +3528,7 @@ async function rubPost(){
 let EIT_CHANNELS = [];
 let EIT_EDIT_ID = null;
 
-async function loadایتاHome(){
+async function loadEitaaHome(){
   try{
     const d = await jget('/api/eitaa');
     const s = d.settings||{};
@@ -3523,14 +3537,14 @@ async function loadایتاHome(){
     $('eit_auto_post').checked = !!s.auto_post;
     const mode = d.mock ? '🧪 حالت آزمایشی (mock) — بدون ارسال واقعی' : '🔴 حالت واقعی — پیامها از طریق Bot API ایتا ارسال میشوند';
     $('eit_mode_line').textContent = mode;
-    renderایتاChannels();
-    fillایتاPreviewSelect();
+    renderEitaaChannels();
+    fillEitaaPreviewSelect();
   }catch(e){
     $('eit_conn_result').textContent = '❌ ' + e;
   }
 }
 
-function renderایتاChannels(){
+function renderEitaaChannels(){
   const tb = $('eit_channels_table');
   if(!EIT_CHANNELS.length){
     tb.innerHTML = '<tr><td colspan="7" class="muted">— کانالی ثبت نشده —</td></tr>';
@@ -3552,7 +3566,7 @@ function renderایتاChannels(){
     </tr>`).join('');
 }
 
-function fillایتاPreviewSelect(){
+function fillEitaaPreviewSelect(){
   const sel = $('eit_pv_chan');
   sel.innerHTML = '<option value="">— انتخاب کانال —</option>' + EIT_CHANNELS.map(c=>
     `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
@@ -3565,7 +3579,7 @@ async function eitSaveSettings(){
   };
   try{
     const r = await jpost('/api/eitaa/settings', body);
-    if(r.ok){ showBanner('✅ تنظیمات ایتا ذخیره شد', true); loadایتاHome(); }
+    if(r.ok){ showBanner('✅ تنظیمات ایتا ذخیره شد', true); loadEitaaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3624,7 +3638,7 @@ async function eitSaveChannel(){
     let r;
     if(EIT_EDIT_ID) r = await jput('/api/eitaa/channels/'+EIT_EDIT_ID, body);
     else r = await jpost('/api/eitaa/channels', body);
-    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); eitCloseForm(); loadایتاHome(); }
+    if(r.ok){ showBanner('✅ کانال ذخیره شد', true); eitCloseForm(); loadEitaaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3633,7 +3647,7 @@ async function eitDelete(id){
   if(!confirm('حذف کانال '+id+'؟')) return;
   try{
     const r = await jdel('/api/eitaa/channels/'+id);
-    if(r.ok){ showBanner('🗑 حذف شد', true); loadایتاHome(); }
+    if(r.ok){ showBanner('🗑 حذف شد', true); loadEitaaHome(); }
     else showBanner('❌ '+(r.error||'خطا'), false);
   }catch(e){ showBanner('❌ '+e, false); }
 }
@@ -3669,7 +3683,7 @@ async function eitPost(){
     const r = await jpost('/api/eitaa/post/'+cid, {post_type: type});
     if(r.ok){
       $('eit_pv_result').innerHTML = '✅ ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — message_id: <code dir="ltr">'+esc(r.message_id||'')+'</code>';
-      loadایتاHome();
+      loadEitaaHome();
     }else $('eit_pv_result').textContent = '❌ '+(r.error||'خطا');
   }catch(e){ $('eit_pv_result').textContent = '❌ '+e; }
 }
@@ -3726,6 +3740,13 @@ function bootDashboard(){
   const authed = await authCheck();
   if(!authed) return;   // gate on screen — dashboard loads after login
   bootDashboard();
+  // deep-link: #p=rubika opens that platform's landing panel (also used by E2E probes)
+  try{
+    const m = (location.hash||'').match(/p=(\w+)/);
+    if(m && ['telegram','whatsapp','bale','rubika','eitaa'].includes(m[1])){
+      showPanelForPlatform(m[1]);
+    }
+  }catch(e){}
 })();
 
 </script>
