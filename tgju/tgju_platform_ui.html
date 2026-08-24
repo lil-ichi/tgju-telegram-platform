@@ -1379,6 +1379,57 @@ html[data-mode="light"] .ts-emerald.active {}
         </div>
       </div>
 
+<!-- ── بله: پیش‌نمایش و ارسال ── -->
+      <div id="panel_bale_preview" class="panel">
+        <div class="flex-between">
+          <h1>📝 پیش‌نمایش و ارسال بله</h1>
+          <div class="row"><button onclick="loadBaleHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">ساخت و ارسال پست به کانال‌های بله — قیمت، خبر یا تحلیل</div>
+        <div class="card">
+          <div class="row form-row">
+            <div style="min-width:180px;flex:1"><label>کانال</label><select id="bale_pv_chan"></select></div>
+            <div style="min-width:160px"><label>نوع پست</label>
+              <select id="bale_pv_type">
+                <option value="prices">📊 جدول قیمت</option>
+                <option value="news">📰 خبر</option>
+                <option value="analysis">📈 تحلیل</option>
+              </select>
+            </div>
+            <div class="btn-group">
+              <button onclick="baleDoPreview()">👁 پیش‌نمایش</button>
+              <button class="primary" onclick="balePost()">📤 ارسال به کانال</button>
+            </div>
+          </div>
+          <div id="bale_pv_box" class="preview-box" style="margin-top:12px;display:none"><pre id="bale_pv_text"></pre></div>
+          <div id="bale_pv_result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+<!-- ── بله: ربات ── -->
+      <div id="panel_bale_conn" class="panel">
+        <div class="flex-between">
+          <h1>🤖 ربات بله</h1>
+          <div class="row"><button onclick="loadBaleHome()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">اتصال ربات بله: توکن از BotFather بله + ارسال خودکار</div>
+        <div class="wa-grid">
+          <div class="wa-card">
+            <h3>🔑 اتصال ربات بله</h3>
+            <div class="wa-field"><label>توکن ربات بله (از BotFather بله)</label><input id="bale_token" type="password" placeholder="123456789:AA..."></div>
+            <div class="check-row" style="margin-top:6px">
+              <label><input type="checkbox" id="bale_auto_post"> ارسال خودکار (مانند زمانبندی تلگرام)</label>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <button class="primary" onclick="baleSaveSettings()">💾 ذخیره</button>
+              <button onclick="baleTest()">🔌 تست اتصال</button>
+            </div>
+            <div id="bale_conn_result" class="wa-status-line"></div>
+            <div class="wa-status-line" id="bale_mode_line"></div>
+          </div>
+        </div>
+      </div>
+
 <div id="panel_rub_channels" class="panel">
         <div class="flex-between">
           <h1>🟣 کانالهای روبیکا</h1>
@@ -3505,7 +3556,7 @@ function toggleRub(id){
 
 async function rubQuickPreview(cid){
   const sel = $('rub_pv_chan');
-  if(sel){ await loadRubHOME(); sel.value = cid; }
+  if(sel){ await loadRubikaHome(); sel.value = cid; }
   showPanel('rub_preview');
 }
 function fillRubPreviewSelect(){
@@ -3710,7 +3761,7 @@ async function loadEitHome(){
   }
 }
 
-function rendereitChannels(){
+function renderEitChannels(){
   const list = $('eit_channels_list');
   if(!list) return;
   if(!EIT_CHANNELS.length){
@@ -3750,7 +3801,7 @@ function toggleEit(id){
 
 async function eitQuickPreview(cid){
   const sel = $('eit_pv_chan');
-  if(sel){ await loadEitHOME(); sel.value = cid; }
+  if(sel){ await loadEitaaHome(); sel.value = cid; }
   showPanel('eit_preview');
 }
 function fillEitPreviewSelect(){
