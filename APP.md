@@ -715,4 +715,15 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   sampled links across ارز/طلا/سکه/کریپتو/نفت/شاخص all HTTP 200 on
   tgju.org; all 233 known slugs produce a profile path (zero without).
   Committed separately so the user's runtime telegram_id stays out of git.
+- **2026-08-24 (16)** — Persian font switched to IRANSansDN (دست نویس
+  ایران سنس): woff2 embedded as base64 in the UI (self-contained, same
+  pattern as Vazirmatn), placed first in the body font stack with
+  Vazirmatn fallback. Verified via fontTools: family 'IRANSansDN', full
+  Persian glyph coverage (گ ی چ پ). Pushed as 58e89a7.
+- **2026-08-24 (17)** — Latin/English glyphs switched to Comic Sans MS:
+  placed FIRST in the body font stack so Latin chars hit it while Persian
+  chars fall through to IRANSansDN (Comic Sans has no Arabic-script
+  glyphs). comic.ttf/comicbd.ttf verified installed on the host; remote
+  visitors without it fall back to IRANSansDN/Vazirmatn. Pushed as
+  01aaeb3.
 
