@@ -665,4 +665,21 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   E2E verified via API for all three platforms: create with full Persian
   fields → persisted → PUT edits applied → preview renders with custom
   header → delete cleans up. 70/70 tests pass.
+- **2026-08-24 (10)** — Bulk slug selection. Shared slug-picker modal now
+  has: 6 one-click preset bundles (`SP_PRESETS`: ارز آزاد / ارز بانکی /
+  طلا و سکه / ارز دیجیتال اصلی / شاخصهای جهانی / نفت و انرژی), per-category
+  select-all checkbox in each group header (state via SP_CAT_SLUGS map —
+  avoids JSON-in-attribute quoting bugs), and a paste box accepting slugs
+  or Persian names separated by newline/comma/semicolon with per-item
+  match feedback (matched by slug OR display name; unmatched reported).
+  Available on every channel form: telegram/bale/rubika/eitaa.
+- **2026-08-24 (11)** — Compact channel lists for Bale/Rubika/Eitaa. The
+  wide 8-column table was replaced with Telegram-style `.ch` cards: header
+  row (icon, name, id, chat_id/schedule/post-types summary, status pill)
+  expands inline (chbody) to show chat_id/header/section/format details,
+  slug tags and news categories + ویرایش/پیش‌نمایش/حذف buttons. Removed
+  duplicate panel/form ids left by earlier clones; fixed remaining Persian
+  JS identifiers (`loadبلهHome`→`loadBaleHome`); Bale config API exposes
+  `chat_id` mirror of `bale_id` so the generic UI reads one field name.
+  70/70 tests pass; node --check + html balance OK.
 
