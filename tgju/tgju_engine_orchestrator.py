@@ -87,6 +87,32 @@ def _backfill_one(slug: str, name: str = "") -> dict:
     return row or {}
 
 
+def apply_slug_overrides(slug: str, row: dict, overrides: dict | None = None) -> dict:
+    """THE shared single-source-of-truth merge for ALL platforms.
+
+    Telegram build_for_channel, WhatsApp keyword/group replies and Bale
+    previews all call this so a manual price/name/link set in the
+    «داده‌ها و لینک‌ها» tab applies everywhere identically.
+    Precedence: manual_price > name override > live row (homepage/profile).
+    """
+    if overrides is None:
+        from tgju_engine_config import load_slug_overrides
+        overrides = load_slug_overrides()
+    ov = overrides.get(slug) or {}
+    merged = dict(row or {})
+    if ov.get("manual_price"):
+        merged["price"] = str(ov["manual_price"]).replace(",", "").strip()
+    if ov.get("name"):
+        merged["name"] = ov["name"]
+    if ov.get("change_pct") not in (None, ""):
+        merged["change_pct"] = str(ov["change_pct"])
+    if ov.get("change_amt") not in (None, ""):
+        merged["change_amt"] = str(ov["change_amt"])
+    if ov.get("dir"):
+        merged["dir"] = ov["dir"]
+    return merged
+
+
 def slug_group_map(channel: dict) -> dict:
     m = {}
     for gname, slugs in (channel.get("slug_groups") or {}).items():

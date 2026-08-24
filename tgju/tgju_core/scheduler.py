@@ -78,24 +78,31 @@ def _next_post_type(c: dict, now: datetime) -> str:
         except Exception:
             poll_iv = max(1, int(load_settings().get("poll_interval_hours", 4)))
         if now.hour % poll_iv == 0:
-            # Only fire ONE poll per boundary, not the whole hour:
-            # a channel posting every 10min would otherwise send 6 polls
-            # per 4h window. Track last_poll_at in channel state.
+            # Fire ONE poll per interval window. Two-layer dedupe:
+            #   a) last_poll_at within the window → skip (state merge fix in
+            #      tgju_engine_news keeps this intact now)
+            #   b) slot fingerprint: the window's start-hour is recorded as
+            #      last_poll_slot ("day/hour"); even if timestamps get wiped,
+            #      a poll can't repeat inside the same window because the
+            #      slot only matches once per window.
             try:
                 st = load_channel_state(c.get("id", ""))
+                slot = "%s/%d" % (now.date().isoformat(), now.hour - now.hour % poll_iv)
                 lp = st.get("last_poll_at")
-                if lp:
+                if st.get("last_poll_slot") == slot:
+                    return_poll = False
+                elif lp:
                     lp_dt = datetime.fromisoformat(lp)
                     if (now - lp_dt) < timedelta(hours=poll_iv):
-                        # poll already sent within this window → skip to
-                        # the regular rotation for this tick
-                        pass
+                        return_poll = False
                     else:
-                        return "poll"
+                        return_poll = True
                 else:
+                    return_poll = True
+                if return_poll:
                     return "poll"
             except Exception:
-                return "poll"
+                pass  # dedupe failure must not block polling entirely
     # 3) News (interval-driven, configurable via functions.json → news)
     try:
         fns = load_functions()
@@ -115,10 +122,17 @@ def _next_post_type(c: dict, now: datetime) -> str:
                 return "news"
     except Exception:
         pass
-    pts = _channel_post_types(c)
+    pts = [p for p in _channel_post_types(c) if p != "poll"]
+    if not pts:
+        return "prices"
     if "all" in pts:
         return "all"
-    # rotate by the hour so a multi-type channel alternates deterministically
+    # rotate by the hour so a multi-type channel alternates deterministically.
+    # NOTE: polls are NOT part of the rotation — they are interval-driven
+    # (functions.json → poll.interval_hours) and fire ONLY on boundary hours
+    # via the dedupe above. A channel with post_types=[prices, poll] and a
+    # 2-minute schedule used to send a poll every rotation tick (the
+    # «3 polls in a row» bug): rotation must never produce polls.
     idx = now.hour % len(pts)
     return pts[idx]
 
@@ -157,6 +171,14 @@ async def _scheduler_tick():
                     (now - RUNTIME["last_fetch"]) > timedelta(seconds=2 * ttl):
                 rows = await asyncio.to_thread(refresh_prices, True)
             post_type = _next_post_type(c, now)
+            # Empty-cache guard: NEVER send a prices/analysis post built from
+            # nothing (AI would produce «داده‌ای در دسترس نیست» filler, or the
+            # build collapses to an empty message Telegram rejects). Wait for
+            # data instead — the next tick retries.
+            if not rows and post_type in ("prices", "analysis", "all"):
+                log_line("scheduler skipped %s (%s): no price data available"
+                         % (cid, post_type))
+                continue
             # Detect stale/fallback data so posts carry a visible notice
             stale = bool(RUNTIME.get("degraded"))
             stale_age_h = 0.0
@@ -193,6 +215,13 @@ async def _scheduler_tick():
                 resp = await asyncio.to_thread(post_channel_type, c, post_type, rows)
                 ok = bool(resp.get("ok"))
                 detail = resp.get("error") or resp.get("description") or ""
+                if not ok and "empty" in str(detail).lower():
+                    # empty build → don't count as a post; retry next tick
+                    st["last_error"] = "پست خالی ساخته شد — ارسال نشد (تلاش بعدی)"
+                    save_channel_state(cid, st)
+                    log_line("scheduler skipped %s (%s): empty message"
+                             % (cid, post_type))
+                    continue
             if ok:
                 st["last_post_at"] = now.isoformat(timespec="seconds")
                 st["last_ok"] = now.isoformat(timespec="seconds")
@@ -200,6 +229,9 @@ async def _scheduler_tick():
                 st["last_type"] = post_type
                 if post_type == "poll":
                     st["last_poll_at"] = now.isoformat(timespec="seconds")
+                    st["last_poll_slot"] = "%s/%d" % (
+                        now.date().isoformat(), now.hour - now.hour % max(1, int(
+                            load_settings().get("poll_interval_hours", 4))))
                 if post_type == "analysis":
                     st["last_analysis_at"] = now.isoformat(timespec="seconds")
                 if post_type == "news":

@@ -41,3 +41,6 @@ new_css_block.txt
 *.swo
 .DS_Store
 Thumbs.db
+
+# UI backups
+*.bak-*

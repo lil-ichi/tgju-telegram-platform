@@ -418,10 +418,12 @@ def run_analysis(cfg: dict, channel: dict, rows: dict) -> dict:
             effort = ch_cfg_fn["effort"]
     except Exception:
         pass
+    # Orchestrator job config (state/ai_jobs.json) can override effort/tokens/timeout
+    job = resolve_job(cfg, "analysis")
+    if job.get("effort"):                     # AI-tab job setting wins over functions.json
+        effort = job["effort"]
     length = "۸ تا ۱۲ جمله جامع و تفصیلی" if effort == "deep" else "۳ تا ۵ جمله"
     prompt = ANALYSIS_PROMPT.format(domain=domain, length=length, table=table)
-    # Orchestrator job config (state/ai_jobs.json) can override tokens/timeout
-    job = resolve_job(cfg, "analysis")
     max_tokens = int(job.get("max_tokens") or 2000)
     timeout_s = int(job.get("timeout_s") or 90)
     t0 = time.time()

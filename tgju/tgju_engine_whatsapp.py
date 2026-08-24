@@ -499,12 +499,26 @@ def phone_key(us: dict) -> str:
 
 # ── shared data access ─────────────────────────────────────────────────────
 def _current_rows() -> dict:
-    """Live rows from RUNTIME cache (never touch the network from handlers)."""
+    """Live rows from RUNTIME cache (never touch the network from handlers).
+
+    Manual slug overrides (state/slug_overrides.json — the «داده‌ها و لینک‌ها»
+    tab) are applied HERE so WhatsApp serves exactly what Telegram/Bale serve:
+    one TGJU source, one override layer, every platform identical.
+    """
     try:
         from tgju_platform import RUNTIME
-        return RUNTIME.get("last_rows") or {}
+        rows = RUNTIME.get("last_rows") or {}
     except Exception:
         return {}
+    try:
+        from tgju_engine_orchestrator import apply_slug_overrides
+        from tgju_engine_config import load_slug_overrides
+        ovs = load_slug_overrides()
+        if ovs and rows:
+            rows = {s: apply_slug_overrides(s, r, ovs) for s, r in rows.items()}
+    except Exception:
+        pass
+    return rows
 
 
 def _fmt_price(slug: str, row: dict) -> str:

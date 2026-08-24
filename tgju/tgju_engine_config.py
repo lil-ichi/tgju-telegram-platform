@@ -57,6 +57,14 @@ def load_channels() -> list:
         # Ensure custom_data is always present
         if "custom_data" not in base:
             base["custom_data"] = {}
+        # style templates: stored as style_json (flat JSON string) in YAML
+        if not isinstance(base.get("style"), dict):
+            try:
+                sj = base.pop("style_json", "") or ""
+                parsed = json.loads(sj) if sj else {}
+                base["style"] = parsed if isinstance(parsed, dict) else {}
+            except Exception:
+                base["style"] = {}
         out.append(base)
     return out
 
@@ -121,6 +129,10 @@ def save_channels(channels: list):
                 f.write("    custom_data:\n")
                 for k, v in c["custom_data"].items():
                     f.write("      %s: %s\n" % (_q(k), _q(str(v))))
+            if c.get("style"):
+                # tag-style templates — stored as a flat JSON string so the
+                # simple YAML writer stays line-based (parsed back via json)
+                f.write("    style_json: %s\n" % _q(json.dumps(c["style"], ensure_ascii=False)))
 
 
 def channel_state_path(channel_id: str) -> str:

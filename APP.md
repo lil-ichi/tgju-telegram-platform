@@ -514,4 +514,100 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   rule "update APP.md in the same turn after any structural change" is
   encoded in the tgju-telegram-platform skill (mandatory for TGJU work), so
   every agent that changes the app keeps the doc in sync. No cron/watchdog.
+- **2026-08-24** — Multi-theme system + dark/light switch in the dashboard UI
+  (`tgju_platform_ui.html`): token-based skins switched via
+  `<html data-theme="emerald|ocean|amber" data-mode="light|dark">` — 3 hue
+  families × light/dark = 6 skins. Header pill switcher (3 round swatches +
+  mode toggle) persists choice in `localStorage` (`tgju_theme`, `tgju_mode`);
+  first visit respects OS `prefers-color-scheme`. All hardcoded surface /
+  semantic colors converted to tokens (`--surface`, `--ok-bg/--bad-bg/…`,
+  `--glow-1/2`, `--track`, `--row-hover`, `--on-accent`). Previous skin
+  preserved as default (`emerald` light = «Porcelain & Emerald»). Backup:
+  `tgju/tgju_platform_ui.html.bak-porcelain-20260824`. 70 tests pass.
+- **2026-08-24 (2)** — «داده‌ها و لینک‌ها» tab now shows the FULL tgju.org
+  slug inventory, not just channel-used slugs. `GET /api/slugs?scope=all`
+  (default) merges live homepage rows + profile-cache + channel pools
+  (Telegram/WhatsApp/Bale usage map per slug) + manual overrides into one
+  table with `source` ∈ {homepage, profile, manual, missing}, auto-unit,
+  and per-platform usage chips; `?scope=used` = legacy behavior. UI adds
+  search box + source/platform filters. NEW shared
+  `tgju_engine_orchestrator.apply_slug_overrides(slug, row, overrides)` is
+  THE single merge point — WhatsApp `_current_rows()` now applies overrides
+  too, so a manual price/name set in the dashboard flows to Telegram,
+  WhatsApp AND Bale identically (Bale already routed through
+  `build_for_channel` → `get_channel_rows`). Convention: `manual_price` is
+  RIAL like `data-price` (÷10 for تومان items). Homepage `<th>` cells that
+  embed onclick JS are cleaned by `_clean_display_name()` (keeps longest
+  pure-Persian chunk). Verified E2E: PUT override → visible in WhatsApp
+  keyword reply + Telegram builds; tests 69/70 pass (1 pre-existing failure:
+  channels.yaml now carries a real ch1 telegram_id from user's own UI edit —
+  conflicts with the repo-safety placeholder test, unrelated to this change).
+- **2026-08-24 (3)** — Scheduler bug fixes + UI polish. ROOT CAUSE of the
+  "3 polls in a row" bug: `tgju_engine_news.pick_rotating()` REPLACED the
+  whole channel-state file (`state/analysis_ch1.json`) with only its own
+  keys, WIPING `last_poll_at`/`last_analysis_at`/`last_news_at` on every news
+  rotation → interval dedupe broke (news also fired every ~2min instead of
+  6h). Fix: pick_rotating now MERGES into the loaded state (keys renamed to
+  `news_used`, reads legacy `used` too) and stamps `last_news_at` itself.
+  Poll dedupe hardened with a `last_poll_slot` fingerprint
+  ("YYYY-MM-DD/window-start-hour") recorded on success — a poll can never
+  repeat inside one interval window even if timestamps are lost; polls still
+  fire only at boundary hours (`hour % poll_interval_hours == 0`, default
+  0/4/8/12/16/20). EMPTY-POST guard: `_scheduler_tick` skips prices/analysis
+  when the rows cache is empty, and skips any non-prices post whose build is
+  empty — logged as «scheduler skipped …», NOT marked posted, retried next
+  tick (this was the "auto posts empty on telegram" symptom: AI analysis ran
+  with no price table and posted «داده‌ای در دسترس نیست» filler / Telegram
+  400s during tgju.org timeouts). UI: «🔗 داده‌ها و لینک‌ها» moved from the
+  Telegram sidebar group to ⚙️ سامانه (cross-platform tab); platform usage
+  chips restyled as token-based `.pf-chip` pills (colored dot + count,
+  theme-aware light/dark); inline slug editor card now uses `--surface-2`
+  (was hardcoded #fafafa + undefined var). Verified: state-merge unit test
+  passes, `_next_post_type` simulation correct at/below boundaries, 69/70
+  tests pass (same pre-existing placeholder failure).
+- **2026-08-24 (4)** — Activity tab rebuilt as a UNIFIED cross-platform feed +
+  final poll-rotation fix. ROOT CAUSE of the remaining polls (11:50, 11:52):
+  `post_types: [prices, poll]` + rotation `idx = hour % len(pts)` meant
+  rotation itself emitted polls on non-boundary hours. Fix: rotation can
+  NEVER return "poll" — polls are interval-only (boundary hours + slot
+  dedupe). NEW `GET /api/activity?limit=&category=` merges platform.log
+  (last ~400KB, classified via ACTIVITY_PATTERNS into telegram/whatsapp/
+  bale/config/data/error/skip; auth noise hidden), core event-bus buffer,
+  and run records into one newest-first feed with dedupe. UI «📋 فعالیت‌ها»:
+  live feed (auto-refresh every 15s, toggleable), category filter dropdown,
+  health+runs demoted into a collapsed <details> section. Verified live:
+  feed returns telegram/data/config/error/event entries; rotation simulation
+  shows zero polls across all 20 non-boundary hours; 69/70 tests pass.
+- **2026-08-24 (5)** — Activity feed detail view + AI tab control + template
+  tag editor. Activity rows are now expandable (click → detail card with the
+  raw log line / event payload JSON + structured fields: action verb,
+  channel pill, status pill failed/skipped/success) and searchable; backend
+  `/api/activity` items gained `action`, `raw`, structured `detail`.
+  Template editor (📝 پیش‌نمایش و ارسال → 🧩 قالب پیام کانال): variables are
+  clickable chips that insert at the cursor; `{footer}` is a special dashed
+  chip that opens an INLINE editor under the tag row showing the channel's
+  current footer text + with_footer toggle, saved via PUT /api/channels/{cid}
+  (answers «چطور مقدار {footer} را عوض کنم؟» — the tag is a placeholder, its
+  VALUE lives on the channel). AI tab: per-job search filter, channel-count
+  pill, effort (استاندارد/عمیق) selector on the analysis job — `effort` now
+  persisted via POST /api/ai/jobs and consumed by run_analysis (overrides
+  functions.json), activity list gets a 10/25/50 limit selector with richer
+  rows (chars, picked poll question).
+- **2026-08-24 (6)** — TAG STYLE ENGINE («🎨 استایل تگ‌ها» card in the
+  preview tab). Every tag's own TEXT is now editable per channel:
+  `style:{rows,weekday,time,sep,star}` on the channel object. Sub-variables:
+  rows → {name} {link_name} {url} {price} {unit} {arrow} {pct} {change};
+  weekday → {weekday}; time → {time}; star → {star_name} {star_pct}
+  {star_arrow}. Engine: `get_style()` merges user style over STYLE_DEFAULTS;
+  `render_row_line()` builds each price row from the template; build_message
+  renders weekday/time/sep/star through it — default templates reproduce the
+  classic output byte-for-byte (31/31 format tests pass). Persistence:
+  channels.yaml stores `style_json` (flat JSON string) written by
+  save_channels and parsed back by load_channels (line-based YAML writer
+  untouched). API: GET/PUT `/api/channels/{cid}/style` (empty value = reset
+  to default; PUT rejects templates missing their required sub-var, e.g.
+  rows without {price}). UI: style editor card with per-tag inputs, live
+  preview button, reset-to-default; validation errors shown in Persian.
+  Verified E2E: PUT «امروز {weekday}» + custom sep → preview showed
+  «امروز دوشنبه» + ━ separator → reset restored defaults.
 

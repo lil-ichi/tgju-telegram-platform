@@ -160,7 +160,7 @@ def pick_rotating(channel_id: str, arts: list) -> dict:
     if not arts:
         return {}
     state = load_channel_state(channel_id)
-    used = set(state.get("used", []))
+    used = set(state.get("news_used") or state.get("used") or [])
     dayid = datetime.now().timetuple().tm_yday
     if state.get("day") != dayid:
         used = set()  # fresh day -> allow reusing older articles
@@ -188,8 +188,20 @@ def pick_rotating(channel_id: str, arts: list) -> dict:
         pick = arts[0]
     used.add(pick["id"])
     state["last_news_id"] = pick["id"]
-    save_channel_state(channel_id, {"day": dayid, "used": sorted(used)[-80:],
-                                    "last_news_id": pick["id"]})
+    # MERGE into the existing channel state — this file also carries
+    # last_poll_at / last_analysis_at / last_news_at (scheduler dedupe).
+    # Replacing the whole dict here used to WIPE those timestamps, which
+    # broke poll/news interval tracking (polls fired every tick).
+    try:
+        from tgju_engine_config import load_channel_state as _load_full
+        full = _load_full(channel_id) or {}
+    except Exception:
+        full = {}
+    full.update({"day": dayid,
+                 "news_used": sorted(used)[-80:],
+                 "last_news_id": pick["id"],
+                 "last_news_at": datetime.now().isoformat(timespec="seconds")})
+    save_channel_state(channel_id, full)
     return pick
 
 

@@ -119,6 +119,76 @@ def direction_arrow(row: dict) -> str:
     return "▲" if row.get("dir") == "high" else ("▼" if row.get("dir") == "low" else "")
 
 
+# ── Tag style engine (per-channel editable tag templates) ────────────────
+# Each tag can have its own mini-template with SUB-variables:
+#   rows    : {name} {link_name} {url} {price} {unit} {arrow} {pct}
+#   weekday : {weekday} (lets you wrap/rename, e.g. «امروز {weekday}`)
+#   time    : {time}
+#   star    : {star_name} {star_pct} {star_arrow} {star_lines}
+#   news    : {news_url} {news_title} {news_text}
+#   sep     : literal text
+STYLE_DEFAULTS = {
+    "rows": "▸ {link_name} : [ <b>{price} {unit}{change}</b> ]",
+    "weekday": "{weekday}",
+    "time": "{time}",
+    "sep": "_" * 66,
+    "star": ("⚡ بیشترین نوسانات\nبیشترین نوسانات : {star_name}\n"
+             "بیشترین رشد/افت : [ {star_pct} {star_arrow} ]"),
+    "news": "",
+}
+
+def _sub(tpl: str, ctx: dict) -> str:
+    """Replace {key}s; missing keys → ''."""
+    out = tpl or ""
+    for k, v in ctx.items():
+        out = out.replace("{%s}" % k, "" if v is None else str(v))
+    return out
+
+def get_style(channel: dict) -> dict:
+    """Channel style merged over defaults (never raises)."""
+    st = STYLE_DEFAULTS.copy()
+    try:
+        user = channel.get("style") or {}
+        if isinstance(user, dict):
+            for k in STYLE_DEFAULTS:
+                if isinstance(user.get(k), str) and user[k].strip():
+                    st[k] = user[k]
+        # global default from settings.default_footer handled at call site
+    except Exception:
+        pass
+    return st
+
+
+def render_row_line(slug: str, row: dict, unit: str, profile_path: str,
+                    style_tpl: str) -> str:
+    """One price row rendered from a user-editable template.
+
+    Sub-variables: {name} plain name · {link_name} name as TGJU link (or
+    plain when no profile) · {url} profile URL · {price} · {unit} ·
+    {arrow} ▲▼ · {pct} number+٪ · {change} ' arrow pct٪' fragment.
+    """
+    name = row.get("name") or slug
+    if not row.get("price"):
+        return _sub(style_tpl, {
+            "name": esc(name), "link_name": esc(name), "url": "",
+            "price": "—", "unit": "", "arrow": "", "pct": "", "change": ""})
+    price = fmt_price(slug, row["price"], unit)
+    if price == "—":
+        return ""
+    arrow = direction_arrow(row)
+    pct = fa_num(row.get("change_pct") or "")
+    pct_txt = (pct + "٪") if pct else ""
+    change = ""
+    if arrow and pct:
+        change = " " + arrow + " " + pct_txt
+    url = ("https://www.tgju.org/" + profile_path) if profile_path else ""
+    link_name = ('<a href="%s">%s</a>' % (url, esc(name))) if url else esc(name)
+    return _sub(style_tpl, {
+        "name": esc(name), "link_name": link_name, "url": url,
+        "price": price, "unit": unit_label(unit), "arrow": arrow,
+        "pct": pct_txt, "change": change})
+
+
 def chip_line(slug: str, row: dict, profile_path: str, unit: str) -> str:
     """One ▸ chip line: name link : [ price unit arrow pct ]."""
     text = plain_chip_line(slug, row, unit)
@@ -237,33 +307,51 @@ def build_message(channel: dict, rows: dict, slug_group_map: dict,
     appended after {footer} so members always know the numbers are old.
     """
     now = datetime.now()
-    wd = FA_WEEKDAYS[now.weekday()]
-    hm = fa_num(now.strftime("%H:%M"))
+    style = get_style(channel)
+    wd = _sub(style["weekday"], {"weekday": FA_WEEKDAYS[now.weekday()]})
+    hm = _sub(style["time"], {"time": fa_num(now.strftime("%H:%M"))})
+    sep = _sub(style["sep"], {})
     icon = channel.get("icon") or ""
     header_txt = channel.get("header") or channel.get("name", "TGJU بازار")
     gname = channel.get("section_title", "قیمت‌ها")
 
-    # rows block
+    # rows block — rendered from the per-channel {rows} style template
+    rows_tpl = style["rows"]
     row_lines = []
     for slug, row in rows.items():
-        if not row.get("price"):
-            row_lines.append("▸ %s : [ — ]" % esc(row.get("name") or slug))
-            continue
         unit = slug_unit(slug, channel)
         profile = slug_profile(slug)
-        cl = chip_line(slug, row, profile, unit)
+        cl = render_row_line(slug, row, unit, profile, rows_tpl)
         if cl:
             row_lines.append(cl)
     rows_txt = "\n".join(row_lines)
 
-    star = star_block(rows, slug_group_map) if channel.get("with_star", True) and rows else ""
+    star = ""
+    if channel.get("with_star", True) and rows:
+        best = None
+        for slug, row in rows.items():
+            pct = row.get("change_pct") or ""
+            try:
+                apct = abs(float(pct.replace(",", "")))
+            except ValueError:
+                continue
+            if best is None or apct > best[1]:
+                best = (slug, apct, row)
+        if best is not None:
+            _, apct, brow = best
+            arrow_b = direction_arrow(brow)
+            star = _sub(style["star"], {
+                "star_name": esc(brow.get("name") or ""),
+                "star_pct": fa_num("%.2f" % apct) + "٪",
+                "star_arrow": arrow_b,
+            })
 
     ctx = {
         "icon": esc(icon),
         "header": esc(header_txt),
         "weekday": wd,
         "time": hm,
-        "sep": SEP,
+        "sep": sep,
         "gname": esc(gname),
         "star": star,
         "rows": rows_txt,
