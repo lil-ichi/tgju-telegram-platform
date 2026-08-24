@@ -1320,182 +1320,125 @@ html[data-mode="light"] .ts-emerald.active {}
       </div>
 
 <!-- ── بله: کانال‌ها ── -->
+      <!-- ── بله: کانالها ── -->
       <div id="panel_bale_channels" class="panel">
         <div class="flex-between">
-          <h1>🟢 کانال‌های بله</h1>
-          <div class="row"><button onclick="loadبلهHome()" aria-label="به‌روزرسانی">🔄</button></div>
-        </div>
-        <div class="sub">همان تجربهٔ کامل تلگرام: گروه اسلاگ، قالب پیام، خبر، تحلیل و زمان‌بندی — بهینه برای بله</div>
-        <table style="margin-top:12px">
-          <thead><tr><th>نام</th><th>شناسه</th><th>وضعیت</th><th>زمان‌بندی</th><th>انواع پست</th><th>آخرین ارسال</th><th>خطا</th><th></th></tr></thead>
-          <tbody id="bale_channels_table"></tbody>
-        </table>
-        <div class="row" style="margin-top:10px">
-          <button onclick="baleNewChannel()">➕ کانال جدید</button>
-        </div>
-        
-      <div id="bale_form" style="display:none">
-        <h2 id="bale_form_title">کانال بله جدید</h2>
-        <div class="form-grid">
-          <div><label>نام کانال</label><input id="bale_name"></div>
-          <div><label>شناسه کانال بله (bale_id)</label><input id="bale_tgid" placeholder="@channel"></div>
-          <div><label>آیکون</label><input id="bale_icon" value="🟢"></div>
-          <div><label>سربرگ</label><input id="bale_header"></div>
-          <div><label>عنوان بخش</label><input id="bale_section"></div>
-          <div><label>زمان‌بندی (دقیقه)</label><input id="bale_sched" type="number" value="10"></div>
-          <div><label>قالب</label>
-            <select id="bale_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
+          <h1>🟢 کانالهای بله</h1>
+          <div class="row">
+            <button onclick="baleNewChannel()">➕ کانال جدید</button>
+            <button onclick="loadBaleHome()" aria-label="بهروزرسانی">🔄</button>
           </div>
-          <div style="grid-column:1/-1"><label>پانوشت</label><input id="bale_footer"></div>
-          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label>
-            <div class="row" style="gap:8px;align-items:flex-start">
-              <input id="bale_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
-              <button type="button" class="small" onclick="openSlugPicker('bale_slugs')">🏷 انتخاب از فهرست</button>
-              <select id="bale_copy_from" onchange="copySlugsFrom('bale_copy_from','bale_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+        </div>
+        <div class="sub">همان تجربه کامل تلگرام — بهینه برای بله</div>
+        <div id="bale_channels_list" style="margin-top:14px"></div>
+        <div id="bale_form" style="display:none">
+          <h2 id="bale_form_title">کانال بله جدید</h2>
+          <div class="form-grid">
+            <div><label>نام کانال</label><input id="bale_name"></div>
+            <div><label>شناسه کانال بله (bale_id)</label><input id="bale_tgid" placeholder="@channel"></div>
+            <div><label>آیکون</label><input id="bale_icon" value="🟢"></div>
+            <div><label>سربرگ</label><input id="bale_header"></div>
+            <div><label>عنوان بخش</label><input id="bale_section"></div>
+            <div><label>زمانبندی (دقیقه)</label><input id="bale_sched" type="number" value="10"></div>
+            <div><label>قالب</label>
+              <select id="bale_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
+            </div>
+            <div style="grid-column:1/-1"><label>پانوشت</label><input id="bale_footer"></div>
+            <div style="grid-column:1/-1"><label>اسلاگها (با ویرگول جدا کنید)</label>
+              <div class="row" style="gap:8px;align-items:flex-start">
+                <input id="bale_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
+                <button type="button" class="small" onclick="openSlugPicker('bale_slugs')">🏷 انتخاب از فهرست</button>
+                <select id="bale_copy_from" onchange="copySlugsFrom('bale_copy_from','bale_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+              </div>
+            </div>
+            <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="bale_news" placeholder="اخبار-ارزی"></div>
+            <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="bale_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
+            <div style="grid-column:1/-1">
+              <label>قالب پیام (Template) — اختیاری؛ خالی = پیشفرض</label>
+              <textarea id="bale_template" rows="6" style="width:100%;font-family:monospace;direction:ltr;text-align:left"></textarea>
+              <div class="muted" style="margin-top:4px;font-size:11.5px">متغیرها: icon header weekday time sep gname star rows news footer</div>
             </div>
           </div>
-          <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="bale_news" placeholder="اخبار-ارزی"></div>
-          <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="bale_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
-          <div style="grid-column:1/-1">
-            <label>قالب پیام (Template) — اختیاری؛ خالی = پیش‌فرض</label>
-            <textarea id="bale_template" rows="6" style="width:100%;font-family:monospace;direction:ltr;text-align:left" placeholder="{icon} {header} | {weekday} {time}&#10;{sep}&#10;{star}&#10;{gname}&#10;{rows}&#10;{sep}&#10;{news}&#10;{footer}"></textarea>
-            <div class="muted" style="margin-top:4px;font-size:11.5px">متغیرها: <code>{icon}</code> <code>{header}</code> <code>{weekday}</code> <code>{time}</code> <code>{sep}</code> <code>{gname}</code> <code>{star}</code> <code>{rows}</code> <code>{news}</code> <code>{footer}</code></div>
+          <div class="check-row">
+            <label><input type="checkbox" id="bale_enabled" checked> فعال</label>
+            <label><input type="checkbox" id="bale_star" checked> ستاره نوسانات</label>
+            <label><input type="checkbox" id="bale_analysis" checked> تحلیل</label>
+            <label><input type="checkbox" id="bale_footer_on" checked> پانوشت</label>
+          </div>
+          <div class="check-row">
+            <span class="muted" style="margin-inline-end:8px">انواع پست:</span>
+            <label><input type="checkbox" class="bale-pt" value="prices" checked> جدول قیمت</label>
+            <label><input type="checkbox" class="bale-pt" value="news"> خبر</label>
+            <label><input type="checkbox" class="bale-pt" value="poll"> نظرسنجی</label>
+          </div>
+          <div class="row" style="margin-top:18px">
+            <button class="primary" onclick="baleSaveChannel()">💾 ذخیره</button>
+            <button onclick="baleCloseForm()">انصراف</button>
+            <button class="danger" id="bale_del_btn" style="display:none" onclick="baleDeleteChannel()">🗑 حذف</button>
           </div>
         </div>
-        <div class="check-row">
-          <label><input type="checkbox" id="bale_enabled" checked> فعال</label>
-          <label><input type="checkbox" id="bale_star" checked> ستاره نوسانات</label>
-          <label><input type="checkbox" id="bale_analysis" checked> تحلیل</label>
-          <label><input type="checkbox" id="bale_footer_on" checked> پانوشت</label>
-        </div>
-        <div class="check-row">
-          <span class="muted" style="margin-inline-end:8px">انواع پست:</span>
-          <label><input type="checkbox" class="bale-pt" value="prices" checked> جدول قیمت</label>
-          <label><input type="checkbox" class="bale-pt" value="news"> خبر</label>
-          <label><input type="checkbox" class="bale-pt" value="analysis"> تحلیل</label>
-        </div>
-        <div class="row" style="margin-top:18px">
-          <button class="primary" onclick="baleSaveChannel()">💾 ذخیره</button>
-          <button onclick="baleCloseForm()">انصراف</button>
-          <button class="danger" id="bale_del_btn" style="display:none" onclick="baleDeleteChannel()">🗑 حذف</button>
-        </div>
-      </div>
       </div>
 
-<div id="panel_bale_preview" class="panel">
+<div id="panel_rub_channels" class="panel">
         <div class="flex-between">
-          <h1>📝 پیش‌نمایش و ارسال بله</h1>
-          <div class="row"><button onclick="loadBaleHome()" aria-label="به‌روزرسانی">🔄</button></div>
+          <h1>🟣 کانالهای روبیکا</h1>
+          <div class="row">
+            <button onclick="rubNewChannel()">➕ کانال جدید</button>
+            <button onclick="loadRubHome()" aria-label="بهروزرسانی">🔄</button>
+          </div>
         </div>
-        <div class="sub">ساخت و ارسال پست به کانال‌های بله — قیمت، خبر، تحلیل یا نظرسنجی</div>
-        <div class="card">
-          <div class="row form-row">
-            <div style="min-width:180px;flex:1"><label>کانال</label><select id="bale_pv_chan"></select></div>
-            <div style="min-width:160px"><label>نوع پست</label>
-              <select id="bale_pv_type">
-                <option value="prices">📊 جدول قیمت</option>
-                <option value="news">📰 خبر</option>
-                <option value="analysis">📈 تحلیل</option>
-                <option value="poll">🗳 نظرسنجی</option>
-              </select>
+        <div class="sub">همان تجربه کامل تلگرام — بهینه برای روبیکا</div>
+        <div id="rub_channels_list" style="margin-top:14px"></div>
+        <div id="rub_form" style="display:none">
+          <h2 id="rub_form_title">کانال روبیکا جدید</h2>
+          <div class="form-grid">
+            <div><label>نام کانال</label><input id="rub_name"></div>
+            <div><label>شناسه کانال روبیکا (chat_id)</label><input id="rub_tgid" placeholder="g0xxxxxx"></div>
+            <div><label>آیکون</label><input id="rub_icon" value="🟣"></div>
+            <div><label>سربرگ</label><input id="rub_header"></div>
+            <div><label>عنوان بخش</label><input id="rub_section"></div>
+            <div><label>زمانبندی (دقیقه)</label><input id="rub_sched" type="number" value="10"></div>
+            <div><label>قالب</label>
+              <select id="rub_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
             </div>
-            <div class="btn-group">
-              <button onclick="balePreview()">👁 پیش‌نمایش</button>
-              <button class="primary" onclick="balePost()">📤 ارسال</button>
+            <div style="grid-column:1/-1"><label>پانوشت</label><input id="rub_footer"></div>
+            <div style="grid-column:1/-1"><label>اسلاگها (با ویرگول جدا کنید)</label>
+              <div class="row" style="gap:8px;align-items:flex-start">
+                <input id="rub_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
+                <button type="button" class="small" onclick="openSlugPicker('rub_slugs')">🏷 انتخاب از فهرست</button>
+                <select id="rub_copy_from" onchange="copySlugsFrom('rub_copy_from','rub_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+              </div>
+            </div>
+            <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="rub_news" placeholder="اخبار-ارزی"></div>
+            <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="rub_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
+            <div style="grid-column:1/-1">
+              <label>قالب پیام (Template) — اختیاری؛ خالی = پیشفرض</label>
+              <textarea id="rub_template" rows="6" style="width:100%;font-family:monospace;direction:ltr;text-align:left"></textarea>
+              <div class="muted" style="margin-top:4px;font-size:11.5px">متغیرها: icon header weekday time sep gname star rows news footer</div>
             </div>
           </div>
-          <div id="bale_pv_box" class="preview-box" style="margin-top:12px;display:none"><pre id="bale_pv_text"></pre></div>
-          <div id="bale_pv_result" style="margin-top:12px"></div>
+          <div class="check-row">
+            <label><input type="checkbox" id="rub_enabled" checked> فعال</label>
+            <label><input type="checkbox" id="rub_star" checked> ستاره نوسانات</label>
+            <label><input type="checkbox" id="rub_analysis" checked> تحلیل</label>
+            <label><input type="checkbox" id="rub_footer_on" checked> پانوشت</label>
+          </div>
+          <div class="check-row">
+            <span class="muted" style="margin-inline-end:8px">انواع پست:</span>
+            <label><input type="checkbox" class="rub-pt" value="prices" checked> جدول قیمت</label>
+            <label><input type="checkbox" class="rub-pt" value="news"> خبر</label>
+            <label><input type="checkbox" class="rub-pt" value="analysis"> تحلیل</label>
+          </div>
+          <div class="row" style="margin-top:18px">
+            <button class="primary" onclick="rubSaveChannel()">💾 ذخیره</button>
+            <button onclick="rubCloseForm()">انصراف</button>
+            <button class="danger" id="rub_del_btn" style="display:none" onclick="rubDeleteChannel()">🗑 حذف</button>
+          </div>
         </div>
       </div>
 
-<!-- ── بله: ربات ── -->
-      <div id="panel_bale_conn" class="panel">
-        <div class="flex-between">
-          <h1>🤖 ربات بله</h1>
-          <div class="row"><button onclick="loadBaleHome()" aria-label="به‌روزرسانی">🔄</button></div>
-        </div>
-        <div class="sub">اتصال ربات بله: توکن از @BotFather بله + ارسال خودکار</div>
-        <div class="wa-grid">
-          <div class="wa-card">
-            <h3>🔑 اتصال ربات بله</h3>
-            <div class="wa-field"><label>توکن ربات بله (از @BotFather بله)</label><input id="bale_token" type="password" placeholder="123456789:AA..."></div>
-            <div class="check-row" style="margin-top:6px">
-              <label><input type="checkbox" id="bale_auto_post"> ارسال خودکار (مانند زمان‌بندی تلگرام)</label>
-            </div>
-            <div class="row" style="margin-top:12px">
-              <button class="primary" onclick="baleSaveSettings()">💾 ذخیره</button>
-              <button onclick="baleTest()">🔌 تست اتصال</button>
-            </div>
-            <div id="bale_conn_result" class="wa-status-line"></div>
-            <div class="wa-status-line" id="bale_mode_line"></div>
-          </div>
-        </div>
-      </div>
 
-      <div id="panel_rub_channels" class="panel">
-        <div class="flex-between">
-          <h1>🟣 کانال‌های روبیکا</h1>
-          <div class="row"><button onclick="loadروبیکاHome()" aria-label="به‌روزرسانی">🔄</button></div>
-        </div>
-        <div class="sub">همان تجربهٔ کامل تلگرام: گروه اسلاگ، قالب پیام، خبر، تحلیل و زمان‌بندی — بهینه برای روبیکا</div>
-        <table style="margin-top:12px">
-          <thead><tr><th>نام</th><th>شناسه</th><th>وضعیت</th><th>زمان‌بندی</th><th>انواع پست</th><th>آخرین ارسال</th><th>خطا</th><th></th></tr></thead>
-          <tbody id="rub_channels_table"></tbody>
-        </table>
-        <div class="row" style="margin-top:10px">
-          <button onclick="rubNewChannel()">➕ کانال جدید</button>
-        </div>
-        
-      <div id="rub_form" style="display:none">
-        <h2 id="rub_form_title">کانال روبیکا جدید</h2>
-        <div class="form-grid">
-          <div><label>نام کانال</label><input id="rub_name"></div>
-          <div><label>شناسه کانال روبیکا (chat_id)</label><input id="rub_tgid" placeholder="g0xxxxxx یا c0xxxxxx"></div>
-          <div><label>آیکون</label><input id="rub_icon" value="🟣"></div>
-          <div><label>سربرگ</label><input id="rub_header"></div>
-          <div><label>عنوان بخش</label><input id="rub_section"></div>
-          <div><label>زمان‌بندی (دقیقه)</label><input id="rub_sched" type="number" value="10"></div>
-          <div><label>قالب</label>
-            <select id="rub_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
-          </div>
-          <div style="grid-column:1/-1"><label>پانوشت</label><input id="rub_footer"></div>
-          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label>
-            <div class="row" style="gap:8px;align-items:flex-start">
-              <input id="rub_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
-              <button type="button" class="small" onclick="openSlugPicker('rub_slugs')">🏷 انتخاب از فهرست</button>
-              <select id="rub_copy_from" onchange="copySlugsFrom('rub_copy_from','rub_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
-            </div>
-          </div>
-          <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="rub_news" placeholder="اخبار-ارزی"></div>
-          <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="rub_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
-          <div style="grid-column:1/-1">
-            <label>قالب پیام (Template) — اختیاری؛ خالی = پیش‌فرض</label>
-            <textarea id="rub_template" rows="6" style="width:100%;font-family:monospace;direction:ltr;text-align:left" placeholder="{icon} {header} | {weekday} {time}&#10;{sep}&#10;{star}&#10;{gname}&#10;{rows}&#10;{sep}&#10;{news}&#10;{footer}"></textarea>
-            <div class="muted" style="margin-top:4px;font-size:11.5px">متغیرها: <code>{icon}</code> <code>{header}</code> <code>{weekday}</code> <code>{time}</code> <code>{sep}</code> <code>{gname}</code> <code>{star}</code> <code>{rows}</code> <code>{news}</code> <code>{footer}</code></div>
-          </div>
-        </div>
-        <div class="check-row">
-          <label><input type="checkbox" id="rub_enabled" checked> فعال</label>
-          <label><input type="checkbox" id="rub_star" checked> ستاره نوسانات</label>
-          <label><input type="checkbox" id="rub_analysis" checked> تحلیل</label>
-          <label><input type="checkbox" id="rub_footer_on" checked> پانوشت</label>
-        </div>
-        <div class="check-row">
-          <span class="muted" style="margin-inline-end:8px">انواع پست:</span>
-          <label><input type="checkbox" class="rub-pt" value="prices" checked> جدول قیمت</label>
-          <label><input type="checkbox" class="rub-pt" value="news"> خبر</label>
-          <label><input type="checkbox" class="rub-pt" value="analysis"> تحلیل</label>
-        </div>
-        <div class="row" style="margin-top:18px">
-          <button class="primary" onclick="rubSaveChannel()">💾 ذخیره</button>
-          <button onclick="rubCloseForm()">انصراف</button>
-          <button class="danger" id="rub_del_btn" style="display:none" onclick="rubDeleteChannel()">🗑 حذف</button>
-        </div>
-      </div>
-      </div>
-
-<div id="panel_rub_preview" class="panel">
+      <div id="panel_rub_preview" class="panel">
         <div class="flex-between">
           <h1>📝 پیش‌نمایش و ارسال روبیکا</h1>
           <div class="row"><button onclick="loadRubHome()" aria-label="به‌روزرسانی">🔄</button></div>
@@ -1549,67 +1492,64 @@ html[data-mode="light"] .ts-emerald.active {}
 
       <div id="panel_eit_channels" class="panel">
         <div class="flex-between">
-          <h1>🟠 کانال‌های ایتا</h1>
-          <div class="row"><button onclick="loadایتاHome()" aria-label="به‌روزرسانی">🔄</button></div>
-        </div>
-        <div class="sub">همان تجربهٔ کامل تلگرام: گروه اسلاگ، قالب پیام، خبر، تحلیل و زمان‌بندی — بهینه برای ایتا</div>
-        <table style="margin-top:12px">
-          <thead><tr><th>نام</th><th>شناسه</th><th>وضعیت</th><th>زمان‌بندی</th><th>انواع پست</th><th>آخرین ارسال</th><th>خطا</th><th></th></tr></thead>
-          <tbody id="eit_channels_table"></tbody>
-        </table>
-        <div class="row" style="margin-top:10px">
-          <button onclick="eitNewChannel()">➕ کانال جدید</button>
-        </div>
-        
-      <div id="eit_form" style="display:none">
-        <h2 id="eit_form_title">کانال ایتا جدید</h2>
-        <div class="form-grid">
-          <div><label>نام کانال</label><input id="eit_name"></div>
-          <div><label>آیدی کانال ایتا (@username یا عددی)</label><input id="eit_tgid" placeholder="@mychannel"></div>
-          <div><label>آیکون</label><input id="eit_icon" value="🟠"></div>
-          <div><label>سربرگ</label><input id="eit_header"></div>
-          <div><label>عنوان بخش</label><input id="eit_section"></div>
-          <div><label>زمان‌بندی (دقیقه)</label><input id="eit_sched" type="number" value="10"></div>
-          <div><label>قالب</label>
-            <select id="eit_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
+          <h1>🟠 کانالهای ایتا</h1>
+          <div class="row">
+            <button onclick="eitNewChannel()">➕ کانال جدید</button>
+            <button onclick="loadEitHome()" aria-label="بهروزرسانی">🔄</button>
           </div>
-          <div style="grid-column:1/-1"><label>پانوشت</label><input id="eit_footer"></div>
-          <div style="grid-column:1/-1"><label>اسلاگ‌ها (با ویرگول جدا کنید)</label>
-            <div class="row" style="gap:8px;align-items:flex-start">
-              <input id="eit_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
-              <button type="button" class="small" onclick="openSlugPicker('eit_slugs')">🏷 انتخاب از فهرست</button>
-              <select id="eit_copy_from" onchange="copySlugsFrom('eit_copy_from','eit_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+        </div>
+        <div class="sub">همان تجربه کامل تلگرام — بهینه برای ایتا</div>
+        <div id="eit_channels_list" style="margin-top:14px"></div>
+        <div id="eit_form" style="display:none">
+          <h2 id="eit_form_title">کانال ایتا جدید</h2>
+          <div class="form-grid">
+            <div><label>نام کانال</label><input id="eit_name"></div>
+            <div><label>آیدی کانال ایتا (@username)</label><input id="eit_tgid" placeholder="@mychannel"></div>
+            <div><label>آیکون</label><input id="eit_icon" value="🟠"></div>
+            <div><label>سربرگ</label><input id="eit_header"></div>
+            <div><label>عنوان بخش</label><input id="eit_section"></div>
+            <div><label>زمانبندی (دقیقه)</label><input id="eit_sched" type="number" value="10"></div>
+            <div><label>قالب</label>
+              <select id="eit_format"><option value="chips">چیپ (Chips)</option><option value="list">فهرست (List)</option></select>
+            </div>
+            <div style="grid-column:1/-1"><label>پانوشت</label><input id="eit_footer"></div>
+            <div style="grid-column:1/-1"><label>اسلاگها (با ویرگول جدا کنید)</label>
+              <div class="row" style="gap:8px;align-items:flex-start">
+                <input id="eit_slugs" placeholder="price_dollar_rl, price_eur, …" style="flex:1">
+                <button type="button" class="small" onclick="openSlugPicker('eit_slugs')">🏷 انتخاب از فهرست</button>
+                <select id="eit_copy_from" onchange="copySlugsFrom('eit_copy_from','eit_slugs')" style="max-width:200px;width:auto"><option value="">📋 کپی از کانال…</option></select>
+              </div>
+            </div>
+            <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="eit_news" placeholder="اخبار-ارزی"></div>
+            <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="eit_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
+            <div style="grid-column:1/-1">
+              <label>قالب پیام (Template) — اختیاری؛ خالی = پیشفرض</label>
+              <textarea id="eit_template" rows="6" style="width:100%;font-family:monospace;direction:ltr;text-align:left"></textarea>
+              <div class="muted" style="margin-top:4px;font-size:11.5px">متغیرها: icon header weekday time sep gname star rows news footer</div>
             </div>
           </div>
-          <div style="grid-column:1/-1"><label>دسته‌های خبری (با ویرگول)</label><input id="eit_news" placeholder="اخبار-ارزی"></div>
-          <div style="grid-column:1/-1"><label>تگ‌های تحلیل (با ویرگول)</label><input id="eit_tags" placeholder="تحلیل-تکنیکال-دلار"></div>
-          <div style="grid-column:1/-1">
-            <label>قالب پیام (Template) — اختیاری؛ خالی = پیش‌فرض</label>
-            <textarea id="eit_template" rows="6" style="width:100%;font-family:monospace;direction:ltr;text-align:left" placeholder="{icon} {header} | {weekday} {time}&#10;{sep}&#10;{star}&#10;{gname}&#10;{rows}&#10;{sep}&#10;{news}&#10;{footer}"></textarea>
-            <div class="muted" style="margin-top:4px;font-size:11.5px">متغیرها: <code>{icon}</code> <code>{header}</code> <code>{weekday}</code> <code>{time}</code> <code>{sep}</code> <code>{gname}</code> <code>{star}</code> <code>{rows}</code> <code>{news}</code> <code>{footer}</code></div>
+          <div class="check-row">
+            <label><input type="checkbox" id="eit_enabled" checked> فعال</label>
+            <label><input type="checkbox" id="eit_star" checked> ستاره نوسانات</label>
+            <label><input type="checkbox" id="eit_analysis" checked> تحلیل</label>
+            <label><input type="checkbox" id="eit_footer_on" checked> پانوشت</label>
+          </div>
+          <div class="check-row">
+            <span class="muted" style="margin-inline-end:8px">انواع پست:</span>
+            <label><input type="checkbox" class="eit-pt" value="prices" checked> جدول قیمت</label>
+            <label><input type="checkbox" class="eit-pt" value="news"> خبر</label>
+            <label><input type="checkbox" class="eit-pt" value="analysis"> تحلیل</label>
+          </div>
+          <div class="row" style="margin-top:18px">
+            <button class="primary" onclick="eitSaveChannel()">💾 ذخیره</button>
+            <button onclick="eitCloseForm()">انصراف</button>
+            <button class="danger" id="eit_del_btn" style="display:none" onclick="eitDeleteChannel()">🗑 حذف</button>
           </div>
         </div>
-        <div class="check-row">
-          <label><input type="checkbox" id="eit_enabled" checked> فعال</label>
-          <label><input type="checkbox" id="eit_star" checked> ستاره نوسانات</label>
-          <label><input type="checkbox" id="eit_analysis" checked> تحلیل</label>
-          <label><input type="checkbox" id="eit_footer_on" checked> پانوشت</label>
-        </div>
-        <div class="check-row">
-          <span class="muted" style="margin-inline-end:8px">انواع پست:</span>
-          <label><input type="checkbox" class="eit-pt" value="prices" checked> جدول قیمت</label>
-          <label><input type="checkbox" class="eit-pt" value="news"> خبر</label>
-          <label><input type="checkbox" class="eit-pt" value="analysis"> تحلیل</label>
-        </div>
-        <div class="row" style="margin-top:18px">
-          <button class="primary" onclick="eitSaveChannel()">💾 ذخیره</button>
-          <button onclick="eitCloseForm()">انصراف</button>
-          <button class="danger" id="eit_del_btn" style="display:none" onclick="eitDeleteChannel()">🗑 حذف</button>
-        </div>
-      </div>
       </div>
 
-<div id="panel_eit_preview" class="panel">
+
+      <div id="panel_eit_preview" class="panel">
         <div class="flex-between">
           <h1>📝 پیش‌نمایش و ارسال ایتا</h1>
           <div class="row"><button onclick="loadEitHome()" aria-label="به‌روزرسانی">🔄</button></div>
@@ -3280,33 +3220,49 @@ async function loadBaleHome(){
   }
 }
 
-function renderBaleChannels(){
-  const tb = $('bale_channels_table');
-  if(!tb) return;
+function renderbaleChannels(){
+  const list = $('bale_channels_list');
+  if(!list) return;
   if(!BALE_CHANNELS.length){
-    tb.innerHTML = '<tr><td colspan="8" class="muted">— کانالی ثبت نشده —</td></tr>';
+    list.innerHTML = '<div class="muted">کانالی ثبت نشده</div>';
     return;
   }
-  tb.innerHTML = BALE_CHANNELS.map(c=>{
-    const connected = String(c.chat_id||'').trim().length > 0;
-    const types = (c.post_types||[]).map(t=>'<span class="pill pill-dim">'+esc(t)+'</span>').join(' ');
-    return `<tr>
-      <td><b>${esc(c.icon||'')} ${esc(c.name)}</b></td>
-      <td class="mono">${esc(c.chat_id||'—')}</td>
-      <td>${(connected&&c.enabled)?pill('enabled'):pill('disabled')}</td>
-      <td>هر ${faNum(c.schedule_minutes||30)} دقیقه</td>
-      <td>${types||'—'}</td>
-      <td class="muted">${esc(c.last_post||'—')}</td>
-      <td class="err">${esc((c.last_error||'').slice(0,60))}</td>
-      <td>
-        <button class="small" onclick="baleEdit('${c.id}')">✏️</button>
-        <button class="small" onclick="baleQuickPreview('${c.id}')">👁</button>
-        <button class="small danger" onclick="baleDelete('${c.id}')">🗑</button>
-      </td>
-    </tr>`;
-  }).join('');
+  list.innerHTML = BALE_CHANNELS.map(c=>`<div class="ch">
+      <div class="ch-head" onclick="toggleBale('${c.id}')">
+        <span class="icon">${esc(c.icon||'📢')}</span>
+        <div style="flex:1"><b>${esc(c.name)}</b> <span class="mono">(${esc(c.id)})</span>
+          <div class="muted">${esc(c.chat_id||'بدون آیدی')} • هر ${faNum(c.schedule_minutes||30)} دقیقه • ${(c.post_types||['prices']).map(esc).join('، ')}</div></div>
+        ${(String(c.chat_id||'').trim())?(c.enabled?pill('enabled'):pill('disabled')):pill('disabled')}
+      </div>
+      <div class="ch-body" id="balebody_${c.id}" style="display:none">
+        <div class="row" style="margin-bottom:12px">
+          <button class="small" onclick="baleEdit('${c.id}')">✏️ ویرایش</button>
+          <button class="small" onclick="baleQuickPreview('${c.id}')">👁 پیش‌نمایش</button>
+          <button class="small danger" onclick="baleDelete('${c.id}')">🗑 حذف</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:12.5px">
+          <div><span class="muted">شناسه:</span> <code dir="ltr">${esc(c.chat_id||'—')}</code></div>
+          <div><span class="muted">سربرگ:</span> ${esc(c.header||'—')}</div>
+          <div><span class="muted">عنوان بخش:</span> ${esc(c.section_title||'—')}</div>
+          <div><span class="muted">قالب:</span> ${esc(c.format||'chips')}</div>
+          <div style="grid-column:1/-1"><span class="muted">اسلاگها (${faNum((c.slugs||[]).length)}):</span>
+            ${(c.slugs||[]).length?c.slugs.map(s=>`<span class="tag">${esc(s)}</span>`).join(''):'<span class="muted">—</span>'}</div>
+          ${(c.news_categories||[]).length?`<div style="grid-column:1/-1"><span class="muted">خبر:</span> ${c.news_categories.map(n=>'<span class="tag">'+esc(n)+'</span>').join('')}</div>`:''}
+        </div>
+      </div>
+    </div>`).join('');
 }
 
+function toggleBale(id){
+  const el = $('balebody_'+id);
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+async function baleQuickPreview(cid){
+  const sel = $('bale_pv_chan');
+  if(sel){ await loadBaleHOME(); sel.value = cid; }
+  showPanel('bale_preview');
+}
 function fillBalePreviewSelect(){
   const sel = $('bale_pv_chan');
   if(!sel) return;
@@ -3509,33 +3465,49 @@ async function loadRubHome(){
   }
 }
 
-function renderRubChannels(){
-  const tb = $('rub_channels_table');
-  if(!tb) return;
+function renderrubChannels(){
+  const list = $('rub_channels_list');
+  if(!list) return;
   if(!RUB_CHANNELS.length){
-    tb.innerHTML = '<tr><td colspan="8" class="muted">— کانالی ثبت نشده —</td></tr>';
+    list.innerHTML = '<div class="muted">کانالی ثبت نشده</div>';
     return;
   }
-  tb.innerHTML = RUB_CHANNELS.map(c=>{
-    const connected = String(c.chat_id||'').trim().length > 0;
-    const types = (c.post_types||[]).map(t=>'<span class="pill pill-dim">'+esc(t)+'</span>').join(' ');
-    return `<tr>
-      <td><b>${esc(c.icon||'')} ${esc(c.name)}</b></td>
-      <td class="mono">${esc(c.chat_id||'—')}</td>
-      <td>${(connected&&c.enabled)?pill('enabled'):pill('disabled')}</td>
-      <td>هر ${faNum(c.schedule_minutes||30)} دقیقه</td>
-      <td>${types||'—'}</td>
-      <td class="muted">${esc(c.last_post||'—')}</td>
-      <td class="err">${esc((c.last_error||'').slice(0,60))}</td>
-      <td>
-        <button class="small" onclick="rubEdit('${c.id}')">✏️</button>
-        <button class="small" onclick="rubQuickPreview('${c.id}')">👁</button>
-        <button class="small danger" onclick="rubDelete('${c.id}')">🗑</button>
-      </td>
-    </tr>`;
-  }).join('');
+  list.innerHTML = RUB_CHANNELS.map(c=>`<div class="ch">
+      <div class="ch-head" onclick="toggleRub('${c.id}')">
+        <span class="icon">${esc(c.icon||'📢')}</span>
+        <div style="flex:1"><b>${esc(c.name)}</b> <span class="mono">(${esc(c.id)})</span>
+          <div class="muted">${esc(c.chat_id||'بدون آیدی')} • هر ${faNum(c.schedule_minutes||30)} دقیقه • ${(c.post_types||['prices']).map(esc).join('، ')}</div></div>
+        ${(String(c.chat_id||'').trim())?(c.enabled?pill('enabled'):pill('disabled')):pill('disabled')}
+      </div>
+      <div class="ch-body" id="rubbody_${c.id}" style="display:none">
+        <div class="row" style="margin-bottom:12px">
+          <button class="small" onclick="rubEdit('${c.id}')">✏️ ویرایش</button>
+          <button class="small" onclick="rubQuickPreview('${c.id}')">👁 پیش‌نمایش</button>
+          <button class="small danger" onclick="rubDelete('${c.id}')">🗑 حذف</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:12.5px">
+          <div><span class="muted">شناسه:</span> <code dir="ltr">${esc(c.chat_id||'—')}</code></div>
+          <div><span class="muted">سربرگ:</span> ${esc(c.header||'—')}</div>
+          <div><span class="muted">عنوان بخش:</span> ${esc(c.section_title||'—')}</div>
+          <div><span class="muted">قالب:</span> ${esc(c.format||'chips')}</div>
+          <div style="grid-column:1/-1"><span class="muted">اسلاگها (${faNum((c.slugs||[]).length)}):</span>
+            ${(c.slugs||[]).length?c.slugs.map(s=>`<span class="tag">${esc(s)}</span>`).join(''):'<span class="muted">—</span>'}</div>
+          ${(c.news_categories||[]).length?`<div style="grid-column:1/-1"><span class="muted">خبر:</span> ${c.news_categories.map(n=>'<span class="tag">'+esc(n)+'</span>').join('')}</div>`:''}
+        </div>
+      </div>
+    </div>`).join('');
 }
 
+function toggleRub(id){
+  const el = $('rubbody_'+id);
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+async function rubQuickPreview(cid){
+  const sel = $('rub_pv_chan');
+  if(sel){ await loadRubHOME(); sel.value = cid; }
+  showPanel('rub_preview');
+}
 function fillRubPreviewSelect(){
   const sel = $('rub_pv_chan');
   if(!sel) return;
@@ -3738,33 +3710,49 @@ async function loadEitHome(){
   }
 }
 
-function renderEitChannels(){
-  const tb = $('eit_channels_table');
-  if(!tb) return;
+function rendereitChannels(){
+  const list = $('eit_channels_list');
+  if(!list) return;
   if(!EIT_CHANNELS.length){
-    tb.innerHTML = '<tr><td colspan="8" class="muted">— کانالی ثبت نشده —</td></tr>';
+    list.innerHTML = '<div class="muted">کانالی ثبت نشده</div>';
     return;
   }
-  tb.innerHTML = EIT_CHANNELS.map(c=>{
-    const connected = String(c.chat_id||'').trim().length > 0;
-    const types = (c.post_types||[]).map(t=>'<span class="pill pill-dim">'+esc(t)+'</span>').join(' ');
-    return `<tr>
-      <td><b>${esc(c.icon||'')} ${esc(c.name)}</b></td>
-      <td class="mono">${esc(c.chat_id||'—')}</td>
-      <td>${(connected&&c.enabled)?pill('enabled'):pill('disabled')}</td>
-      <td>هر ${faNum(c.schedule_minutes||30)} دقیقه</td>
-      <td>${types||'—'}</td>
-      <td class="muted">${esc(c.last_post||'—')}</td>
-      <td class="err">${esc((c.last_error||'').slice(0,60))}</td>
-      <td>
-        <button class="small" onclick="eitEdit('${c.id}')">✏️</button>
-        <button class="small" onclick="eitQuickPreview('${c.id}')">👁</button>
-        <button class="small danger" onclick="eitDelete('${c.id}')">🗑</button>
-      </td>
-    </tr>`;
-  }).join('');
+  list.innerHTML = EIT_CHANNELS.map(c=>`<div class="ch">
+      <div class="ch-head" onclick="toggleEit('${c.id}')">
+        <span class="icon">${esc(c.icon||'📢')}</span>
+        <div style="flex:1"><b>${esc(c.name)}</b> <span class="mono">(${esc(c.id)})</span>
+          <div class="muted">${esc(c.chat_id||'بدون آیدی')} • هر ${faNum(c.schedule_minutes||30)} دقیقه • ${(c.post_types||['prices']).map(esc).join('، ')}</div></div>
+        ${(String(c.chat_id||'').trim())?(c.enabled?pill('enabled'):pill('disabled')):pill('disabled')}
+      </div>
+      <div class="ch-body" id="eitbody_${c.id}" style="display:none">
+        <div class="row" style="margin-bottom:12px">
+          <button class="small" onclick="eitEdit('${c.id}')">✏️ ویرایش</button>
+          <button class="small" onclick="eitQuickPreview('${c.id}')">👁 پیش‌نمایش</button>
+          <button class="small danger" onclick="eitDelete('${c.id}')">🗑 حذف</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:12.5px">
+          <div><span class="muted">شناسه:</span> <code dir="ltr">${esc(c.chat_id||'—')}</code></div>
+          <div><span class="muted">سربرگ:</span> ${esc(c.header||'—')}</div>
+          <div><span class="muted">عنوان بخش:</span> ${esc(c.section_title||'—')}</div>
+          <div><span class="muted">قالب:</span> ${esc(c.format||'chips')}</div>
+          <div style="grid-column:1/-1"><span class="muted">اسلاگها (${faNum((c.slugs||[]).length)}):</span>
+            ${(c.slugs||[]).length?c.slugs.map(s=>`<span class="tag">${esc(s)}</span>`).join(''):'<span class="muted">—</span>'}</div>
+          ${(c.news_categories||[]).length?`<div style="grid-column:1/-1"><span class="muted">خبر:</span> ${c.news_categories.map(n=>'<span class="tag">'+esc(n)+'</span>').join('')}</div>`:''}
+        </div>
+      </div>
+    </div>`).join('');
 }
 
+function toggleEit(id){
+  const el = $('eitbody_'+id);
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+async function eitQuickPreview(cid){
+  const sel = $('eit_pv_chan');
+  if(sel){ await loadEitHOME(); sel.value = cid; }
+  showPanel('eit_preview');
+}
 function fillEitPreviewSelect(){
   const sel = $('eit_pv_chan');
   if(!sel) return;
