@@ -287,6 +287,23 @@ def api_slugs(scope: str = "all", q: str = ""):
     from tgju_engine_scrape import SLUG_ALIASES
     overrides = load_slug_overrides()
     rows = cached_rows()
+    # removed_slugs: user-deleted slugs that must stay hidden even if the
+    # homepage scrape re-publishes them (e.g. the 504409 numeric codes)
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))), "state", "removed_slugs.json"),
+                  encoding="utf-8") as f:
+            removed = set(json.load(f).get("removed", []))
+    except Exception:
+        removed = set()
+    # verified alias map (slug → real tgju slug + last verified price):
+    # a mapped slug is NEVER "missing" even when its 5-min profile cache
+    # entry expired — the map IS the durable source record.
+    try:
+        from tgju_core.alias_resolver import load_alias_map
+        alias_map = load_alias_map()
+    except Exception:
+        alias_map = {}
     profile_cache = {}
     try:
         with open(os.path.join(os.path.dirname(os.path.dirname(
@@ -352,8 +369,11 @@ def api_slugs(scope: str = "all", q: str = ""):
 
     # ── merged universe of slugs ──────────────────────────────────────
     universe = set(rows.keys()) | set(usage.keys()) | set(overrides.keys())
+    # user-deleted slugs stay hidden (homepage may still publish them)
+    universe -= removed
     if scope == "used":
         universe = set(usage.keys())
+        universe -= removed
 
     needle = (q or "").strip().lower()
     out = []
@@ -366,6 +386,11 @@ def api_slugs(scope: str = "all", q: str = ""):
         price = row.get("price") or pc.get("price") or ""
         source = "homepage" if row.get("price") else (
             "profile" if pc.get("price") else "missing")
+        am = alias_map.get(s) or {}
+        if not price and am.get("price"):
+            # mapped + last-verified price from the resolver (durable)
+            price = str(am["price"])
+            source = "alias"
         if ov.get("manual_price"):
             price = str(ov["manual_price"]).replace(",", "").strip()
             source = "manual"
@@ -385,6 +410,7 @@ def api_slugs(scope: str = "all", q: str = ""):
             "unit": ov.get("unit", ""),
             "unit_auto": _auto_unit(s),
             "profile_url": ov.get("profile_url") or "",
+            "ai_log": ov.get("ai_log") or "",
             "alias": SLUG_ALIASES.get(s, ""),
             "platforms": plats,
             "usage": u,
@@ -396,6 +422,192 @@ def api_slugs(scope: str = "all", q: str = ""):
     return {"slugs": out, "overrides": overrides,
             "total": len(out), "used": used_count,
             "with_price": sum(1 for i in out if i["price"])}
+
+@router.post("/api/slugs/add")
+async def api_slug_add(req: Request):
+    """Add a NEW slug/data source to the inventory.
+
+    Body: {slug, name?, profile_url?}. The slug is stored as an override so
+    it appears in the داده‌ها و لینک‌ها table immediately; if it has no
+    homepage price, the resolver/backfill will try to fetch its profile.
+    """
+    try:
+        body = await req.json()
+    except Exception:
+        body = {}
+    slug = str(body.get("slug") or "").strip().lower()
+    if not slug or not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", slug):
+        return JSONResponse({"error": "اسلاگ نامعتبر است"}, status_code=400)
+    # (re-)adding clears any prior user-removal
+    try:
+        rs_path = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "state", "removed_slugs.json")
+        with open(rs_path, encoding="utf-8") as f:
+            rs = json.load(f) or {}
+        if slug in list(rs.get("removed") or []):
+            rs["removed"] = [x for x in rs["removed"] if x != slug]
+            tmp = rs_path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(rs, f, ensure_ascii=False, indent=1)
+            os.replace(tmp, rs_path)
+    except Exception:
+        pass
+    overrides = load_slug_overrides()
+    ov = dict(overrides.get(slug) or {})
+    name = str(body.get("name") or "").strip()
+    purl = str(body.get("profile_url") or "").strip()
+    if name:
+        ov["name"] = name
+    if purl:
+        ov["profile_url"] = purl
+    overrides[slug] = ov
+    save_slug_overrides(overrides)
+    # try to warm a price right away (bounded, one fetch)
+    warmed = False
+    if not ov.get("manual_price"):
+        try:
+            from tgju_core.alias_resolver import resolve_slug, warm_profile_cache
+            res = await asyncio.to_thread(resolve_slug, slug, name)
+            if res.get("price"):
+                await asyncio.to_thread(
+                    warm_profile_cache, slug, res["price"], name)
+                warmed = True
+        except Exception:
+            pass
+    return {"ok": True, "slug": slug, "warmed": warmed}
+
+
+@router.delete("/api/slugs/remove/{slug}")
+async def api_slug_remove(slug: str, purge: bool = True):
+    """Remove a slug from the inventory and (default) from every channel."""
+    from tgju_engine_config import save_channels
+    removed_from = []
+    overrides = load_slug_overrides()
+    overrides.pop(slug, None)
+    save_slug_overrides(overrides)
+    # remember removal so homepage re-publish doesn't resurrect it
+    try:
+        rs_path = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "state", "removed_slugs.json")
+        with open(rs_path, encoding="utf-8") as f:
+            rs = json.load(f) or {}
+        lst = list(rs.get("removed") or [])
+        if slug not in lst:
+            lst.append(slug)
+        rs["removed"] = lst
+        tmp = rs_path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(rs, f, ensure_ascii=False, indent=1)
+        os.replace(tmp, rs_path)
+    except Exception:
+        pass
+
+    def _strip(channels, saver):
+        changed = False
+        for c in channels:
+            slugs = list(c.get("slugs") or [])
+            if slug in slugs:
+                slugs.remove(slug)
+                c["slugs"] = slugs
+                changed = True
+            groups = c.get("slug_groups") or {}
+            for g, lst in list(groups.items()):
+                if slug in (lst or []):
+                    groups[g] = [x for x in lst if x != slug]
+                    changed = True
+        if changed:
+            saver(channels)
+            return True
+        return False
+
+    try:
+        chans = get_channels()
+        if _strip(chans, save_channels):
+            RUNTIME["channels"] = chans
+            removed_from.append("telegram")
+    except Exception:
+        pass
+    try:
+        from tgju_engine_whatsapp import list_categories, save_categories
+        cats = list_categories()
+        changed = False
+        for cat in cats:
+            for g, lst in ((cat.get("slug_groups") or {}).items()):
+                if slug in (lst or []):
+                    cat["slug_groups"][g] = [x for x in lst if x != slug]
+                    changed = True
+        if changed:
+            save_categories(cats)
+            removed_from.append("whatsapp")
+    except Exception:
+        pass
+    try:
+        import tgju_engine_bale as bale
+        cfg = bale.load_bale()
+        changed = False
+        for bc in (cfg.get("channels") or []):
+            if slug in list(bc.get("slugs") or []):
+                bc["slugs"] = [x for x in bc["slugs"] if x != slug]
+                changed = True
+            for g, lst in ((bc.get("slug_groups") or {}).items()):
+                if slug in (lst or []):
+                    bc["slug_groups"][g] = [x for x in lst if x != slug]
+                    changed = True
+        if changed:
+            bale.save_bale(cfg)
+            removed_from.append("bale")
+    except Exception:
+        pass
+    try:
+        import tgju_engine_rubika as rub
+        data = rub.load_rubika() if hasattr(rub, "load_rubika") else {}
+        changed = False
+        for rc in (data.get("channels") or []):
+            if slug in list(rc.get("slugs") or []):
+                rc["slugs"] = [x for x in rc["slugs"] if x != slug]
+                changed = True
+            for g, lst in ((rc.get("slug_groups") or {}).items()):
+                if slug in (lst or []):
+                    rc["slug_groups"][g] = [x for x in lst if x != slug]
+                    changed = True
+        if changed:
+            rub.save_rubika(data)
+            removed_from.append("rubika")
+    except Exception:
+        pass
+    try:
+        import tgju_engine_eitaa as eit
+        data = eit.load_eitaa() if hasattr(eit, "load_eitaa") else {}
+        changed = False
+        for ec in (data.get("channels") or []):
+            if slug in list(ec.get("slugs") or []):
+                ec["slugs"] = [x for x in ec["slugs"] if x != slug]
+                changed = True
+            for g, lst in ((ec.get("slug_groups") or {}).items()):
+                if slug in (lst or []):
+                    ec["slug_groups"][g] = [x for x in lst if x != slug]
+                    changed = True
+        if changed:
+            eit.save_eitaa(data)
+            removed_from.append("eitaa")
+    except Exception:
+        pass
+    # drop any cached price so it stops showing in posts immediately
+    try:
+        pc_path = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "state", "profile_cache.json")
+        with open(pc_path, encoding="utf-8") as f:
+            pc = json.load(f) or {}
+        if slug in pc:
+            del pc[slug]
+            tmp = pc_path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(pc, f, ensure_ascii=False)
+            os.replace(tmp, pc_path)
+    except Exception:
+        pass
+    return {"ok": True, "removed": slug, "purged_from": removed_from}
+
 
 def _auto_unit(slug: str) -> str:
     """Convention unit for a slug (what fmt/slug_unit would pick with no override)."""
@@ -1261,6 +1473,11 @@ async def api_ai_job_run(job_id: str):
     data = load_ai_jobs()
     if job_id not in data["jobs"]:
         return JSONResponse({"error": "unknown job"}, status_code=404)
+    if job_id == "slug_repair":
+        # delegate to the alias-resolver's bounded pass
+        from tgju_core.alias_routes import resolver_pass
+        res = await asyncio.to_thread(resolver_pass)
+        return res
     if job_id == "analysis":
         cfg = load_ai_config()
         rows = cached_rows()
@@ -2225,9 +2442,9 @@ async def api_bale_update_channel(cid: str, req: Request):
                                 status_code=404)
         if "chat_id" in body and "bale_id" not in body:
             body["bale_id"] = body["chat_id"]     # UI sends the generic name
-        for k in ("name", "bale_id", "enabled", "schedule_minutes", "icon",
-                  "header", "section_title", "footer", "template", "format",
-                  "slug_groups", "slugs", "post_types",
+        for k in ("name", "bale_id", "chat_id", "enabled", "schedule_minutes",
+                  "icon", "header", "section_title", "footer", "template",
+                  "format", "slug_groups", "slugs", "post_types",
                   "news_categories", "analysis_tags"):
             if k in body:
                 ch[k] = body[k]

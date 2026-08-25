@@ -88,6 +88,7 @@ from tgju_core.categories import (  # noqa: E402  # noqa: F401
 from tgju_core.scheduler import (  # noqa: E402  # noqa: F401
     _channel_post_types, _next_post_type, _scheduler_tick, scheduler_loop)
 from tgju_core.api_routes import router as api_router  # noqa: E402
+from tgju_core.alias_routes import router as alias_router, resolver_loop
 from tgju_core import auth  # noqa: E402
 from tgju_core.auth import require_auth  # noqa: E402
 
@@ -96,6 +97,7 @@ app = FastAPI(title="TGJU Telegram Platform", version="1.1.0",
 
 # Attach every route handler (URLs/responses unchanged).
 app.include_router(api_router)
+app.include_router(alias_router)
 # Status-family endpoints live in tgju_core/status.py; register them under
 # the exact same URLs the monolith used.  They are registered on the app
 # directly (NOT the router), so they get the auth guard explicitly here —
@@ -125,6 +127,7 @@ async def startup():
     asyncio.create_task(refresher_loop())
     task = asyncio.create_task(scheduler_loop())
     RUNTIME["scheduler"] = task
+    asyncio.create_task(resolver_loop())   # alias resolver — bounded, safe
 
 
 def main():

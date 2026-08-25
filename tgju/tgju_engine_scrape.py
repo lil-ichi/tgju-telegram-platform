@@ -126,8 +126,16 @@ def fetch_profile_price(slug: str, name: str | None = None) -> dict:
     """
     # NAVBAR profile path is the reliable page (verified 2026-08-10);
     # crypto/currency/<name> is flaky, so it is only a fallback URL.
-    # Wrong homepage slugs (e.g. bourse_dow) resolve via SLUG_ALIASES.
+    # Wrong homepage slugs (e.g. bourse_dow) resolve via SLUG_ALIASES,
+    # then via the alias-resolver's verified map (state/slug_alias_map.json).
     fetch_slug = SLUG_ALIASES.get(slug, slug)
+    try:
+        from tgju_core.alias_resolver import load_alias_map
+        _ent = load_alias_map().get(slug) or {}
+        if _ent.get("real_slug"):
+            fetch_slug = _ent["real_slug"]
+    except Exception:
+        pass
     urls = [
         "https://www.tgju.org/profile/" + urllib.parse.quote(fetch_slug, safe=""),
         "https://www.tgju.org/crypto/currency/" + fetch_slug.replace("crypto-", ""),
