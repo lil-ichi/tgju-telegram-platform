@@ -96,6 +96,17 @@ DEFAULT_JOBS = {
         "timeout_s": 60,
         "channels": [],
     },
+    "slug_repair": {
+        "label": "ترمیم منابع داده (Slug Doctor)",
+        "desc": "اسلاگ‌های بدون قیمت را پیدا می‌کند، اسلاگ واقعی tgju را می‌یابد، "
+                "قیمت را زنده تست می‌کند و فقط نتیجهٔ تأییدشده را ثبت می‌کند",
+        "enabled": True,
+        "provider": "",          # empty = same provider as other jobs
+        "model": "",
+        "max_tokens": 0,         # Tier-1 resolver is rule-based — no tokens
+        "interval_minutes": 30,
+        "batch_size": 5,
+    },
 }
 
 _ACTIVITY_MAX = 50  # ring buffer size

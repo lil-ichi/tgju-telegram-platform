@@ -508,17 +508,18 @@ button + button { margin-inline-start:10px; }
   .platform-header::before { animation:none; }
 }
 
-/* ── Theme switcher (header) ─────────────────────────────────── */
-.theme-switcher { display:flex; align-items:center; gap:10px; margin-top:10px;
-  padding:7px 12px; background:var(--surface); border:1px solid var(--border);
-  border-radius:999px; box-shadow:var(--shadow-sm); }
-.ts-themes { display:flex; gap:6px; align-items:center; }
-.ts-swatch { width:22px; height:22px; min-height:22px; padding:0; border-radius:50%;
-  cursor:pointer; border:2px solid var(--border); position:relative; overflow:hidden;
+/* ── Theme switcher (floating top-left, minimal icon-only) ──── */
+.theme-switcher { position:fixed; top:12px; left:12px; z-index:1000;
+  display:flex; align-items:center; gap:5px;
+  padding:5px 7px; background:var(--surface); border:1px solid var(--border);
+  border-radius:999px; box-shadow:var(--shadow-sm); margin-top:0; }
+.ts-themes { display:flex; gap:4px; align-items:center; }
+.ts-swatch { width:14px; height:14px; min-height:14px; padding:0; border-radius:50%;
+  cursor:pointer; border:1.5px solid var(--border); position:relative; overflow:hidden;
   transition:transform var(--trans), border-color var(--trans), box-shadow var(--trans); }
-.ts-swatch:hover { transform:scale(1.12); }
+.ts-swatch:hover { transform:scale(1.15); }
 .ts-swatch:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.ts-swatch.active { border-color:var(--txt); box-shadow:0 0 0 2px var(--surface), 0 0 0 3.5px var(--txt); }
+.ts-swatch.active { border-color:var(--txt); box-shadow:0 0 0 1.5px var(--surface), 0 0 0 2.5px var(--txt); }
 .ts-swatch::after { content:""; position:absolute; inset:0; }
 .ts-emerald::after { background:linear-gradient(135deg,#0d8a72 50%, #073b31 50%); }
 .ts-ocean::after   { background:linear-gradient(135deg,#2563eb 50%, #0a1020 50%); }
@@ -526,19 +527,16 @@ button + button { margin-inline-start:10px; }
 .ts-swatch[aria-checked], .ts-swatch[data-active="true"] {}
 html:not([data-mode]) .ts-emerald,
 html[data-mode="light"] .ts-emerald.active {}
-.ts-mode { display:inline-flex; align-items:center; gap:6px;
-  min-height:26px; padding:0 12px; border-radius:999px;
+.ts-mode { display:inline-flex; align-items:center; justify-content:center;
+  width:22px; min-height:22px; padding:0; border-radius:50%;
   border:1px solid var(--border); background:var(--surface-2);
-  color:var(--dim); font-size:11.5px; font-weight:700; font-family:inherit; cursor:pointer;
+  color:var(--dim); cursor:pointer;
   transition:color var(--trans), border-color var(--trans), background var(--trans); }
 .ts-mode:hover { color:var(--accent-h); border-color:var(--accent-line); background:var(--accent-soft); }
 .ts-mode:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.ts-mode-icon { font-size:13px; line-height:1; }
-/* login gate gets a floating switcher too */
-.auth-theme-float { position:fixed; top:18px; left:18px; z-index:1001; }
-@media (max-width:900px){
-  .theme-switcher { margin-top:8px; }
-}
+.ts-mode-icon { font-size:11px; line-height:1; }
+#ts_mode_label { display:none; }          /* icon-only mode button */
+.theme-sep { width:1px; height:14px; background:var(--border); flex-shrink:0; }
 
 /* ── Platform usage chips (داده‌ها و لینک‌ها) ────────────────── */
 .pf-chip { display:inline-flex; align-items:center; gap:5px;
@@ -621,6 +619,20 @@ html[data-mode="light"] .ts-emerald.active {}
     </aside>
   <main class="main">
 
+      <!-- theme switcher — fixed top-left, minimal icon-only -->
+      <div class="theme-switcher" id="theme_switcher" role="group" aria-label="پوسته و حالت نمایش">
+        <div class="ts-themes" role="radiogroup" aria-label="انتخاب پوسته رنگی">
+          <button type="button" class="ts-swatch ts-emerald" data-set-theme="emerald" title="زمرد" aria-label="پوسته زمرد"></button>
+          <button type="button" class="ts-swatch ts-ocean"   data-set-theme="ocean"   title="اقیانوس" aria-label="پوسته اقیانوس"></button>
+          <button type="button" class="ts-swatch ts-amber"   data-set-theme="amber"   title="کهربا" aria-label="پوسته کهربا"></button>
+        </div>
+        <span class="theme-sep" aria-hidden="true"></span>
+        <button type="button" class="ts-mode" id="ts_mode_btn" aria-label="تغییر حالت روشن و تیره" title="حالت روشن/تیره">
+          <span class="ts-mode-icon" id="ts_mode_icon" aria-hidden="true">🌙</span>
+          <span id="ts_mode_label">تیره</span>
+        </button>
+      </div>
+
       <div id="platform_header" class="platform-header">
         <div class="ph-title">
           <span class="ph-icon" id="ph_icon">🛰️</span>
@@ -630,17 +642,6 @@ html[data-mode="light"] .ts-emerald.active {}
           </div>
         </div>
         <div class="platform-menu" id="platform_menu"></div>
-        <div class="theme-switcher" id="theme_switcher" role="group" aria-label="پوسته و حالت نمایش">
-          <div class="ts-themes" role="radiogroup" aria-label="انتخاب پوسته رنگی">
-            <button type="button" class="ts-swatch ts-emerald" data-set-theme="emerald" title="زمرد" aria-label="پوسته زمرد"></button>
-            <button type="button" class="ts-swatch ts-ocean"   data-set-theme="ocean"   title="اقیانوس" aria-label="پوسته اقیانوس"></button>
-            <button type="button" class="ts-swatch ts-amber"   data-set-theme="amber"   title="کهربا" aria-label="پوسته کهربا"></button>
-          </div>
-          <button type="button" class="ts-mode" id="ts_mode_btn" aria-label="تغییر حالت روشن و تیره">
-            <span class="ts-mode-icon" id="ts_mode_icon" aria-hidden="true">🌙</span>
-            <span id="ts_mode_label">تیره</span>
-          </button>
-        </div>
 
       </div>
 
@@ -904,6 +905,39 @@ html[data-mode="light"] .ts-emerald.active {}
           <option value="_unused">بدون استفاده (کل tgju)</option>
         </select>
         <span class="muted" id="slug_summary"></span>
+      </div>
+      <div class="card" style="margin:0 0 12px;padding:10px 16px;border-right:4px solid var(--accent,#2563eb)">
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <b style="font-size:13.5px">🩺 ترمیم خودکار منابع</b>
+          <span class="muted" style="font-size:12px">اسلاگ‌های بدون قیمت را با اسلاگ واقعی tgju مطابقت می‌دهد، قیمت را زنده تست می‌کند و فقط نتیجهٔ تأییدشده را ثبت می‌کند.</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12.5px"><input type="checkbox" id="ar_enabled" onchange="saveAliasConfig()"> فعال (خودکار)</label>
+          <button class="small" onclick="runAliasNow()">🩺 بررسی الان</button>
+          <span class="muted" id="ar_summary" style="font-size:12.5px"></span>
+        </div>
+        <div id="ar_recent" style="margin-top:6px;font-size:12px"></div>
+      </div>
+      <div class="row" style="gap:8px;margin:0 0 12px">
+        <button class="primary" onclick="toggleAddSlugForm()">➕ افزودن اسلاگ / منبع داده</button>
+        <span class="muted" style="font-size:12px">اسلاگ جدید اضافه کنید یا اسلاگ‌های انتخابی را از همهٔ پلتفرم‌ها حذف کنید.</span>
+      </div>
+      <div class="card" id="add_slug_card" style="display:none;margin:0 0 12px;padding:12px 16px;max-width:640px;border-right:4px solid var(--accent,#2563eb)">
+        <h3 style="margin:0 0 10px">➕ افزودن منبع داده جدید</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <label style="font-size:12.5px">اسلاگ tgju *
+            <input id="nas_slug" placeholder="مثلاً price_myr یا crypto-sui" style="width:100%;direction:ltr">
+          </label>
+          <label style="font-size:12.5px">نام نمایشی
+            <input id="nas_name" placeholder="مثلاً رینگیت مالزی" style="width:100%">
+          </label>
+        </div>
+        <label style="font-size:12.5px;display:block;margin-top:10px">لینک پروفایل (اختیاری — در صورت خالی بودن خودکار پیدا می‌شود)
+          <input id="nas_url" placeholder="https://www.tgju.org/profile/..." style="width:100%;direction:ltr;text-align:left">
+        </label>
+        <div class="row" style="gap:8px;margin-top:12px">
+          <button class="primary small" onclick="submitAddSlug()">ذخیره و افزودن</button>
+          <button class="small" onclick="toggleAddSlugForm()">انصراف</button>
+          <span id="nas_status" class="muted" style="font-size:12px"></span>
+        </div>
       </div>
       <div style="overflow-x:auto">
       <table>
@@ -1926,7 +1960,7 @@ function refresh(){
   if(p==='panel_channels') loadChannels();
   if(p==='panel_preview'){ loadPreviewPage(); loadTemplateEditor(); }
   if(p==='panel_polls') loadPolls();
-  if(p==='panel_data') loadSlugData();
+  if(p==='panel_data'){ loadSlugData(); loadAliasStatus(); }
   if(p==='panel_custom_data') loadCustomDataPanel();
   if(p==='panel_ai') loadAiPage();
   if(p==='panel_functions') loadFunctions();
@@ -2287,13 +2321,13 @@ function renderSlugTable(){
     const unit = s.unit || s.unit_auto || '';
     return `<tr>
       <td class="mono">${esc(s.slug)}</td>
-      <td>${esc(s.name)} ${s.alias?`<span class="pill pill-dim">→ ${esc(s.alias)}</span>`:''}</td>
+      <td>${esc(s.name)} ${s.alias?`<span class="pill pill-dim">→ ${esc(s.alias)}</span>`:''}${s.ai_log?`<div style="font-size:11px;color:var(--muted-foreground);margin-top:2px">${esc(s.ai_log)}</div>`:''}</td>
       <td>${platformChips(s.usage||{})}</td>
       <td>${s.price?`<b>${faNum(s.price)}</b>`:'<span class="err">—</span>'}</td>
       <td><span class="pill ${pillCls}">${pillTxt}</span></td>
       <td>${unit?`<span class="pill pill-dim">${esc(unit)}</span>`:'<span class="muted">خودکار</span>'}</td>
       <td class="mono" style="font-size:11px;direction:ltr;text-align:left">${esc(s.profile_url||'—')}</td>
-      <td><button class="small" onclick="openSlugEditorInline('${esc(s.slug)}', this)">✏️ ویرایش</button></td>
+      <td><button class="small" onclick="openSlugEditorInline('${esc(s.slug)}', this)">✏️ ویرایش</button> <button class="small danger" onclick="removeSlugEverywhere('${esc(s.slug)}')">🗑 حذف</button></td>
     </tr>
     <tr id="editor_${esc(s.slug)}" class="slug-editor-inline" style="display:none"><td colspan="8"></td></tr>`;
     }).join('') || '<tr><td colspan="8" class="muted">— موردی یافت نشد</td></tr>';
@@ -2374,6 +2408,190 @@ function closeInlineSlug(slug){
   const editorRow = $(`editor_${slug}`);
   if(editorRow) editorRow.style.display = 'none';
   if(CURRENT_INLINE_SLUG === slug) CURRENT_INLINE_SLUG = null;
+}
+
+// ── Alias resolver (ترمیم خودکار منابع) ──
+async function loadAliasStatus(){
+  try{
+    const d = await jget('/api/alias-resolver');
+    const c = d.config||{};
+    $('ar_enabled').checked = !!c.enabled;
+    $('ar_summary').textContent = c.last_run
+      ? ('آخرین اجرا: '+faNum(c.last_fixed||0)+' ترمیم / '+faNum(c.last_checked||0)+' بررسی — '+c.last_run)
+      : 'هنوز اجرایی ثبت نشده';
+    const rec = d.recent||[];
+    $('ar_recent').innerHTML = rec.slice(0,6).map(f=>
+      `<span class="pill pill-ok" style="margin:2px">🩺 ${esc(f.slug)} → ${esc(f.real_slug)}</span>`).join(' ');
+  }catch(e){}
+}
+async function saveAliasConfig(){
+  const r = await jput('/api/alias-resolver/config', {enabled: $('ar_enabled').checked});
+  if(r.ok) showBanner('✅ تنظیمات ترمیم خودکار ذخیره شد', true);
+}
+async function runAliasNow(){
+  $('ar_summary').innerHTML='<span class="muted">⏳ در حال بررسی… (حداکثر چند ثانیه)</span>';
+  const r = await jpost('/api/alias-resolver/run', {});
+  if(r.ok){
+    if((r.checked||0)===0 && (r.fixed||0)===0){
+      showBanner('✅ همهٔ منابع سالم هستند — هیچ اسلاگ بدون قیمتِ قابلِ ترمیمی باقی نمانده', true);
+      $('ar_summary').innerHTML='<span class="ok">✅ صف خالی است — همهٔ منابع دارای قیمت‌اند یا در انتظار منبع آزاد (Tier 2)</span>';
+    } else {
+      showBanner('🩺 '+faNum((r.fixed||[]).length)+' منبع ترمیم شد از '+faNum(r.checked||0)+' بررسی', true);
+    }
+    loadAliasStatus(); loadSlugData();
+  } else {
+    $('ar_summary').innerHTML='<span class="err">❌ خطا در اجرا</span>';
+  }
+}
+
+// ── وظایف (Functions) — load/save ──
+let FN_DATA = null;
+async function loadFunctions(){
+  try{
+    const d = await jget('/api/functions');
+    FN_DATA = d.functions || {};
+    const an = FN_DATA.analysis || {}, po = FN_DATA.poll || {}, ne = FN_DATA.news || {};
+    $('fn_interval').value = an.interval_hours != null ? an.interval_hours : 6;
+    $('fn_effort').value = an.effort || 'standard';
+    $('fn_template').value = an.template || '';
+    $('fn_maxtok').value = an.max_tokens != null ? an.max_tokens : 2000;
+    $('fn_timeout').value = an.timeout_s != null ? an.timeout_s : 90;
+    $('fn_master').checked = an.enabled !== false;
+    $('fn_poll_interval').value = po.interval_hours != null ? po.interval_hours : 4;
+    $('fn_poll_options').value = po.poll_options != null ? po.poll_options : 4;
+    $('fn_poll_anon').checked = po.anonymous !== false;
+    $('fn_poll_master').checked = po.enabled !== false;
+    if($('fn_poll_model')) $('fn_poll_model').value = po.model || '';
+    $('fn_news_interval').value = ne.interval_hours != null ? ne.interval_hours : 6;
+    $('fn_news_items').value = ne.items_per_post != null ? ne.items_per_post : 3;
+    $('fn_news_template').value = ne.template || '';
+    $('fn_news_master').checked = ne.enabled !== false;
+    const st = $('fn_status');
+    if(st){
+      const lbl = k => FN_DATA[k] && FN_DATA[k].enabled !== false ? '✅ فعال' : '⛔ خاموش';
+      st.innerHTML = '<span class="muted">وضعیت فعلی — 📈 تحلیل: '+lbl('analysis')
+        +' ('+((FN_DATA.analysis||{}).interval_hours!=null?FN_DATA.analysis.interval_hours:'?')+'h)'
+        +' | 📊 نظرسنجی: '+lbl('poll')
+        +' ('+((FN_DATA.poll||{}).interval_hours!= null?FN_DATA.poll.interval_hours:'?')+'h)'
+        +' | 📰 خبر: '+lbl('news')
+        +' ('+((FN_DATA.news||{}).interval_hours!=null?FN_DATA.news.interval_hours:'?')+'h)</span>';
+    }
+  }catch(e){ console.error(e); showBanner('⚠️ خطا در بارگذاری وظایف'); }
+}
+
+async function saveFunctions(){
+  // تحلیل فقط
+  if(!FN_DATA) await loadFunctions();
+  const fns = FN_DATA || {};
+  fns.analysis = Object.assign({}, fns.analysis, {
+    enabled: $('fn_master').checked,
+    interval_hours: parseInt($('fn_interval').value)||6,
+    effort: $('fn_effort').value,
+    template: $('fn_template').value,
+    max_tokens: parseInt($('fn_maxtok').value)||2000,
+    timeout_s: parseInt($('fn_timeout').value)||90,
+  });
+  await putFunctions(fns);
+}
+async function savePollFunction(){
+  if(!FN_DATA) await loadFunctions();
+  const fns = FN_DATA || {};
+  fns.poll = Object.assign({}, fns.poll, {
+    enabled: $('fn_poll_master').checked,
+    interval_hours: parseInt($('fn_poll_interval').value)||4,
+    poll_options: parseInt($('fn_poll_options').value)||4,
+    anonymous: $('fn_poll_anon').checked,
+  });
+  await putFunctions(fns);
+}
+async function saveNewsFunction(){
+  if(!FN_DATA) await loadFunctions();
+  const fns = FN_DATA || {};
+  fns.news = Object.assign({}, fns.news, {
+    enabled: $('fn_news_master').checked,
+    interval_hours: parseInt($('fn_news_interval').value)||6,
+    items_per_post: parseInt($('fn_news_items').value)||3,
+    template: $('fn_news_template').value,
+  });
+  await putFunctions(fns);
+}
+async function saveAllFunctions(){
+  if(!FN_DATA) await loadFunctions();
+  const fns = FN_DATA || {};
+  fns.analysis = Object.assign({}, fns.analysis, {
+    enabled: $('fn_master').checked,
+    interval_hours: parseInt($('fn_interval').value)||6,
+    effort: $('fn_effort').value,
+    template: $('fn_template').value,
+    max_tokens: parseInt($('fn_maxtok').value)||2000,
+    timeout_s: parseInt($('fn_timeout').value)||90,
+  });
+  fns.poll = Object.assign({}, fns.poll, {
+    enabled: $('fn_poll_master').checked,
+    interval_hours: parseInt($('fn_poll_interval').value)||4,
+    poll_options: parseInt($('fn_poll_options').value)||4,
+    anonymous: $('fn_poll_anon').checked,
+  });
+  fns.news = Object.assign({}, fns.news, {
+    enabled: $('fn_news_master').checked,
+    interval_hours: parseInt($('fn_news_interval').value)||6,
+    items_per_post: parseInt($('fn_news_items').value)||3,
+    template: $('fn_news_template').value,
+  });
+  await putFunctions(fns);
+}
+async function putFunctions(fns){
+  try{
+    const r = await jput('/api/functions', {functions: fns});
+    if(r.ok){
+      showBanner('💾 تنظیمات وظایف ذخیره شد', true);
+      FN_DATA = null;           // force re-read on next load
+      loadFunctions();
+    } else {
+      showBanner('❌ '+(r.error||'خطا در ذخیره'), false);
+    }
+  }catch(e){ showBanner('❌ خطا در ارتباط', false); }
+}
+
+function toggleAddSlugForm(){
+  const c = $('add_slug_card');
+  c.style.display = c.style.display === 'none' ? 'block' : 'none';
+  if(c.style.display === 'block') $('nas_slug').focus();
+}
+async function submitAddSlug(){
+  const slug = $('nas_slug').value.trim().toLowerCase();
+  const name = $('nas_name').value.trim();
+  const purl = $('nas_url').value.trim();
+  if(!slug){ $('nas_status').innerHTML='<span class="err">اسلاگ الزامی است</span>'; return; }
+  $('nas_status').innerHTML='<span class="muted">⏳ در حال افزودن و دریافت قیمت…</span>';
+  try{
+    const r = await jpost('/api/slugs/add', {slug, name, profile_url: purl});
+    if(r.ok){
+      showBanner('✅ '+esc(slug)+' اضافه شد'+(r.warmed?' — قیمت زنده دریافت شد':' — ترمیم خودکار قیمت را پیگیری می‌کند'), true);
+      toggleAddSlugForm();
+      $('nas_slug').value=''; $('nas_name').value=''; $('nas_url').value='';
+      $('nas_status').textContent='';
+      loadSlugData();
+    } else {
+      $('nas_status').innerHTML='<span class="err">'+esc(r.error||'خطا')+'</span>';
+    }
+  }catch(e){
+    $('nas_status').innerHTML='<span class="err">خطا در ارتباط</span>';
+  }
+}
+async function removeSlugEverywhere(slug){
+  if(!confirm('حذف «'+slug+'» از همهٔ پلتفرم‌ها؟\\nاین عمل قابل بازگشت نیست.')) return;
+  try{
+    const r = await jdel('/api/slugs/remove/'+encodeURIComponent(slug));
+    if(r.ok){
+      showBanner('🗑 '+esc(slug)+' حذف شد'+(r.purged_from&&r.purged_from.length?(' از: '+r.purged_from.join('، ')):''), true);
+      loadSlugData();
+    } else {
+      showBanner('❌ خطا در حذف '+esc(slug), false);
+    }
+  }catch(e){
+    showBanner('❌ خطا در ارتباط', false);
+  }
 }
 
 async function saveInlineSlug(slug){
@@ -2541,6 +2759,12 @@ async function loadAiOrchestrator(){
         <option value="standard" ${j.effort!=='deep'?'selected':''}>استاندارد (۳–۵ جمله)</option>
         <option value="deep" ${j.effort==='deep'?'selected':''}>عمیق (۸–۱۲ جمله)</option>
       </select></div>` : '';
+    // slug_repair: rule-based engine — show interval/batch instead of tokens/timeout
+    const repairFields = jid==='slug_repair' ? `
+      <div><label>بازهٔ اجرا (دقیقه)</label><input type="number" min="5" value="${esc(j.interval_minutes||30)}" onchange="saveJob('${esc(jid)}',{interval_minutes:parseInt(this.value)||30})"></div>
+      <div><label>تعداد در هر اجرا</label><input type="number" min="1" max="15" value="${esc(j.batch_size||5)}" onchange="saveJob('${esc(jid)}',{batch_size:parseInt(this.value)||5})"></div>
+      <div class="muted" style="font-size:11.5px;grid-column:1/-1">⚙️ موتور این وظیفه قانون‌محور است (پیدا کردن اسلاگ واقعی tgju + تأیید زنده قیمت) و توکن AI مصرف نمی‌کند؛ پرووایدر فقط برای گزارش در این تب ثبت می‌شود.</div>
+      <div id="repair_recent" style="grid-column:1/-1;font-size:12px"></div>` : '';
     return `<div class="card ai-job-card" data-jid="${esc(jid)}" style="margin-top:10px" data-label="${esc(j.label+' '+jid+' '+(j.desc||'')).toLowerCase()}">
       <div class="row flex-between">
         <div><b>${esc(j.label)}</b> <span class="mono">(${esc(jid)})</span>
@@ -2552,11 +2776,12 @@ async function loadAiOrchestrator(){
         </div>
       </div>
       <div class="form-grid" style="margin-top:10px">
-        <div><label>پرووایدر</label><select id="jobprov_${esc(jid)}" onchange="saveJob('${esc(jid)}',{provider:this.value}); loadModels(this.value,'jobmodel_${esc(jid)}')">${provOpts}</select></div>
-        <div><label>مدل</label><select id="jobmodel_${esc(jid)}" onchange="saveJob('${esc(jid)}',{model:this.value})"><option value="">${esc(j.model||'')}</option></select></div>
-        <div><label>حداکثر توکن</label><input id="jobtok_${esc(jid)}" type="number" min="200" step="100" value="${esc(j.max_tokens||'')}" onchange="saveJob('${esc(jid)}',{max_tokens:parseInt(this.value)||500})"></div>
-        <div><label>مهلت (ثانیه)</label><input id="jobto_${esc(jid)}" type="number" min="10" value="${esc(j.timeout_s||'')}" onchange="saveJob('${esc(jid)}',{timeout_s:parseInt(this.value)||30})"></div>
-        ${effSel}
+        ${jid==='slug_repair' ? '' : `<div><label>پرووایدر</label><select id="jobprov_${esc(jid)}" onchange="saveJob('${esc(jid)}',{provider:this.value}); loadModels(this.value,'jobmodel_${esc(jid)}')">${provOpts}</select></div>
+        <div><label>مدل</label><select id="jobmodel_${esc(jid)}" onchange="saveJob('${esc(jid)}',{model:this.value})"><option value="">${esc(j.model||'')}</option></select></div>`}
+        ${jid==='slug_repair' ? `<div class="muted" style="font-size:12px;grid-column:1/-1">پرووایدر فعال: <b>${esc((d.providers||[]).find(p=>p.name===((j.provider)||((d.providers||[])[0]||{}).name))||{}).label || '—'}</b> — برای تغییر، وظیفهٔ دیگر را ویرایش کنید</div>` : ''}
+        ${jid==='slug_repair' ? '' : `<div><label>حداکثر توکن</label><input id="jobtok_${esc(jid)}" type="number" min="200" step="100" value="${esc(j.max_tokens||'')}" onchange="saveJob('${esc(jid)}',{max_tokens:parseInt(this.value)||500})"></div>
+        <div><label>مهلت (ثانیه)</label><input id="jobto_${esc(jid)}" type="number" min="10" value="${esc(j.timeout_s||'')}" onchange="saveJob('${esc(jid)}',{timeout_s:parseInt(this.value)||30})"></div>`}
+        ${repairFields}
       </div>
       <div id="jobres_${esc(jid)}" style="margin-top:8px"></div>
     </div>`;
@@ -2573,6 +2798,17 @@ async function loadAiOrchestrator(){
   // activity feed (stored; rendered by renderAiActivity with limit)
   AI_ACT = act||[];
   renderAiActivity();
+  // slug_repair card: fill recent-fix chips from the resolver status
+  try{
+    const ar = await jget('/api/alias-resolver');
+    const el = $('repair_recent');
+    if(el){
+      const rec = (ar.recent||[]).slice(0,8);
+      el.innerHTML = rec.length
+        ? rec.map(f=>`<span class="pill pill-ok" style="margin:2px">🩺 ${esc(f.slug)} → ${esc(f.real_slug)}</span>`).join(' ')
+        : '<span class="muted">هنوز ترمیمی ثبت نشده</span>';
+    }
+  }catch(e){}
 }
 let AI_ACT = [];
 function renderAiActivity(){
@@ -2628,6 +2864,11 @@ async function runJob(jid){
   const el = $('jobres_'+jid); if(!el) return;
   el.innerHTML = '<span class="muted">⏳ در حال اجرا…</span>';
   const r = await jpost('/api/ai/jobs/'+encodeURIComponent(jid)+'/run', {});
+  if(jid==='slug_repair' && r.ok){
+    el.innerHTML = `<span class="ok">✓ ${faNum((r.fixed||[]).length)} ترمیم از ${faNum(r.checked||0)} بررسی</span>`;
+    loadAiOrchestrator();
+    return;
+  }
   if(r.ok && r.results){
     el.innerHTML = r.results.map(x=>`<div class="${x.ok?'ok':'err'}">${esc(x.channel)}: ${x.ok?'✓ '+faNum(x.latency_ms||0)+'ms':'✗ '+(x.error||'')}</div>`).join('');
   } else if(r.ok){
