@@ -128,6 +128,56 @@ async def startup():
     task = asyncio.create_task(scheduler_loop())
     RUNTIME["scheduler"] = task
     asyncio.create_task(resolver_loop())   # alias resolver — bounded, safe
+    _start_bot_pollers()                   # بله/روبیکا/ایتا long-poll receivers
+
+
+def _start_bot_pollers():
+    """Start unified message pollers for Bale/Rubika/Eitaa (best-effort).
+
+    Each platform only polls when its bot token is configured; handlers
+    currently log + record activity so incoming messages are visible in
+    the فعالیت‌ها feed. Transport lives in tgju_engine_polling.py.
+    """
+    try:
+        import tgju_engine_polling as polling
+    except Exception as e:
+        print("polling engine unavailable: %s" % e)
+        return
+
+    def make_handler(platform):
+        """Best-effort handler: appends to platform.log so the unified activity
+        feed shows incoming messages with zero coupling to the event bus."""
+        def handle(update):
+            try:
+                import datetime as _dt
+                state_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state")
+                msg = update.get("message") or update.get("update") or {}
+                if isinstance(msg, dict):
+                    chat = msg.get("chat", {})
+                    if isinstance(chat, dict):
+                        chat_id = chat.get("id", "")
+                    else:
+                        chat_id = msg.get("chat_id", "")
+                    text = (msg.get("text") or "")[:80]
+                else:
+                    chat_id = ""
+                    text = ""
+                log_line = "%s [%s] inbound %s: %s" % (
+                    _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    platform, chat_id, text)
+                with open(os.path.join(state_dir, "platform.log"), "a",
+                          encoding="utf-8") as f:
+                    f.write(log_line + "\n")
+            except Exception:
+                pass  # logging is best-effort; never break the poller
+        return handle
+
+    try:
+        started = polling.start_all(make_handler)
+        n = sum(1 for p in started.values() if p._thread and p._thread.is_alive())
+        print("TGJU polling: %d platform receiver(s) running (bale/rubika/eitaa)" % n)
+    except Exception as e:
+        print("polling start failed: %s" % e)
 
 
 def main():

@@ -150,6 +150,16 @@ async def resolver_loop():
 router = APIRouter()
 
 
+@router.get("/api/polling")
+def api_polling_status():
+    """Live status of the بله/روبیکا/ایتا message pollers."""
+    try:
+        import tgju_engine_polling as polling
+        return {"ok": True, "pollers": polling.status_all()}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "pollers": []}
+
+
 @router.get("/api/alias-resolver")
 def api_alias_status():
     cfg = load_cfg()
