@@ -3126,7 +3126,9 @@ function renderAiActivity(){
   const lim = parseInt($('ai_act_limit')?.value||'25');
   const rows = (AI_ACT||[]).slice(0, lim);
   $('ai_activity').innerHTML = rows.map(a=>{
-    const ok = a.status==='ok';
+    // slug_repair entries (old format) have no status field but only log on
+    // success (they carry fixed/slugs) — treat them as ok, not errors.
+    const ok = a.status==='ok' || (a.job==='slug_repair' && !a.status);
     return `<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 2px;border-bottom:1px solid var(--border-soft);font-size:12px">
       <span class="pill ${ok?'pill-ok':'pill-bad'}" style="flex-shrink:0">${ok?'✓':'✗'}</span>
       <div style="flex:1;line-height:1.7">

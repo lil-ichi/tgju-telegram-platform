@@ -121,6 +121,7 @@ def resolver_pass(batch_size: int | None = None) -> dict:
             record_ai_activity({
                 "job": "slug_repair",
                 "label": jobs.get("label") or "ترمیم منابع داده",
+                "status": "ok",
                 "provider": prov_name,
                 "model": job.get("model") or prov.get("model") or "-",
                 "engine": "قانونی + تأیید شبکه (بدون توکن)",
