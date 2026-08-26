@@ -851,8 +851,9 @@ button + button { margin-inline-start:10px; }
         <input id="slug_search" placeholder="جستجو: نام یا اسلاگ…" style="max-width:260px" oninput="renderSlugTable()">
         <select id="slug_filter_source" onchange="renderSlugTable()" style="max-width:200px;width:auto">
           <option value="">همه منابع</option>
-          <option value="homepage">صفحه اصلی</option>
-          <option value="profile">بک‌فیل پروفایل</option>
+          <option value="homepage">صفحه اصلی tgju</option>
+          <option value="profile">پروفایل tgju</option>
+          <option value="alias">پروفایل (نگاشت اسلاگ)</option>
           <option value="manual">قیمت دستی</option>
           <option value="missing">بدون قیمت</option>
         </select>
@@ -2557,7 +2558,9 @@ async function loadSlugData(){
 const SOURCE_PILL = {
   homepage:['pill-ok','صفحه اصلی'],
   profile:['pill-warn','پروفایل'],
+  alias:['pill-ok','پروفایل (نگاشت)'],
   manual:['','دستی'],
+  fallback:['pill-dim','کش پشتیبان'],
   missing:['pill-bad','بدون قیمت']
 };
 function platformChips(u){
