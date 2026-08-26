@@ -9,9 +9,9 @@ Automated Telegram channels, WhatsApp & Bale delivery, a full Persian RTL dashbo
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.133-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
-![Platform](https://img.shields.io/badge/Platform-Telegram%20•%20WhatsApp%20•%20Bale-2CA5E0?style=flat-square)
+![Platform](https://img.shields.io/badge/Platform-Telegram%20•%20WhatsApp%20•%20Bale%20•%20Rubika%20•%20Eitaa-2CA5E0?style=flat-square)
 ![CI](https://github.com/lil-ichi/tgju-telegram-platform/actions/workflows/ci.yml/badge.svg)
-![Tests](https://img.shields.io/badge/Tests-47%20passing-brightgreen?style=flat-square)
+![Tests](https://img.shields.io/badge/Tests-70%20passing-brightgreen?style=flat-square)
 
 </div>
 
@@ -38,8 +38,8 @@ settings, and logs.
 
 | Area | Highlights |
 |---|---|
-| 📡 **Market data** | 230+ TGJU slugs (currency, gold, coins, metals, global indices, oil, crypto) with profile-page fallback for missing prices |
-| 📣 **Channels** | 9 Telegram channels out of the box — prices, news, polls, AI analysis; full CRUD from the dashboard |
+| 📡 **Market data** | 230+ TGJU slugs (currency, gold, coins, metals, global indices, oil, crypto) with profile-page fallback + a self-healing alias resolver that auto-corrects broken/renamed slugs |
+| 📣 **Channels** | 9 Telegram channels out of the box — prices, news, polls, AI analysis; full CRUD from the dashboard; one-click copy of the whole channel set to Bale/Rubika/Eitaa |
 | 🤖 **Post engine** | Chip-format price tables, star ratings, TGJU analysis links, custom footers, per-channel templates |
 | 🗞️ **News** | Rotating TGJU news summaries with full hyperlinks (text-only, safe) |
 | 📊 **Polls** | Native Telegram polls from a safe interaction-focused pool, 4-hour rotation, anonymous (required for channels) |
@@ -47,7 +47,8 @@ settings, and logs.
 | 🕐 **Scheduler** | Priority scheduler (analysis → news → poll → rotation) with per-channel intervals; prices are never stolen by other jobs |
 | 🖥️ **Dashboard** | Persian RTL single-page UI: channels, preview & post, AI control center, routing, categories, connections, settings, reports |
 | 🔌 **Connections** | Live bot monitoring — `getMe`, `getChat`, `getChatMember` admin checks with 60s cache |
-| 🌍 **Multi-platform** | Telegram + WhatsApp (Meta Cloud API) + Bale — managed from the same dashboard |
+| 🌍 **Multi-platform** | Telegram + WhatsApp (Meta Cloud API) + Bale + Rubika + Eitaa — managed from the same dashboard |
+| 🩺 **Slug Doctor** | Rule-based alias resolver: finds بدون قیمت slugs, proposes the correct TGJU page, verifies with a live fetch, and heals automatically (zero AI tokens); manual ➕ add / 🗑 delete with a permanent blocklist so deleted codes never resurrect |
 | 🏥 **Core services** | Health checks, idempotency, run history, events, approval flow (`platform/tgju_core/`) |
 
 ---
@@ -174,6 +175,8 @@ tgju-telegram-platform/
 | GET | `/api/connections`, `/api/connections/probe` | Live bot connection monitoring |
 | GET | `/api/providers`, `/api/ai/*` | AI provider management, tests, runs |
 | GET | `/api/functions` | Scheduled-function registry (analysis/news/poll) |
+| GET/POST | `/api/alias-resolver[/run|/config]` | Slug Doctor: status, manual pass, interval config |
+| POST/DELETE | `/api/slugs/add`, `/api/slugs/remove/{slug}` | Add a slug (auto price-warm) / delete from all platforms + blocklist |
 | GET/POST | `/api/bot*` | Bot profile management & activation |
 | GET | `/api/logs` | System logs |
 
@@ -209,10 +212,13 @@ endpoint (local LLMs included):
 
 ## 🧭 Roadmap
 
-- [x] Test suite (`tests/`) — 47 tests, hermetic (no network/Telegram)
+- [x] Test suite (`tests/`) — 70 tests, hermetic (no network/Telegram)
 - [x] CI pipeline (`.github/workflows/ci.yml`) — Python 3.11/3.12 × Ubuntu/Windows
 - [x] Proper packaging (`pyproject.toml`, `pip install -e .`)
 - [x] Dockerfile (one-command deploy)
+- [x] Five-platform delivery (Telegram, WhatsApp, Bale, Rubika, Eitaa) with per-platform channel tabs
+- [x] Slug Doctor (Tier 1): self-healing alias resolver with live verification
+- [ ] Slug Doctor Tier 2: free third-party sources (CoinGecko / open.er-api / Yahoo) for slugs with no TGJU page
 - [ ] GitHub Actions release workflow (tag → PyPI/ghcr)
 - [ ] Webhook-based Telegram delivery (vs. polling)
 - [ ] Multi-language post templates (EN/Farsi)
@@ -244,7 +250,11 @@ endpoint (local LLMs included):
 
 پلتفرم کامل مدیریت کانال‌های بازار (قیمت‌ها، اخبار، نظرسنجی و تحلیل) بر پایه داده‌های
 [TGJU](https://www.tgju.org) — با داشبورد فارسی RTL، زمان‌بندی خودکار، ارسال به
-تلگرام / واتساپ / بله و لایه هوش مصنوعی اختیاری.
+تلگرام / واتساپ / بله / روبیکا / ایتا و لایه هوش مصنوعی اختیاری.
+
+ویژگی «دکتر اسلاگ»: اسلاگ‌های بدون قیمت به‌صورت خودکار پیدا و ترمیم می‌شوند
+(نقشهٔ نام‌های مستعار + تأیید زنده از tgju.org، بدون مصرف توکن). افزودن و حذف
+اسلاگ از تب داده‌ها با لیست سیاه دائمی برای کدهای حذف‌شده.
 
 ### راه‌اندازی سریع
 
