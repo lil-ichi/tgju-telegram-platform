@@ -508,11 +508,10 @@ button + button { margin-inline-start:10px; }
   .platform-header::before { animation:none; }
 }
 
-/* ── Theme switcher (floating top-left, minimal icon-only) ──── */
-.theme-switcher { position:fixed; top:12px; left:12px; z-index:1000;
-  display:flex; align-items:center; gap:5px;
-  padding:5px 7px; background:var(--surface); border:1px solid var(--border);
-  border-radius:999px; box-shadow:var(--shadow-sm); margin-top:0; }
+/* ── Theme switcher (inside header, compact pill) ─────────── */
+.theme-switcher { display:inline-flex; align-items:center; gap:5px;
+  padding:5px 7px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:999px; margin:0; }
 .ts-themes { display:flex; gap:4px; align-items:center; }
 .ts-swatch { width:14px; height:14px; min-height:14px; padding:0; border-radius:50%;
   cursor:pointer; border:1.5px solid var(--border); position:relative; overflow:hidden;
@@ -529,13 +528,13 @@ html:not([data-mode]) .ts-emerald,
 html[data-mode="light"] .ts-emerald.active {}
 .ts-mode { display:inline-flex; align-items:center; justify-content:center;
   width:22px; min-height:22px; padding:0; border-radius:50%;
-  border:1px solid var(--border); background:var(--surface-2);
+  border:1px solid var(--border); background:var(--surface);
   color:var(--dim); cursor:pointer;
   transition:color var(--trans), border-color var(--trans), background var(--trans); }
 .ts-mode:hover { color:var(--accent-h); border-color:var(--accent-line); background:var(--accent-soft); }
 .ts-mode:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .ts-mode-icon { font-size:11px; line-height:1; }
-#ts_mode_label { display:none; }          /* icon-only mode button */
+#ts_mode_label { display:none; }
 .theme-sep { width:1px; height:14px; background:var(--border); flex-shrink:0; }
 
 /* ── Platform usage chips (داده‌ها و لینک‌ها) ────────────────── */
@@ -619,20 +618,6 @@ html[data-mode="light"] .ts-emerald.active {}
     </aside>
   <main class="main">
 
-      <!-- theme switcher — fixed top-left, minimal icon-only -->
-      <div class="theme-switcher" id="theme_switcher" role="group" aria-label="پوسته و حالت نمایش">
-        <div class="ts-themes" role="radiogroup" aria-label="انتخاب پوسته رنگی">
-          <button type="button" class="ts-swatch ts-emerald" data-set-theme="emerald" title="زمرد" aria-label="پوسته زمرد"></button>
-          <button type="button" class="ts-swatch ts-ocean"   data-set-theme="ocean"   title="اقیانوس" aria-label="پوسته اقیانوس"></button>
-          <button type="button" class="ts-swatch ts-amber"   data-set-theme="amber"   title="کهربا" aria-label="پوسته کهربا"></button>
-        </div>
-        <span class="theme-sep" aria-hidden="true"></span>
-        <button type="button" class="ts-mode" id="ts_mode_btn" aria-label="تغییر حالت روشن و تیره" title="حالت روشن/تیره">
-          <span class="ts-mode-icon" id="ts_mode_icon" aria-hidden="true">🌙</span>
-          <span id="ts_mode_label">تیره</span>
-        </button>
-      </div>
-
       <div id="platform_header" class="platform-header">
         <div class="ph-title">
           <span class="ph-icon" id="ph_icon">🛰️</span>
@@ -642,6 +627,20 @@ html[data-mode="light"] .ts-emerald.active {}
           </div>
         </div>
         <div class="platform-menu" id="platform_menu"></div>
+
+        <!-- theme switcher — inside header, below the menu -->
+        <div class="theme-switcher" id="theme_switcher" role="group" aria-label="پوسته و حالت نمایش">
+          <div class="ts-themes" role="radiogroup" aria-label="انتخاب پوسته رنگی">
+            <button type="button" class="ts-swatch ts-emerald" data-set-theme="emerald" title="زمرد" aria-label="پوسته زمرد"></button>
+            <button type="button" class="ts-swatch ts-ocean"   data-set-theme="ocean"   title="اقیانوس" aria-label="پوسته اقیانوس"></button>
+            <button type="button" class="ts-swatch ts-amber"   data-set-theme="amber"   title="کهربا" aria-label="پوسته کهربا"></button>
+          </div>
+          <span class="theme-sep" aria-hidden="true"></span>
+          <button type="button" class="ts-mode" id="ts_mode_btn" aria-label="تغییر حالت روشن و تیره" title="حالت روشن/تیره">
+            <span class="ts-mode-icon" id="ts_mode_icon" aria-hidden="true">🌙</span>
+            <span id="ts_mode_label">تیره</span>
+          </button>
+        </div>
 
       </div>
 
