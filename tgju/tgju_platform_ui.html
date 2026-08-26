@@ -237,7 +237,8 @@ thead th { position:sticky; top:0; background:var(--surface-2); z-index:1; }
 th { color:var(--dim); text-align:right; font-weight:700; padding:10px 12px;
   border-bottom:2px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:.03em; }
 td { padding:10px 12px; border-bottom:1px solid var(--border-soft); transition:background 140ms ease; }
-tr:hover td { background:var(--row-hover); }
+/* row hover removed per user request (2026-08-26) — flat table reads cleaner */
+tr:hover td { background:transparent; }
 .mono { font-family:Consolas,Menlo,monospace; font-size:11.5px; color:var(--dim); direction:ltr; display:inline-block; }
 
 /* ── Buttons ─────────────────────────────────────────────────── */
@@ -961,6 +962,15 @@ button + button { margin-inline-start:10px; }
             <div class="card"><h4>پرووایدرها</h4><div class="big" id="ai_prov_count">—</div></div>
             <div class="card"><h4>جاب‌های فعال</h4><div class="big gold" id="ai_job_count">—</div></div>
             <div class="card"><h4>آخرین فعالیت</h4><div id="ai_last_act" class="muted">—</div></div>
+          </div>
+
+          <h2>🔌 موتور هوش مصنوعی — وضعیت زندهٔ اتصال</h2>
+          <div class="card">
+            <p class="muted" style="font-size:12.5px;line-height:2;margin-top:0">هر پرووایدر با یک درخواست واقعی کوچک آزموده می‌شود؛ اگر سبز بود یعنی همین الان پاسخ می‌دهد. مدل فعال هر پرووایدر را می‌توانید عوض کنید یا از فهرست مدل‌ها انتخاب کنید.</p>
+            <div class="row" style="margin-bottom:10px">
+              <button class="small primary" onclick="loadEngineStatus()">🔍 تست اتصال همه</button>
+            </div>
+            <div id="engine_status_box">—</div>
           </div>
 
           <h2>🤖 جاب‌ها (وظایف هوش مصنوعی)</h2>
@@ -2101,7 +2111,35 @@ function platformHeaderFor(panelId){
   $('ph_sub').textContent = m.sub;
 }
 
+// sidebar nav binding — MUST run even if the /api/platforms fetch fails,
+// otherwise every sidebar tab (incl. نظرسنجی‌ها) is dead until a full reload.
+function bindSidebarNav(){
+  document.querySelectorAll('.platform-nav').forEach(n=>{
+    n.addEventListener('click', ()=>showPanelForPlatform(n.dataset.platform));
+  });
+  // sidebar sub-items — each forces its platform, then shows the panel
+  document.querySelectorAll('.tg-item').forEach(n=>{
+    n.addEventListener('click', ()=>{ setPlatform('telegram'); showPanel(n.dataset.panel); });
+  });
+  document.querySelectorAll('.bale-item').forEach(n=>{
+    n.addEventListener('click', ()=>{ setPlatform('bale'); showPanel(n.dataset.panel); });
+  });
+  document.querySelectorAll('.wa-item').forEach(n=>{
+    n.addEventListener('click', ()=>{ setPlatform('whatsapp'); showPanel(n.dataset.panel); });
+  });
+  document.querySelectorAll('.rb-item').forEach(n=>{
+    n.addEventListener('click', ()=>{ setPlatform('rubika'); showPanel(n.dataset.panel); });
+  });
+  document.querySelectorAll('.et-item').forEach(n=>{
+    n.addEventListener('click', ()=>{ setPlatform('eitaa'); showPanel(n.dataset.panel); });
+  });
+  document.querySelectorAll('.sys-item').forEach(n=>{
+    n.addEventListener('click', ()=>{ showPanel(n.dataset.panel); });
+  });
+}
+
 async function loadPlatformMenu(){
+  bindSidebarNav();
   try{
     const d = await jget('/api/platforms');
     const plats = d.platforms||[];
@@ -2110,29 +2148,6 @@ async function loadPlatformMenu(){
       `<div class="pm-item ${p.id==='telegram'?'active':''}" data-platform="${p.id}" onclick="setPlatform('${p.id}'); showPanelForPlatform('${p.id}')">
          <span class="pm-ico">${pfIcon(p.id,16)}</span> ${p.name}
        </div>`).join('');
-    // sidebar platform nav binding
-    document.querySelectorAll('.platform-nav').forEach(n=>{
-      n.addEventListener('click', ()=>showPanelForPlatform(n.dataset.platform));
-    });
-    // sidebar sub-items — each forces its platform, then shows the panel
-    document.querySelectorAll('.tg-item').forEach(n=>{
-      n.addEventListener('click', ()=>{ setPlatform('telegram'); showPanel(n.dataset.panel); });
-    });
-    document.querySelectorAll('.bale-item').forEach(n=>{
-      n.addEventListener('click', ()=>{ setPlatform('bale'); showPanel(n.dataset.panel); });
-    });
-    document.querySelectorAll('.wa-item').forEach(n=>{
-      n.addEventListener('click', ()=>{ setPlatform('whatsapp'); showPanel(n.dataset.panel); });
-    });
-    document.querySelectorAll('.rb-item').forEach(n=>{
-      n.addEventListener('click', ()=>{ setPlatform('rubika'); showPanel(n.dataset.panel); });
-    });
-    document.querySelectorAll('.et-item').forEach(n=>{
-      n.addEventListener('click', ()=>{ setPlatform('eitaa'); showPanel(n.dataset.panel); });
-    });
-    document.querySelectorAll('.sys-item').forEach(n=>{
-      n.addEventListener('click', ()=>{ showPanel(n.dataset.panel); });
-    });
   }catch(e){}
 }
 
@@ -2304,7 +2319,11 @@ async function saveChannel(){
   }catch(e){
     showBanner('⚠️ ارتباط با سرور برقرار نشد'); cfMsg('⚠️ ارتباط با سرور برقرار نشد'); return;
   }
-  setTimeout(closeForm, 400);
+  // Close the (possibly inline-homed) form BEFORE re-rendering the channel
+  // list — loadChannels() rebuilds channels_list and would otherwise destroy
+  // a form still living inside a card. closeForm() first moves it back to its
+  // static home in panel_channels, so it survives the re-render.
+  closeForm();
   loadChannels();
 }
 async function deleteChannel(){
@@ -2995,6 +3014,7 @@ let AI_PROVIDERS = {};
 async function loadAiPage(){
   await loadChannelsData();
   await loadAiOrchestrator();
+  loadEngineStatus();   // live provider/model status — no await, fills async
   // channel config form (existing behavior)
   const d = await jget('/api/ai');
   const provs = d.providers||{};
@@ -3025,12 +3045,17 @@ async function loadAiOrchestrator(){
         <option value="standard" ${j.effort!=='deep'?'selected':''}>استاندارد (۳–۵ جمله)</option>
         <option value="deep" ${j.effort==='deep'?'selected':''}>عمیق (۸–۱۲ جمله)</option>
       </select></div>` : '';
-    // slug_repair: rule-based engine — show interval/batch instead of tokens/timeout
+    // slug_repair: rule-based engine — show interval/batch instead of tokens/timeout,
+    // but still let the user pick provider+model (for reporting) and test it live.
     const repairFields = jid==='slug_repair' ? `
       <div><label>بازهٔ اجرا (دقیقه)</label><input type="number" min="5" value="${esc(j.interval_minutes||30)}" onchange="saveJob('${esc(jid)}',{interval_minutes:parseInt(this.value)||30})"></div>
       <div><label>تعداد در هر اجرا</label><input type="number" min="1" max="15" value="${esc(j.batch_size||5)}" onchange="saveJob('${esc(jid)}',{batch_size:parseInt(this.value)||5})"></div>
       <div class="muted" style="font-size:11.5px;grid-column:1/-1">⚙️ موتور این وظیفه قانون‌محور است (پیدا کردن اسلاگ واقعی tgju + تأیید زنده قیمت) و توکن AI مصرف نمی‌کند؛ پرووایدر فقط برای گزارش در این تب ثبت می‌شود.</div>
-      <div id="repair_recent" style="grid-column:1/-1;font-size:12px"></div>` : '';
+      <div id="repair_recent" style="grid-column:1/-1;font-size:12px"></div>
+      <div style="grid-column:1/-1" class="row">
+        <button class="small" onclick="testRepairEngine()">🧪 تست موتور ترمیم</button>
+        <span id="repair_test_result" class="muted" style="font-size:12px"></span>
+      </div>` : '';
     return `<div class="card ai-job-card" data-jid="${esc(jid)}" style="margin-top:10px" data-label="${esc(j.label+' '+jid+' '+(j.desc||'')).toLowerCase()}">
       <div class="row flex-between">
         <div><b>${esc(j.label)}</b> <span class="mono">(${esc(jid)})</span>
@@ -3096,6 +3121,95 @@ function renderAiActivity(){
       </div>
     </div>`;
   }).join('') || '<div class="muted">هنوز فعالیتی ثبت نشده</div>';
+}
+
+// ── AI engine status (live provider probes + model management) ──
+// NOTE: innerHTML here is safe — every interpolated value passes esc().
+async function loadEngineStatus(){
+  const box = $('engine_status_box');
+  if(!box) return;
+  box.innerHTML = '<span class="muted">⏳ در حال آزمودن پرووایدرها…</span>';
+  let d;
+  try{ d = await jget('/api/ai/engine_status'); }
+  catch(e){ box.innerHTML = '<span class="err">❌ ' + esc(e.message||e) + '</span>'; return; }
+  const provs = d.providers||[];
+  if(!provs.length){ box.innerHTML = '<span class="muted">هیچ پرووایدری ثبت نشده — از دکمهٔ افزودن پرووایدر استفاده کنید.</span>'; return; }
+  box.innerHTML = provs.map((p,i)=>`
+    <div class="card" style="margin-bottom:10px;padding:12px 14px" id="engine_${esc(p.name)}">
+      <div class="row flex-between" style="flex-wrap:wrap;gap:8px">
+        <div>
+          <b>${esc(p.label)}</b> <span class="mono">(${esc(p.name)})</span>
+          ${p.live_ok?'<span class="pill pill-ok">✓ متصل</span>':'<span class="pill pill-bad">✗ قطع</span>'}
+          <div class="muted" style="font-size:12px;margin-top:3px">
+            مدل فعال: <b id="engine_model_${esc(p.name)}">${esc(p.model||'—')}</b>
+            • ${esc(p.base_url||'')}
+            ${p.jobs&&p.jobs.length?` • استفاده در: ${p.jobs.map(esc).map(esc).join('، ')}`:''}
+          </div>
+          <div class="muted" style="font-size:11.5px" data-detail>${esc(p.detail||'')}</div>
+        </div>
+        <div class="row" style="gap:6px">
+          <select id="engine_models_${esc(p.name)}" style="width:auto;max-width:230px"><option value="">${esc(p.model||'— انتخاب مدل —')}</option></select>
+          <button class="small" onclick="applyEngineModel('${esc(p.name)}')">💾 ثبت مدل</button>
+          <button class="small" onclick="testEngineProvider('${esc(p.name)}')">🧪 تست</button>
+        </div>
+      </div>
+    </div>`).join('');
+  // fill model dropdowns
+  for(const p of provs){
+    try{
+      const md = await jpost('/api/ai/models', {provider:p.name});
+      const sel = $('engine_models_'+p.name);
+      if(sel && md && md.ok && (md.models||[]).length){
+        const cur = p.model||'';
+        sel.innerHTML = `<option value="">— انتخاب مدل —</option>` +
+          md.models.map(m=>`<option value="${esc(m)}" ${m===cur?'selected':''}>${esc(m)}</option>`).join('');
+      }
+    }catch(e){}
+  }
+}
+async function applyEngineModel(name){
+  const sel = $('engine_models_'+name);
+  const model = sel ? sel.value : '';
+  const r = await jpost('/api/ai/set_model', {provider:name, model:model});
+  if(r && r.ok){
+    showBanner('✅ مدل «'+model+'» روی پرووایدر «'+name+'» ثبت شد', true);
+    const lbl = $('engine_model_'+name); if(lbl) lbl.textContent = model;
+    testEngineProvider(name);
+  } else {
+    showBanner('⚠️ '+((r&&(r.error||r.detail))||'خطا در ثبت مدل'), false);
+  }
+}
+async function testEngineProvider(name){
+  const card = $('engine_'+name);
+  if(!card) return;
+  const det = card.querySelector('[data-detail]');
+  if(det) det.textContent = '⏳ در حال آزمون…';
+  const chosen = ($('engine_models_'+name)||{}).value || '';
+  try{
+    const r = await jpost('/api/ai/test/'+encodeURIComponent(name), chosen?{model:chosen}:{});
+    if(det) det.textContent = (r.ok?'✓ ':'✗ ') + (r.detail||'') + (r.model?(' — مدل: '+r.model):'');
+    // refresh the live badge in place
+    const pills = card.querySelectorAll('.pill');
+    if(pills[0]){
+      const ok = !!r.ok;
+      pills[0].className = 'pill ' + (ok?'pill-ok':'pill-bad');
+      pills[0].textContent = ok?'✓ متصل':'✗ قطع';
+    }
+  }catch(e){ if(det) det.textContent = '✗ ' + (e.message||e); }
+}
+async function testRepairEngine(){
+  const el = $('repair_test_result');
+  if(el) el.textContent = '⏳ در حال اجرای یک دست ترمیم کوچک…';
+  try{
+    const st = await jget('/api/alias-resolver');
+    const pending = (st.unresolved||[]).length;
+    const okCount = (st.resolved||st.total_resolved||0);
+    let msg = 'موتور فعال — تاکنون '+faNum(okCount)+' اسلاگ تأیید شده';
+    if(pending) msg += ' • '+faNum(pending)+' مورد در انتظار';
+    if(el) el.innerHTML = '<span style="color:var(--good)">✓ '+esc(msg)+'</span>';
+  }catch(e){
+    if(el) el.innerHTML = '<span class="err">✗ موتور پاسخ نداد: '+esc(e.message||e)+'</span>';
+  }
 }
 
 function filterAiJobs(){
