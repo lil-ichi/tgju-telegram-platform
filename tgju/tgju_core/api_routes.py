@@ -653,7 +653,8 @@ def api_slug_override_del(slug: str):
 
 @router.post("/api/slugs/rename")
 async def api_slug_rename(req: Request):
-    """Rename a slug key everywhere (channels.yaml, overrides, cache)."""
+    """Rename a slug key everywhere (channels.yaml, overrides, cache,
+    alias map) and re-warm the price under the new key."""
     try:
         body = await req.json()
     except Exception:
@@ -663,9 +664,49 @@ async def api_slug_rename(req: Request):
     res = rename_slug(old, new)
     if not res.get("ok"):
         return JSONResponse(res, status_code=400)
+    # Alias map must follow the rename too: it is consulted FIRST by
+    # fetch_profile_price, so a stale `old` entry would keep feeding the
+    # old real-slug/price after the rename.
+    alias_moved = False
+    alias_price = ""
+    try:
+        from tgju_core.alias_resolver import load_alias_map, save_alias_map
+        amap = load_alias_map()
+        if old in amap:
+            ent = amap.pop(old)
+            alias_price = str(ent.get("price") or "")
+            amap[new] = ent
+            save_alias_map(amap)
+            alias_moved = True
+    except Exception:
+        pass
     reload_channels()  # pick up channels.yaml changes in the running server
-    log_line("slug renamed: %s -> %s (channels: %s)" % (
-        old, new, ",".join(res.get("updated") or [])))
+    # Re-warm the new slug immediately so posts show the price without
+    # waiting for the next resolver/backfill pass. Prefer a live fetch of
+    # the new slug; fall back to carrying over the old verified price.
+    warmed = False
+    try:
+        from tgju_engine_scrape import fetch_profile_price
+        from tgju_core.alias_resolver import warm_profile_cache
+        fresh = fetch_profile_price(new) or {}
+        if fresh.get("price"):
+            warm_profile_cache(new, str(fresh["price"]),
+                               str(fresh.get("name") or ""))
+            warmed = True
+    except Exception:
+        pass
+    if not warmed and alias_price:
+        try:
+            from tgju_core.alias_resolver import warm_profile_cache
+            warm_profile_cache(new, alias_price)
+            warmed = True
+        except Exception:
+            pass
+    log_line("slug renamed: %s -> %s (channels: %s, alias_map: %s, warmed: %s)" % (
+        old, new, ",".join(res.get("updated") or []),
+        alias_moved, warmed))
+    res["alias_map"] = alias_moved
+    res["warmed"] = warmed
     return res
 
 @router.post("/api/slugs/test")
@@ -1197,7 +1238,52 @@ async def api_ai_test_provider(name: str, req: Request):
         body = {}
     prov = dict(prov)
     prov.update({k: v for k, v in body.items() if v})
-    return test_provider(prov)
+    out = test_provider(prov)
+    # Also report which model answered so the UI can show the live pairing.
+    out["model"] = (body.get("model") or prov.get("model") or "")
+    return out
+
+@router.post("/api/ai/set_model")
+async def api_ai_set_model(req: Request):
+    """Set the active model on a provider (AI engine management)."""
+    try:
+        body = await req.json()
+    except Exception:
+        return JSONResponse({"error": "bad body"}, status_code=400)
+    name = (body.get("provider") or "").strip()
+    model = (body.get("model") or "").strip()
+    cfg = load_ai_config()
+    prov = (cfg.get("providers") or {}).get(name)
+    if not prov:
+        return JSONResponse({"error": "unknown provider"}, status_code=404)
+    if not model:
+        return JSONResponse({"error": "model required"}, status_code=400)
+    prov["model"] = model
+    save_ai_config(cfg)
+    return {"ok": True, "provider": name, "model": model}
+
+@router.get("/api/ai/engine_status")
+def api_ai_engine_status():
+    """One-shot engine health for the AI tab: every provider with its
+    configured model, probed live (tiny 1-token chat) + job wiring."""
+    cfg = load_ai_config()
+    jobs = load_ai_jobs().get("jobs") or {}
+    out = []
+    for n, p in (cfg.get("providers") or {}).items():
+        st = test_provider(p)
+        used_by = sorted(j for j, jc in jobs.items() if jc.get("enabled"))
+        out.append({
+            "name": n,
+            "label": p.get("label") or n,
+            "base_url": p.get("base_url") or "",
+            "kind": p.get("kind") or "openai_compat",
+            "model": p.get("model") or "",
+            "enabled": p.get("enabled", True),
+            "live_ok": bool(st.get("ok")),
+            "detail": st.get("detail") or "",
+            "jobs": used_by,
+        })
+    return {"providers": out}
 
 @router.post("/api/ai/run/{cid}")
 async def api_ai_run(cid: str):
