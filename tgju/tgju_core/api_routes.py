@@ -812,6 +812,10 @@ async def api_update_channel(cid: str, req: Request):
         body = await req.json()
     except Exception:
         body = {}
+    # never let a blank telegram_id wipe a stored one (UI may omit/blank it on edit)
+    if isinstance(body, dict) and body.get("telegram_id", None) == "" \
+            and str(ch.get("telegram_id") or "").strip():
+        body.pop("telegram_id", None)
     for k, v in body.items():
         if k != "id":
             ch[k] = v
