@@ -2167,6 +2167,9 @@ function refresh(){
   if(p.startsWith('panel_bale_')) loadBaleHome();
   if(p.startsWith('panel_rub_')) loadRubikaHome();
   if(p.startsWith('panel_eit_')) loadEitaaHome();
+  if(p==='panel_bale_polls') loadBalePolls();
+  if(p==='panel_rub_polls') loadRubPolls();
+  if(p==='panel_eit_polls') loadEitPolls();
 }
 setInterval(()=>{ const act = document.querySelector('.panel.active'); if(!act) return; const id=act.id;
   if(id.startsWith('panel_wa_')) loadWaHome();
