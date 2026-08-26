@@ -2357,6 +2357,99 @@ def api_bale_preview(cid: str, post_type: str = "prices"):
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
+@router.post("/api/polls/send/{platform}")
+async def api_polls_send(platform: str, req: Request):
+    """Send a poll through ANY platform's bot.
+
+    بله: native sendPoll (Telegram-style). تلگرام handled by /api/post.
+    روبیکا/ایتا: no native poll API → send a formatted TEXT poll
+    (question + lettered options) that reads perfectly in-channel.
+
+    Body: {"channel_id": "..."}  — question/options come from pick_poll().
+    """
+    try:
+        body = await req.json()
+        cid = (body or {}).get("channel_id", "")
+        if not cid:
+            return JSONResponse({"ok": False, "error": "channel_id required"},
+                                status_code=400)
+        from tgju_core.polls import pick_poll
+
+        # resolve the channel + target id per platform
+        if platform == "bale":
+            import tgju_engine_bale as eng
+            data = eng.load_bale()
+            ch = next((c for c in data["channels"] if c.get("id") == cid), None)
+            if not ch:
+                return JSONResponse({"ok": False, "error": "unknown channel"}, status_code=404)
+            target = ch.get("bale_id") or ch.get("chat_id")
+            if not target:
+                return JSONResponse({"ok": False, "error": "channel has no bale_id"},
+                                    status_code=400)
+            p = pick_poll(ch)
+            resp = await asyncio.to_thread(eng.send_bale_poll, target,
+                                           p["question"], p["options"])
+        elif platform == "rubika":
+            import tgju_engine_rubika as eng
+            ch = next((c for c in eng.list_channels() if c.get("id") == cid), None)
+            if not ch:
+                return JSONResponse({"ok": False, "error": "unknown channel"}, status_code=404)
+            target = ch.get("chat_id")
+            if not target:
+                return JSONResponse({"ok": False, "error": "channel has no chat_id"},
+                                    status_code=400)
+            p = pick_poll(ch)
+            text = _text_poll(p["question"], p["options"])
+            resp = await asyncio.to_thread(eng.send_rubika, target, text)
+        elif platform == "eitaa":
+            import tgju_engine_eitaa as eng
+            ch = next((c for c in eng.list_channels() if c.get("id") == cid), None)
+            if not ch:
+                return JSONResponse({"ok": False, "error": "unknown channel"}, status_code=404)
+            target = ch.get("chat_id")
+            if not target:
+                return JSONResponse({"ok": False, "error": "channel has no chat_id"},
+                                    status_code=400)
+            p = pick_poll(ch)
+            text = eng._plain(_text_poll(p["question"], p["options"]))
+            resp = await asyncio.to_thread(eng.send_eitaa, target, text)
+        else:
+            return JSONResponse({"ok": False, "error": "unknown platform %s" % platform},
+                                status_code=400)
+
+        # record per-channel state so the scheduler/UI can show freshness
+        try:
+            st = eng.load_channel_state(cid) if hasattr(eng, "load_channel_state") else {}
+            st["last_poll_at"] = datetime.now().isoformat(timespec="seconds")
+            if resp.get("ok"):
+                st["last_ok"] = st["last_poll_at"]
+                st["last_error"] = None
+            else:
+                st["last_error"] = resp.get("error")
+            if hasattr(eng, "save_channel_state"):
+                eng.save_channel_state(cid, st)
+        except Exception:
+            pass
+
+        resp["platform"] = platform
+        resp["channel"] = cid
+        resp["poll"] = {"question": p["question"], "options": p["options"]}
+        return resp if resp.get("ok") else JSONResponse(resp, status_code=400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+def _text_poll(question: str, options: list) -> str:
+    """Format a poll as plain text for platforms without native polls."""
+    letters = ["۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹", "۱۰"]
+    lines = ["🗳 <b>%s</b>" % question, ""]
+    for i, opt in enumerate(options[:10]):
+        lines.append("%s) %s" % (letters[i], opt))
+    lines.append("")
+    lines.append("👇 شمارهٔ گزینهٔ موردنظرت رو بنویس")
+    return "\n".join(lines)
+
+
 @router.post("/api/bale/post/{cid}")
 async def api_bale_post(cid: str, req: Request):
     """Live post to a Bale channel (network via to_thread, never blocks)."""

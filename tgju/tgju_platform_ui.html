@@ -27,65 +27,11 @@
 }
 
 :root{
-  /* ══ Theme system v2 «Multi-Skin» — 2026-08-24 ══
-     3 hue families × light/dark = 6 skins, switched via
-     <html data-theme="emerald|ocean|amber" data-mode="light|dark">
+  /* ══ Theme system v3 «Single Blue» — 2026-08-26 ══
+     ONE light + ONE dark theme, blue accent.
+     <html data-theme="ocean" data-mode="light|dark">
      persisted in localStorage (tgju_theme / tgju_mode). */
-  /* ── default: EMERALD · LIGHT (porcelain canvas) ── */
-  --bg:#f6f6f2;
-  --surface:#ffffff;
-  --surface-2:#fafaf7;
-  --border:#e6e6df;
-  --border-soft:#efefe9;
-  --border-hover:#dcdcd3;
-  --input-hover:#cfcfc5;
-  --txt:#1a2624;
-  --dim:#5f6f6b;
-  --faint:#98a5a0;
-  --accent:#0d8a72;
-  --accent-h:#0a6e5b;
-  --accent-soft:#e8f5f0;
-  --accent-line:#bfe3d7;
-  --on-accent:#ffffff;
-  --gold:#b8860b;
-  --ok:#0d8a72;   --ok-bg:#e8f5f0;   --ok-fg:#0a6e5b;   --ok-line:#bfe3d7;
-  --bad:#dc2626;  --bad-bg:#fdeaea;  --bad-fg:#b91c1c;  --bad-line:#f6c8c8;
-  --warn:#d97706; --warn-bg:#fdf3e3; --warn-fg:#b45309; --warn-line:#f3ddb0;
-  --track:#d8d8cf;
-  --row-hover:rgba(232,245,240,.45);
-  --glow-1:rgba(13,138,114,.06);
-  --glow-2:rgba(184,134,11,.05);
-  --shadow-sm:0 1px 2px rgba(26,38,36,.05), 0 1px 3px rgba(26,38,36,.07);
-  --shadow-md:0 2px 4px rgba(26,38,36,.04), 0 12px 24px -6px rgba(26,38,36,.10);
-  --shadow-lg:0 4px 10px rgba(26,38,36,.05), 0 24px 48px -8px rgba(26,38,36,.14);
-  --r-sm:8px; --r-md:14px; --r-lg:20px;
-  --trans:220ms cubic-bezier(.25,.46,.45,.94);
-  --spring:cubic-bezier(.34,1.56,.64,1);
-}
-
-/* ── EMERALD · DARK — deep pine ── */
-[data-theme="emerald"][data-mode="dark"]{
-  --bg:#0a1310; --surface:#111d19; --surface-2:#152420;
-  --border:#23342e; --border-soft:#1c2b26; --border-hover:#2c4038; --input-hover:#33493f;
-  --txt:#e4efe9; --dim:#9db4ab; --faint:#6d837a;
-  --accent:#2fbf9d; --accent-h:#43d1af;
-  --accent-soft:rgba(47,191,157,.12); --accent-line:rgba(47,191,157,.35);
-  --on-accent:#071310;
-  --gold:#caa64a;
-  --ok:#2fbf9d;   --ok-bg:rgba(47,191,157,.14);  --ok-fg:#7fdcc2;  --ok-line:rgba(47,191,157,.40);
-  --bad:#f05252;  --bad-bg:rgba(220,38,38,.16);  --bad-fg:#f19999; --bad-line:rgba(220,38,38,.45);
-  --warn:#e89b3c; --warn-bg:rgba(217,119,6,.16); --warn-fg:#ecb464; --warn-line:rgba(217,119,6,.45);
-  --track:#24352f;
-  --row-hover:rgba(47,191,157,.08);
-  --glow-1:rgba(47,191,157,.07);
-  --glow-2:rgba(202,166,74,.05);
-  --shadow-sm:0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.30);
-  --shadow-md:0 2px 4px rgba(0,0,0,.30), 0 12px 24px -6px rgba(0,0,0,.45);
-  --shadow-lg:0 4px 10px rgba(0,0,0,.30), 0 24px 48px -8px rgba(0,0,0,.55);
-}
-
-/* ── OCEAN · LIGHT — crisp paper + blue ── */
-[data-theme="ocean"]{
+  /* ── LIGHT (crisp paper + blue) ── */
   --bg:#f4f7fb; --surface:#ffffff; --surface-2:#f7fafd;
   --border:#dde5ef; --border-soft:#e9eff7; --border-hover:#c9d6e6; --input-hover:#b9c9dd;
   --txt:#13202e; --dim:#5a6b80; --faint:#94a3b6;
@@ -100,9 +46,15 @@
   --row-hover:rgba(37,99,235,.05);
   --glow-1:rgba(37,99,235,.07);
   --glow-2:rgba(13,148,136,.05);
+  --shadow-sm:0 1px 2px rgba(19,32,46,.05), 0 1px 3px rgba(19,32,46,.07);
+  --shadow-md:0 2px 4px rgba(19,32,46,.04), 0 12px 24px -6px rgba(19,32,46,.10);
+  --shadow-lg:0 4px 10px rgba(19,32,46,.05), 0 24px 48px -8px rgba(19,32,46,.14);
+  --r-sm:8px; --r-md:14px; --r-lg:20px;
+  --trans:220ms cubic-bezier(.25,.46,.45,.94);
+  --spring:cubic-bezier(.34,1.56,.64,1);
 }
 
-/* ── OCEAN · DARK — midnight navy ── */
+/* ── BLUE · DARK — midnight navy (the single dark theme) ── */
 [data-theme="ocean"][data-mode="dark"]{
   --bg:#0a1020; --surface:#111a30; --surface-2:#16203a;
   --border:#24314f; --border-soft:#1d2842; --border-hover:#31426a; --input-hover:#3a4d78;
@@ -118,45 +70,6 @@
   --row-hover:rgba(96,165,250,.08);
   --glow-1:rgba(96,165,250,.08);
   --glow-2:rgba(52,211,153,.05);
-  --shadow-sm:0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.30);
-  --shadow-md:0 2px 4px rgba(0,0,0,.30), 0 12px 24px -6px rgba(0,0,0,.45);
-  --shadow-lg:0 4px 10px rgba(0,0,0,.30), 0 24px 48px -8px rgba(0,0,0,.55);
-}
-
-/* ── AMBER · LIGHT — warm paper + bronze ── */
-[data-theme="amber"]{
-  --bg:#faf6ee; --surface:#fffdf8; --surface-2:#f8f3e8;
-  --border:#e8dfcc; --border-soft:#f0e9da; --border-hover:#d9cbae; --input-hover:#cbbc9c;
-  --txt:#292018; --dim:#756754; --faint:#a4977f;
-  --accent:#b45309; --accent-h:#92400e;
-  --accent-soft:#f7ecd9; --accent-line:#ecd9b4;
-  --on-accent:#ffffff;
-  --gold:#8a6d1f;
-  --ok:#15803d;   --ok-bg:#e9f5ec;   --ok-fg:#166534;   --ok-line:#bfe3c8;
-  --bad:#dc2626;  --bad-bg:#fbe9e7;  --bad-fg:#b91c1c;  --bad-line:#f6c8c0;
-  --warn:#b45309; --warn-bg:#f7ecd9; --warn-fg:#92400e; --warn-line:#ecd9b4;
-  --track:#e0d4ba;
-  --row-hover:rgba(180,83,9,.05);
-  --glow-1:rgba(180,83,9,.06);
-  --glow-2:rgba(138,109,31,.06);
-}
-
-/* ── AMBER · DARK — espresso ── */
-[data-theme="amber"][data-mode="dark"]{
-  --bg:#14100b; --surface:#1d1710; --surface-2:#241c14;
-  --border:#372c1e; --border-soft:#2c2318; --border-hover:#4a3b28; --input-hover:#57462f;
-  --txt:#f0e7d8; --dim:#b3a58d; --faint:#7d7060;
-  --accent:#e09b3d; --accent-h:#ebaf5c;
-  --accent-soft:rgba(224,155,61,.14); --accent-line:rgba(224,155,61,.40);
-  --on-accent:#1d1206;
-  --gold:#e5c05b;
-  --ok:#4ade80;   --ok-bg:rgba(74,222,128,.12);  --ok-fg:#93e6b3;  --ok-line:rgba(74,222,128,.38);
-  --bad:#f05252;  --bad-bg:rgba(220,38,38,.16);  --bad-fg:#f19999; --bad-line:rgba(220,38,38,.45);
-  --warn:#e09b3d; --warn-bg:rgba(224,155,61,.15); --warn-fg:#eec182; --warn-line:rgba(224,155,61,.45);
-  --track:#3a2f20;
-  --row-hover:rgba(224,155,61,.08);
-  --glow-1:rgba(224,155,61,.07);
-  --glow-2:rgba(229,192,91,.05);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.30);
   --shadow-md:0 2px 4px rgba(0,0,0,.30), 0 12px 24px -6px rgba(0,0,0,.45);
   --shadow-lg:0 4px 10px rgba(0,0,0,.30), 0 24px 48px -8px rgba(0,0,0,.55);
@@ -530,7 +443,6 @@ button + button { margin-inline-start:10px; }
   .row > button { flex:1 1 45%; }
   .form-grid { grid-template-columns:1fr; }
   .platform-header { padding:14px 12px 10px; }
-  .theme-switcher { order:99; }
 }
 
 @media (max-width:520px){
@@ -546,34 +458,7 @@ button + button { margin-inline-start:10px; }
   .platform-header::before { animation:none; }
 }
 
-/* ── Theme switcher (inside header, compact pill) ─────────── */
-.theme-switcher { display:inline-flex; align-items:center; gap:5px;
-  padding:5px 7px; background:var(--surface-2); border:1px solid var(--border);
-  border-radius:999px; margin:0; }
-.ts-themes { display:flex; gap:4px; align-items:center; }
-.ts-swatch { width:14px; height:14px; min-height:14px; padding:0; border-radius:50%;
-  cursor:pointer; border:1.5px solid var(--border); position:relative; overflow:hidden;
-  transition:transform var(--trans), border-color var(--trans), box-shadow var(--trans); }
-.ts-swatch:hover { transform:scale(1.15); }
-.ts-swatch:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.ts-swatch.active { border-color:var(--txt); box-shadow:0 0 0 1.5px var(--surface), 0 0 0 2.5px var(--txt); }
-.ts-swatch::after { content:""; position:absolute; inset:0; }
-.ts-emerald::after { background:linear-gradient(135deg,#0d8a72 50%, #073b31 50%); }
-.ts-ocean::after   { background:linear-gradient(135deg,#2563eb 50%, #0a1020 50%); }
-.ts-amber::after   { background:linear-gradient(135deg,#e09b3d 50%, #241c14 50%); }
-.ts-swatch[aria-checked], .ts-swatch[data-active="true"] {}
-html:not([data-mode]) .ts-emerald,
-html[data-mode="light"] .ts-emerald.active {}
-.ts-mode { display:inline-flex; align-items:center; justify-content:center;
-  width:22px; min-height:22px; padding:0; border-radius:50%;
-  border:1px solid var(--border); background:var(--surface);
-  color:var(--dim); cursor:pointer;
-  transition:color var(--trans), border-color var(--trans), background var(--trans); }
-.ts-mode:hover { color:var(--accent-h); border-color:var(--accent-line); background:var(--accent-soft); }
-.ts-mode:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-.ts-mode-icon { font-size:11px; line-height:1; }
-#ts_mode_label { display:none; }
-.theme-sep { width:1px; height:14px; background:var(--border); flex-shrink:0; }
+/* ── Theme toggle (sidebar) — legacy swatch styles removed ── */
 
 /* ── راهنمای سامانه (help panel) ─────────────────────────────── */
 .help-toc { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 4px; }
@@ -618,6 +503,16 @@ html[data-mode="light"] .ts-emerald.active {}
 .tpl-tag:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .tpl-tag-editable { border-style:dashed; }
 .tpl-tag-editable:hover { border-color:var(--gold); color:var(--gold); }
+
+/* ── Theme toggle (sidebar, minimal single button) ───────────── */
+.side-theme { display:flex; justify-content:center; padding:10px 12px 4px; }
+.ts-mode-btn { display:inline-flex; align-items:center; gap:7px;
+  padding:6px 14px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--border); background:var(--surface-2);
+  color:var(--dim); font-size:11.5px; font-weight:600;
+  transition:color var(--trans), border-color var(--trans), background var(--trans); }
+.ts-mode-btn:hover { color:var(--accent-h); border-color:var(--accent-line); background:var(--accent-soft); }
+.ts-mode-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 </style>
 </head>
 <body>
@@ -625,6 +520,12 @@ html[data-mode="light"] .ts-emerald.active {}
 <div class="layout">
   <aside class="sidebar">
       <div class="brand"><span class="logo">🛰️</span><div><span class="t">TGJU پلتفرم</span><span class="s">مرکز کنترل چندپلتفرمی</span></div></div>
+      <div class="side-theme">
+        <button type="button" class="ts-mode-btn" id="ts_mode_btn" aria-label="تغییر حالت روشن و تیره" title="حالت روشن/تیره">
+          <span id="ts_mode_icon" aria-hidden="true">🌙</span>
+          <span id="ts_mode_label">تیره</span>
+        </button>
+      </div>
 
       <!-- ── Platform groups (control center) ── -->
       <div class="nav-group" id="tg_group">
@@ -639,18 +540,21 @@ html[data-mode="light"] .ts-emerald.active {}
         <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="#00A886" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span> بله</div>
         <div class="nav-item bale-item" data-panel="bale_channels">📂 کانال‌ها</div>
         <div class="nav-item bale-item" data-panel="bale_preview">📝 پیش‌نمایش و ارسال</div>
+        <div class="nav-item bale-item" data-panel="bale_polls">🗳 نظرسنجی‌ها</div>
         <div class="nav-item bale-item" data-panel="bale_conn">🤖 ربات</div>
       </div>
       <div class="nav-group" id="rubika_group" style="display:none">
         <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" fill="#7B2D8E"/><path d="M12 5.5l5.2 3v6.9L12 18.5l-5.2-3.1V8.5z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.1" fill="#fff"/></svg></span> روبیکا</div>
         <div class="nav-item rb-item" data-panel="rub_channels">📂 کانال‌ها</div>
         <div class="nav-item rb-item" data-panel="rub_preview">📝 پیش‌نمایش و ارسال</div>
+        <div class="nav-item rb-item" data-panel="rub_polls">🗳 نظرسنجی‌ها</div>
         <div class="nav-item rb-item" data-panel="rub_conn">🤖 ربات</div>
       </div>
       <div class="nav-group" id="eitaa_group" style="display:none">
         <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F58220"/><path d="M6.5 12.4l3.6 3.4 7.4-7.2-6.9 5.1-1.9-1.2z" fill="#fff"/></svg></span> ایتا</div>
         <div class="nav-item et-item" data-panel="eit_channels">📂 کانال‌ها</div>
         <div class="nav-item et-item" data-panel="eit_preview">📝 پیش‌نمایش و ارسال</div>
+        <div class="nav-item et-item" data-panel="eit_polls">🗳 نظرسنجی‌ها</div>
         <div class="nav-item et-item" data-panel="eit_conn">🤖 ربات</div>
       </div>
       <div class="nav-group" id="wa_group" style="display:none">
@@ -695,20 +599,6 @@ html[data-mode="light"] .ts-emerald.active {}
           </div>
         </div>
         <div class="platform-menu" id="platform_menu"></div>
-
-        <!-- theme switcher — inside header, below the menu -->
-        <div class="theme-switcher" id="theme_switcher" role="group" aria-label="پوسته و حالت نمایش">
-          <div class="ts-themes" role="radiogroup" aria-label="انتخاب پوسته رنگی">
-            <button type="button" class="ts-swatch ts-emerald" data-set-theme="emerald" title="زمرد" aria-label="پوسته زمرد"></button>
-            <button type="button" class="ts-swatch ts-ocean"   data-set-theme="ocean"   title="اقیانوس" aria-label="پوسته اقیانوس"></button>
-            <button type="button" class="ts-swatch ts-amber"   data-set-theme="amber"   title="کهربا" aria-label="پوسته کهربا"></button>
-          </div>
-          <span class="theme-sep" aria-hidden="true"></span>
-          <button type="button" class="ts-mode" id="ts_mode_btn" aria-label="تغییر حالت روشن و تیره" title="حالت روشن/تیره">
-            <span class="ts-mode-icon" id="ts_mode_icon" aria-hidden="true">🌙</span>
-            <span id="ts_mode_label">تیره</span>
-          </button>
-        </div>
 
       </div>
 
@@ -1692,6 +1582,26 @@ html[data-mode="light"] .ts-emerald.active {}
         </div>
       </div>
 
+<!-- ── بله: نظرسنجی‌ها ── -->
+      <div id="panel_bale_polls" class="panel">
+        <div class="flex-between">
+          <h1>🗳 نظرسنجی‌های بله</h1>
+          <div class="row"><button onclick="loadBalePolls()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">ارسال نظرسنجی بومی بله (دکمه‌های واقعی رأی) به کانال — سؤال از مخزن نظرسنجی یا هوش مصنوعی انتخاب می‌شود</div>
+        <div class="card">
+          <div class="row form-row">
+            <div style="min-width:220px;flex:1"><label>کانال</label><select id="bale_poll_chan"></select></div>
+            <div style="display:flex;align-items:flex-end"><button class="primary" onclick="baleSendPoll()">🗳 ارسال نظرسنجی اکنون</button></div>
+          </div>
+          <div id="bale_poll_result" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <h3>ℹ️ نظرسنجی در بله چطور کار می‌کند؟</h3>
+          <p class="muted" style="font-size:12.5px;line-height:2">بله مثل تلگرام «نظرسنجی واقعی» دارد: پیامی با دکمه‌های رأی که نتایج را زنده نشان می‌دهد. این صفحه همان را برایتان می‌فرستد — کافی است کانال را انتخاب و دکمهٔ ارسال را بزنید. سؤال از مخزن نظرسنجی سامانه (یا هوش مصنوعی، اگر فعال باشد) برداشته می‌شود؛ همان مخزنی که در تب نظرسنجی‌های تلگرام مدیریت می‌کنید.</p>
+        </div>
+      </div>
+
 <!-- ── بله: ربات ── -->
       <div id="panel_bale_conn" class="panel">
         <div class="flex-between">
@@ -1799,6 +1709,26 @@ html[data-mode="light"] .ts-emerald.active {}
           </div>
           <div id="rub_pv_box" class="preview-box" style="margin-top:12px;display:none"><pre id="rub_pv_text"></pre></div>
           <div id="rub_pv_result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+<!-- ── روبیکا: نظرسنجی‌ها ── -->
+      <div id="panel_rub_polls" class="panel">
+        <div class="flex-between">
+          <h1>🗳 نظرسنجی‌های روبیکا</h1>
+          <div class="row"><button onclick="loadRubPolls()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">ارسال نظرسنجی به کانال روبیکا — به شکل پیام متنی با گزینه‌های شماره‌دار</div>
+        <div class="card">
+          <div class="row form-row">
+            <div style="min-width:220px;flex:1"><label>کانال</label><select id="rub_poll_chan"></select></div>
+            <div style="display:flex;align-items:flex-end"><button class="primary" onclick="rubSendPoll()">🗳 ارسال نظرسنجی اکنون</button></div>
+          </div>
+          <div id="rub_poll_result" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <h3>ℹ️ چرا متنی؟</h3>
+          <p class="muted" style="font-size:12.5px;line-height:2">روبیکا فعلاً در ربات خود «نظرسنجی واقعی» (دکمهٔ رأی) ندارد؛ بهترین روش ممکن همین است: سؤال و گزینه‌های شماره‌دار (۱، ۲، ۳…) که مخاطب جوابش را کامنت می‌کند. سؤال از همان مخزن نظرسنجی سامانه برداشته می‌شود که در تب نظرسنجی‌های تلگرام مدیریت می‌کنید.</p>
         </div>
       </div>
 
@@ -1910,6 +1840,26 @@ html[data-mode="light"] .ts-emerald.active {}
           </div>
           <div id="eit_pv_box" class="preview-box" style="margin-top:12px;display:none"><pre id="eit_pv_text"></pre></div>
           <div id="eit_pv_result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+<!-- ── ایتا: نظرسنجی‌ها ── -->
+      <div id="panel_eit_polls" class="panel">
+        <div class="flex-between">
+          <h1>🗳 نظرسنجی‌های ایتا</h1>
+          <div class="row"><button onclick="loadEitPolls()" aria-label="به‌روزرسانی">🔄</button></div>
+        </div>
+        <div class="sub">ارسال نظرسنجی به کانال ایتا — به شکل پیام متنی با گزینه‌های شماره‌دار</div>
+        <div class="card">
+          <div class="row form-row">
+            <div style="min-width:220px;flex:1"><label>کانال</label><select id="eit_poll_chan"></select></div>
+            <div style="display:flex;align-items:flex-end"><button class="primary" onclick="eitSendPoll()">🗳 ارسال نظرسنجی اکنون</button></div>
+          </div>
+          <div id="eit_poll_result" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <h3>ℹ️ چرا متنی؟</h3>
+          <p class="muted" style="font-size:12.5px;line-height:2">ایتا در ربات فعلی «نظرسنجی واقعی» ندارد؛ پس سامانه بهترین جایگزین را می‌فرستد: سؤال و گزینه‌های شماره‌دار (۱، ۲، ۳…) و مخاطب جوابش را کامنت می‌کند. سؤال از همان مخزن نظرسنجی سامانه می‌آید که در تب نظرسنجی‌های تلگرام مدیریت می‌کنید.</p>
         </div>
       </div>
 
@@ -3838,6 +3788,7 @@ async function loadBaleHome(){
     if(ml) ml.textContent = d.mock ? '🧪 حالت آزمایشی (mock) — بدون ارسال واقعی' : '🔴 حالت واقعی — متصل به بله';
     renderBaleChannels();
     fillBalePreviewSelect();
+    fillPollChan('bale_poll_chan', BALE_CHANNELS);
   }catch(e){
     const cr = $('bale_conn_result'); if(cr) cr.textContent = '❌ ' + e;
   }
@@ -3886,6 +3837,55 @@ function fillBalePreviewSelect(){
   if(!sel) return;
   sel.innerHTML = '<option value="">— انتخاب کانال —</option>' + BALE_CHANNELS.map(c=>
     `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+}
+
+// ── cross-platform polls (بله / روبیکا / ایتا) ──
+function fillPollChan(selId, chans){
+  const sel = $(selId);
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— انتخاب کانال —</option>' + (chans||[]).map(c=>{
+    const noId = !(String(c.chat_id||c.bale_id||'').trim());
+    return `<option value="${esc(c.id)}">${esc(c.name)}${noId?' (بدون آیدی)':''}</option>`;
+  }).join('');
+}
+function loadBalePolls(){ fillPollChan('bale_poll_chan', BALE_CHANNELS); }
+async function baleSendPoll(){
+  const cid = $('bale_poll_chan').value;
+  if(!cid){ showBanner('⚠️ کانال را انتخاب کنید'); return; }
+  $('bale_poll_result').innerHTML = '<span class="muted">⏳ در حال ارسال…</span>';
+  try{
+    const r = await jpost('/api/polls/send/bale', {channel_id: cid});
+    if(r.ok){
+      $('bale_poll_result').innerHTML = '✅ نظرسنجی ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — <span class="muted">«'+esc((r.poll&&r.poll.question)||'')+'»</span>';
+      showBanner('🗳 نظرسنجی بله ارسال شد', true);
+    } else $('bale_poll_result').innerHTML = '❌ '+esc(r.error||'خطا');
+  }catch(e){ $('bale_poll_result').innerHTML = '❌ '+e; }
+}
+async function loadRubPolls(){
+  try{ const d = await jget(RUB_API); fillPollChan('rub_poll_chan', d.channels||[]); }catch(e){}
+}
+async function rubSendPoll(){
+  const cid = $('rub_poll_chan').value;
+  if(!cid){ showBanner('⚠️ کانال را انتخاب کنید'); return; }
+  $('rub_poll_result').innerHTML = '<span class="muted">⏳ در حال ارسال…</span>';
+  try{
+    const r = await jpost('/api/polls/send/rubika', {channel_id: cid});
+    if(r.ok) $('rub_poll_result').innerHTML = '✅ نظرسنجی متنی ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — <span class="muted">«'+esc((r.poll&&r.poll.question)||'')+'»</span>';
+    else $('rub_poll_result').innerHTML = '❌ '+esc(r.error||'خطا');
+  }catch(e){ $('rub_poll_result').innerHTML = '❌ '+e; }
+}
+async function loadEitPolls(){
+  try{ const d = await jget(EIT_API); fillPollChan('eit_poll_chan', d.channels||[]); }catch(e){}
+}
+async function eitSendPoll(){
+  const cid = $('eit_poll_chan').value;
+  if(!cid){ showBanner('⚠️ کانال را انتخاب کنید'); return; }
+  $('eit_poll_result').innerHTML = '<span class="muted">⏳ در حال ارسال…</span>';
+  try{
+    const r = await jpost('/api/polls/send/eitaa', {channel_id: cid});
+    if(r.ok) $('eit_poll_result').innerHTML = '✅ نظرسنجی متنی ارسال شد'+(r.mock?' (حالت آزمایشی)':'')+' — <span class="muted">«'+esc((r.poll&&r.poll.question)||'')+'»</span>';
+    else $('eit_poll_result').innerHTML = '❌ '+esc(r.error||'خطا');
+  }catch(e){ $('eit_poll_result').innerHTML = '❌ '+e; }
 }
 
 function baleNewChannel(){ refreshCopyFromSelects();
@@ -4078,6 +4078,7 @@ async function loadRubikaHome(){
     if(ml) ml.textContent = d.mock ? '🧪 حالت آزمایشی (mock) — بدون ارسال واقعی' : '🔴 حالت واقعی — متصل به روبیکا';
     renderRubChannels();
     fillRubPreviewSelect();
+    fillPollChan('rub_poll_chan', RUB_CHANNELS);
   }catch(e){
     const cr = $('rub_conn_result'); if(cr) cr.textContent = '❌ ' + e;
   }
@@ -4318,6 +4319,7 @@ async function loadEitaaHome(){
     if(ml) ml.textContent = d.mock ? '🧪 حالت آزمایشی (mock) — بدون ارسال واقعی' : '🔴 حالت واقعی — متصل به ایتا';
     renderEitChannels();
     fillEitPreviewSelect();
+    fillPollChan('eit_poll_chan', EIT_CHANNELS);
   }catch(e){
     const cr = $('eit_conn_result'); if(cr) cr.textContent = '❌ ' + e;
   }
@@ -4542,36 +4544,33 @@ async function eitTest(){
   }catch(e){ $('eit_conn_result').textContent = '❌ '+e; }
 }
 
-// ── Theme engine (multi-skin + dark/light) ──
-
-const THEMES = ['emerald','ocean','amber'];
+// ── Theme engine (single blue skin · dark/light) ──
+// One light theme + one dark theme, blue accent. The old 3-skin system
+// (emerald/ocean/amber) is migrated: any stored skin maps to «ocean».
+const THEMES = ['ocean'];
 function applyTheme(theme, mode){
-  if(!THEMES.includes(theme)) theme = 'emerald';
+  if(!THEMES.includes(theme)) theme = 'ocean';
   if(mode !== 'dark' && mode !== 'light') mode = 'light';
   const root = document.documentElement;
   root.setAttribute('data-theme', theme);
   root.setAttribute('data-mode', mode);
-  try{ localStorage.setItem('tgju_theme', theme); localStorage.setItem('tgju_mode', mode); }catch(e){}
-  // swatch active state
-  document.querySelectorAll('.ts-swatch').forEach(b=>{
-    const on = b.getAttribute('data-set-theme') === theme;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
-  // mode button label
+  try{ localStorage.setItem('tgju_theme', 'ocean'); localStorage.setItem('tgju_mode', mode); }catch(e){}
+  // single toggle button label
   const lbl = $('ts_mode_label'), ico = $('ts_mode_icon');
   if(lbl) lbl.textContent = mode === 'dark' ? 'روشن' : 'تیره';
   if(ico) ico.textContent = mode === 'dark' ? '☀️' : '🌙';
 }
 (function themeBoot(){
-  let t='emerald', m='light';
+  let m='light';
   try{
-    t = localStorage.getItem('tgju_theme') || 'emerald';
+    // migrate legacy multi-skin storage → ocean-only
+    const legacy = localStorage.getItem('tgju_theme');
+    if(legacy && legacy !== 'ocean'){ localStorage.setItem('tgju_theme','ocean'); }
     m = localStorage.getItem('tgju_mode') || 'light';
   }catch(e){}
   // respect OS preference on first visit only
-  if(!localStorage.getItem('tgju_theme') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){ m='dark'; }
-  applyTheme(t, m);
+  if(!localStorage.getItem('tgju_mode') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){ m='dark'; }
+  applyTheme('ocean', m);
 })();
 document.addEventListener('click', function(ev){
   // mobile nav: toggle drawer
@@ -4587,11 +4586,9 @@ document.addEventListener('click', function(ev){
   if(ev.target.closest('.nav-item')){
     document.body.classList.remove('nav-open');
   }
-  const sw = ev.target.closest('[data-set-theme]');
-  if(sw){ applyTheme(sw.getAttribute('data-set-theme'), document.documentElement.getAttribute('data-mode')); return; }
   if(ev.target.closest('#ts_mode_btn')){
     const cur = document.documentElement.getAttribute('data-mode');
-    applyTheme(document.documentElement.getAttribute('data-theme'), cur==='dark'?'light':'dark');
+    applyTheme('ocean', cur==='dark'?'light':'dark');
   }
 });
 

@@ -171,6 +171,21 @@ def save_channel_state(cid: str, st: dict):
         pass
 
 
+def send_bale_poll(chat_id: str, question: str, options: list) -> dict:
+    """Native Bale poll (sendPoll) — Bale's Bot API mirrors Telegram."""
+    if not chat_id:
+        return {"ok": False, "error": "no chat_id"}
+    if is_mock():
+        mid = abs(hash((chat_id, question, time.time()))) % (10 ** 8)
+        return {"ok": True, "mock": True, "message_id": str(mid)}
+    ok, data = _call("sendPoll", {"chat_id": chat_id, "question": question,
+                                  "options": options, "is_anonymous": True})
+    if ok:
+        return {"ok": True, "message_id": (data or {}).get("message", {}).get("message_id")
+                if isinstance(data, dict) else None}
+    return {"ok": False, "error": json.dumps(data, ensure_ascii=False)[:200]}
+
+
 def preview_channel(channel: dict, post_type: str = "prices") -> str:
     """Build a preview without sending (reuses Telegram builders)."""
     try:
