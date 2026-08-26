@@ -487,17 +487,55 @@ button + button { margin-inline-start:10px; }
   font-family:inherit; transition:all var(--trans); }
 
 /* ── Responsive ──────────────────────────────────────────────── */
+/* mobile top bar with hamburger — hidden on desktop */
+.m-topbar { display:none; }
+.m-backdrop { display:none; }
+
 @media (max-width:900px){
-  .layout { flex-direction:column; }
-  .sidebar { width:100%; min-width:0; height:auto; position:static;
-    display:flex; overflow-x:auto; gap:8px; padding:12px; border-left:none; }
-  .brand { display:none; }
-  .nav-item { white-space:nowrap; }
-  .main { padding:18px 16px 50px; }
-  button { min-height:42px; }
+  .layout { display:block; }
+
+  /* top bar: brand + hamburger */
+  .m-topbar { display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:60; gap:8px;
+    background:var(--surface); border-bottom:1px solid var(--border);
+    padding:10px 14px; }
+  .m-topbar .mt-brand { display:flex; align-items:center; gap:8px;
+    font-weight:800; font-size:14px; color:var(--txt); }
+  .m-topbar .mt-logo { font-size:20px; }
+  .m-burger { width:40px; height:40px; border-radius:12px;
+    border:1px solid var(--border); background:var(--surface-2);
+    display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0; }
+  .m-burger svg { width:20px; height:20px; stroke:var(--txt); }
+
+  /* sidebar becomes slide-over drawer */
+  .sidebar { position:fixed; inset-block:0; right:0; left:auto; z-index:70;
+    width:min(78vw,300px); min-width:0; height:100dvh;
+    transform:translateX(100%); transition:transform .25s ease;
+    box-shadow:-8px 0 24px rgba(0,0,0,.12); padding-top:max(20px, env(safe-area-inset-top)); }
+  body.nav-open .sidebar { transform:translateX(0); }
+  .brand { display:flex; }               /* show brand inside drawer again */
+
+  /* dim page behind the drawer */
+  .m-backdrop { display:block; position:fixed; inset:0; z-index:65;
+    background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+  body.nav-open .m-backdrop { opacity:1; pointer-events:auto; }
+
+  /* tapping a nav item closes the drawer */
+  body.nav-open .nav-item:active { transform:scale(.97); }
+
+  .main { padding:16px 14px 56px; }
+  button, .nav-item { min-height:42px; }
   .settings-grid { grid-template-columns:1fr; }
   .row > button { flex:1 1 45%; }
   .form-grid { grid-template-columns:1fr; }
+  .platform-header { padding:14px 12px 10px; }
+  .theme-switcher { order:99; }
+}
+
+@media (max-width:520px){
+  .main { padding:14px 10px 48px; }
+  h1 { font-size:18px; }
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -636,6 +674,17 @@ html[data-mode="light"] .ts-emerald.active {}
       </div>
     </aside>
   <main class="main">
+
+      <!-- mobile top bar (hamburger) — visible only under 900px -->
+      <div class="m-topbar">
+        <div class="mt-brand"><span class="mt-logo">🛰️</span> TGJU پلتفرم</div>
+        <button type="button" class="m-burger" id="m_burger" aria-label="باز کردن منو" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16"/>
+          </svg>
+        </button>
+      </div>
+      <div class="m-backdrop" id="m_backdrop"></div>
 
       <div id="platform_header" class="platform-header">
         <div class="ph-title">
@@ -4496,6 +4545,19 @@ function applyTheme(theme, mode){
   applyTheme(t, m);
 })();
 document.addEventListener('click', function(ev){
+  // mobile nav: toggle drawer
+  if(ev.target.closest('#m_burger')){
+    document.body.classList.toggle('nav-open');
+    return;
+  }
+  if(ev.target.closest('.m-backdrop')){
+    document.body.classList.remove('nav-open');
+    return;
+  }
+  // close drawer when any sidebar nav-item is tapped (mobile)
+  if(ev.target.closest('.nav-item')){
+    document.body.classList.remove('nav-open');
+  }
   const sw = ev.target.closest('[data-set-theme]');
   if(sw){ applyTheme(sw.getAttribute('data-set-theme'), document.documentElement.getAttribute('data-mode')); return; }
   if(ev.target.closest('#ts_mode_btn')){
