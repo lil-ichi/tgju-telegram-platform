@@ -770,6 +770,7 @@ html[data-mode="light"] .ts-emerald.active {}
           <button onclick="closeForm()">انصراف</button>
           <button class="danger" id="del_btn" style="display:none" onclick="deleteChannel()">🗑 حذف</button>
         </div>
+        <div id="cf_result" style="display:none;margin-top:12px;font-weight:700;font-size:13px"></div>
       </div>
     </div>
 
@@ -2318,12 +2319,40 @@ function collectForm(){
     template:$('f_template').value.trim()||''
   };
 }
+function cfMsg(msg, good){
+  // inline feedback right under the save button — always visible where the user is
+  const el = $('cf_result');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.color = good ? '#166534' : '#991b1b';
+}
+
 async function saveChannel(){
+  cfMsg('⏳ در حال ذخیره…');
   const body = collectForm();
-  if(!body.name || !body.telegram_id){ showBanner('⚠️ نام کانال و آیدی تلگرام الزامی است'); return; }
-  if(EDIT_ID){ const r = await jput('/api/channels/'+EDIT_ID, body); showBanner('✅ کانال به‌روزرسانی شد', true); }
-  else { const r = await jpost('/api/channels', body); if(r.error) showBanner('⚠️ '+r.error); else { showBanner('✅ کانال ' + body.name + ' ساخته شد', true); } }
-  closeForm(); loadChannels();
+  if(!body.name){ showBanner('⚠️ نام کانال الزامی است'); cfMsg('⚠️ نام کانال را وارد کنید'); return; }
+  // telegram_id required only for NEW channels; editing keeps the stored id when blank
+  if(!EDIT_ID && !body.telegram_id){ showBanner('⚠️ آیدی تلگرام (chat_id) الزامی است'); cfMsg('⚠️ برای ساخت کانال جدید، آیدی تلگرام (chat_id) لازم است'); return; }
+  try{
+    if(EDIT_ID){
+      const r = await jput('/api/channels/'+encodeURIComponent(EDIT_ID), body);
+      if(r && r.ok !== false && !r.error){
+        showBanner('✅ کانال به‌روزرسانی شد', true); cfMsg('✅ ذخیره شد', true);
+      } else {
+        const why = (r && (r.detail||r.error)) ? JSON.stringify(r.detail||r.error).slice(0,120) : 'خطای نامشخص';
+        showBanner('⚠️ ذخیره نشد: '+why); cfMsg('⚠️ ذخیره نشد: '+why); return;
+      }
+    } else {
+      const r = await jpost('/api/channels', body);
+      if(r.error){ showBanner('⚠️ '+r.error); cfMsg('⚠️ '+r.error); return; }
+      showBanner('✅ کانال ' + body.name + ' ساخته شد', true); cfMsg('✅ ساخته شد', true);
+    }
+  }catch(e){
+    showBanner('⚠️ ارتباط با سرور برقرار نشد'); cfMsg('⚠️ ارتباط با سرور برقرار نشد'); return;
+  }
+  setTimeout(closeForm, 400);
+  loadChannels();
 }
 async function deleteChannel(){
   if(!EDIT_ID) return;
