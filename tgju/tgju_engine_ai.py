@@ -47,8 +47,9 @@ ANALYSIS_PROMPT = (
 POLL_GEN_PROMPT = (
     "تو مدیر کانال تلگرام بازار طلا و ارز هستی. بر اساس وضعیت بازار زیر، %d "
     "سؤال نظرسنجی جذاب و مرتبط با مخاطب بساز (به فارسی، بدون تکرار، هر سؤال "
-    "۲ تا ۴ گزینه). خروجی را دقیقاً به صورت JSON بده:\n"
-    '[{"question": "...", "options": ["...", "..."]}]\n\n'
+    "۲ تا ۴ گزینه). خروجی را فقط و فقط به صورت JSON خالص بده — بدون "
+    "توضیح اضافه، بدون متن قبل یا بعد، بدون markdown و بدون ```json fences:\n"
+    '[{"question": "...", "options": ["...", "..."]}]\\n\\n'
     "وضعیت بازار:\n%s"
 )
 
@@ -317,6 +318,71 @@ def _parse_json_response(raw: str) -> dict:
                 except json.JSONDecodeError:
                     break
     raise ValueError("invalid JSON in chat/completions response: %s" % raw[:200])
+
+
+def _parse_poll_json(raw: str):
+    """Robust poll JSON extractor — handles markdown fences, preamble, arrays.
+
+    Models often wrap JSON in ```json ... ``` or prepend text despite the
+    prompt. This strips fences, then extracts the first balanced JSON array
+    (preferred) or object, and returns parsed data. Raises ValueError if
+    nothing valid is found.
+    """
+    if not raw or not raw.strip():
+        raise ValueError("empty response")
+    s = raw.strip()
+    # Strip common markdown fences if present
+    # Remove ```json ... ``` or ``` ... ``` wrappers
+    if "```" in s:
+        # Extract content between first ``` block if it contains JSON
+        import re
+        m = re.search(r"```(?:json)?\s*([\s\S]*?)```", s)
+        if m:
+            s = m.group(1).strip()
+        else:
+            # Fallback: strip fence markers only
+            s = s.replace("```json", "").replace("```", "").strip()
+    # Try direct parse first (pure JSON)
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError:
+        pass
+    # Try to extract first balanced JSON array [...] (poll format)
+    # Fall back to object {...} with questions key
+    for opener, closer in [("[", "]"), ("{", "}")]:
+        depth = 0
+        in_str = False
+        esc = False
+        start = None
+        for i, ch in enumerate(s):
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+                continue
+            if ch == '"':
+                in_str = True
+            elif ch == opener:
+                if depth == 0:
+                    start = i
+                depth += 1
+            elif ch == closer:
+                depth -= 1
+                if depth == 0 and start is not None:
+                    candidate = s[start:i + 1]
+                    try:
+                        return json.loads(candidate)
+                    except json.JSONDecodeError:
+                        break
+        if start is not None:
+            # Found a balanced block but parse failed — don't try other bracket type
+            # if we already found an array candidate that failed
+            if opener == "[":
+                continue
+    raise ValueError("invalid poll JSON: %s" % s[:200])
 
 
 def _rows_to_table(channel: dict, rows: dict) -> str:
