@@ -514,6 +514,21 @@ button + button { margin-inline-start:10px; }
   transition:color var(--trans), border-color var(--trans), background var(--trans); }
 .ts-mode-btn:hover { color:var(--accent-h); border-color:var(--accent-line); background:var(--accent-soft); }
 .ts-mode-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ── 2026-08-29: Hide bare-news UI — prices footer keeps random news only (no bare news posts) ── */
+label:has(input.pt[value="news"]), input.pt[value="news"],
+label:has(input.bale-pt[value="news"]), input.bale-pt[value="news"],
+label:has(input.rub-pt[value="news"]), label:has(input.eit-pt[value="news"]),
+option[value="news"] { display:none !important; }
+div:has(> #f_news), div:has(> #bale_news), div:has(> #rub_news), div:has(> #eit_news) { display:none !important; }
+div:has(> #fn_news_interval), div:has(> #fn_news_items), div:has(> #fn_news_template),
+label:has(#fn_news_master), #fn_news_result { display:none !important; }
+#panel_functions .card:has(#fn_news_master) { display:none !important; }
+div:has(> #s_news) { display:none !important; }
+button.tpl-tag[data-tag="{news}"] { display:none !important; }
+/* Fallback for browsers without :has — direct hide */
+#f_news, #bale_news, #rub_news, #eit_news, #fn_news_interval, #fn_news_items, #fn_news_template, #fn_news_master, #fn_news_result, #s_news { display:none !important; }
+#panel_functions .card:nth-child(3) { display:none !important; } /* وظایف news card fallback */
 </style>
 </head>
 <body>
@@ -2302,7 +2317,7 @@ function collectForm(){
     slugs:$('f_slugs').value.split(/[،,]/).map(s=>s.trim()).filter(Boolean),
     enabled:$('f_enabled').checked, poll_enabled:$('f_poll').checked,
     with_star:$('f_star').checked, with_analysis:$('f_analysis').checked, with_footer:$('f_footer_on').checked,
-    post_types:[...document.querySelectorAll('.pt')].filter(x=>x.checked).map(x=>x.value),
+    post_types:[...document.querySelectorAll('.pt')].filter(x=>x.checked).map(x=>x.value).filter(v=>v!=='news'),
     template:$('f_template').value.trim()||''
   };
 }
@@ -2739,9 +2754,7 @@ async function loadFunctions(){
       st.innerHTML = '<span class="muted">وضعیت فعلی — 📈 تحلیل: '+lbl('analysis')
         +' ('+((FN_DATA.analysis||{}).interval_hours!=null?FN_DATA.analysis.interval_hours:'?')+'h)'
         +' | 📊 نظرسنجی: '+lbl('poll')
-        +' ('+((FN_DATA.poll||{}).interval_hours!= null?FN_DATA.poll.interval_hours:'?')+'h)'
-        +' | 📰 خبر: '+lbl('news')
-        +' ('+((FN_DATA.news||{}).interval_hours!=null?FN_DATA.news.interval_hours:'?')+'h)</span>';
+        +' ('+((FN_DATA.poll||{}).interval_hours!= null?FN_DATA.poll.interval_hours:'?')+'h)</span>';
     }
   }catch(e){ console.error(e); showBanner('⚠️ خطا در بارگذاری وظایف'); }
 }
@@ -2799,12 +2812,8 @@ async function saveAllFunctions(){
     poll_options: parseInt($('fn_poll_options').value)||4,
     anonymous: $('fn_poll_anon').checked,
   });
-  fns.news = Object.assign({}, fns.news, {
-    enabled: $('fn_news_master').checked,
-    interval_hours: parseInt($('fn_news_interval').value)||6,
-    items_per_post: parseInt($('fn_news_items').value)||3,
-    template: $('fn_news_template').value,
-  });
+  // news stays disabled — bare news removed per 2026-08-29, footer random news kept
+  if(fns.news) fns.news.enabled = false;
   await putFunctions(fns);
 }
 async function putFunctions(fns){
@@ -4080,7 +4089,7 @@ function baleCloseForm(){
 }
 
 async function baleSaveChannel(){
-  const post_types = [...document.querySelectorAll('.bale-pt:checked')].map(cb=>cb.value);
+  const post_types = [...document.querySelectorAll('.bale-pt:checked')].map(cb=>cb.value).filter(v=>v!=='news');
   if(!post_types.length) post_types.push('prices');
   const slugs = $('bale_slugs').value.split(',').map(s=>s.trim()).filter(Boolean);
   const body = {
@@ -4321,7 +4330,7 @@ function rubCloseForm(){
 }
 
 async function rubSaveChannel(){
-  const post_types = [...document.querySelectorAll('.rub-pt:checked')].map(cb=>cb.value);
+  const post_types = [...document.querySelectorAll('.rub-pt:checked')].map(cb=>cb.value).filter(v=>v!=='news');
   if(!post_types.length) post_types.push('prices');
   const slugs = $('rub_slugs').value.split(',').map(s=>s.trim()).filter(Boolean);
   const body = {
@@ -4562,7 +4571,7 @@ function eitCloseForm(){
 }
 
 async function eitSaveChannel(){
-  const post_types = [...document.querySelectorAll('.eit-pt:checked')].map(cb=>cb.value);
+  const post_types = [...document.querySelectorAll('.eit-pt:checked')].map(cb=>cb.value).filter(v=>v!=='news');
   if(!post_types.length) post_types.push('prices');
   const slugs = $('eit_slugs').value.split(',').map(s=>s.trim()).filter(Boolean);
   const body = {
@@ -4994,6 +5003,22 @@ function saveSlugPicker(){
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && $('slug_picker').style.display==='block') closeSlugPicker();
 });
+// 2026-08-29: hard-hide bare news — never build/send news post_type, keep footer random news only
+(function(){
+  const orig = window.loadFunctions;
+  if(orig){
+    window.loadFunctions = async function(){
+      const r = await orig.apply(this, arguments);
+      try{
+        if(window.FN_DATA && window.FN_DATA.news) window.FN_DATA.news.enabled = false;
+        document.querySelectorAll('input.pt[value=\"news\"], input.bale-pt[value=\"news\"], input.rub-pt[value=\"news\"], input.eit-pt[value=\"news\"]')
+          .forEach(el=>{ const lb=el.closest('label'); if(lb) lb.style.display='none'; el.checked=false; });
+        document.querySelectorAll('option[value=\"news\"]').forEach(o=>o.remove());
+      }catch(e){}
+      return r;
+    };
+  }
+})();
 </script>
 
 </body>

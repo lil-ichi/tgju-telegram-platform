@@ -1135,7 +1135,7 @@ async def api_polls_generate(req: Request):
     table = "\n".join(table_lines[:25]) or "(داده‌ای در دسترس نیست)"
     from tgju_engine_ai import POLL_GEN_PROMPT
     prompt = POLL_GEN_PROMPT % (count, table)
-    from tgju_engine_ai import _parse_json_response
+    from tgju_engine_ai import _parse_poll_json
     polls = []
     last_error = ""
     for attempt in range(3):  # retry: reasoning models are probabilistic
@@ -1143,8 +1143,8 @@ async def api_polls_generate(req: Request):
             raw = await asyncio.to_thread(_chat_completion, prov_cfg, prompt,
                                           max_tokens=2000, timeout=90)
             try:
-                data = _parse_json_response(raw)
-                items = data if isinstance(data, list) else data.get("questions", [])
+                data = _parse_poll_json(raw)
+                items = data if isinstance(data, list) else data.get("questions", []) or data.get("polls", []) or []
             except Exception:
                 items = []
             for it in items[:count]:
