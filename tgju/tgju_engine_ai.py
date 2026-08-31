@@ -113,6 +113,107 @@ DEFAULT_JOBS = {
 _ACTIVITY_MAX = 50  # ring buffer size
 
 
+# ── Enhancement 6: AI provider fallback chain ─────────────────────────────
+def _enabled_providers_order(cfg: dict) -> list:
+    """Return [(name, provider_dict), ...] in priority order: first enabled
+    non-mock providers with a base_url, then disabled as last resort."""
+    providers = cfg.get("providers") or {}
+    ordered = []
+    for name, p in providers.items():
+        if p.get("kind") != "mock" and p.get("base_url"):
+            ordered.append((name, dict(p)))
+    # keep disabled providers as fallback (no base_url or mock) — but sort
+    # so the ones the user enabled + configured come first
+    for name, p in providers.items():
+        if (name, dict(p)) not in ordered:
+            ordered.append((name, dict(p)))
+    return ordered
+
+def _call_provider(provider: dict, prompt: str, max_tokens: int,
+                   timeout_s: int, job_id: str = "") -> (str, dict):
+    """Try ONE provider. Returns (text_or_empty, activity_entry)."""
+    name = provider.get("name", "")
+    model = provider.get("model", "") or provider.get("model")
+    prov = dict(provider)
+    prov.setdefault("model", model)
+    t0 = time.time()
+    error = ""
+    try:
+        text = _chat_completion(prov, prompt, max_tokens=max_tokens,
+                                timeout=timeout_s)
+        latency_ms = int((time.time() - t0) * 1000)
+        entry = {"status": "ok" if text else "error",
+                 "error": "" if text else "empty response",
+                 "latency_ms": latency_ms, "provider": name,
+                 "model": model}
+        if job_id:
+            entry["job"] = job_id
+        return (text, entry)
+    except urllib.error.HTTPError as e:
+        latency_ms = int((time.time() - t0) * 1000)
+        if e.code == 429:
+            error = "rate limited (HTTP 429)"
+        elif e.code in (401, 403):
+            error = "auth error (HTTP %d)" % e.code
+        else:
+            error = "HTTP %d" % e.code
+        entry = {"status": "error", "error": error,
+                 "latency_ms": latency_ms, "provider": name,
+                 "model": model}
+        if job_id:
+            entry["job"] = job_id
+        return ("", entry)
+    except Exception as e:
+        latency_ms = int((time.time() - t0) * 1000)
+        error = str(e)[:200]
+        entry = {"status": "error", "error": error,
+                 "latency_ms": latency_ms, "provider": name,
+                 "model": model}
+        if job_id:
+            entry["job"] = job_id
+        return ("", entry)
+
+def try_providers(cfg: dict, prompt: str, max_tokens: int, timeout_s: int,
+                  job_id: str = "") -> dict:
+    """Try enabled providers in order; if one 401s/429s/empty, try next.
+    After all tried, return {"ok": bool, "text": str, "provider": str,
+    "model": str, "latency_ms": int, "attempts": [...]} or final error."""
+    providers_order = _enabled_providers_order(cfg)
+    if not providers_order:
+        return {"ok": False, "error": "no provider configured"}
+    last_entry = None
+    total_t0 = time.time()
+    used_timeout = timeout_s
+    attempts = []
+    for idx, (name, prov) in enumerate(providers_order):
+        remaining_attempts = len(providers_order) - idx
+        # time-box this attempt so total stays bounded
+        attempt_timeout = max(8, used_timeout // max(1, remaining_attempts))
+        text, entry = _call_provider(prov, prompt, max_tokens,
+                                      attempt_timeout, job_id)
+        entry["attempt"] = idx + 1
+        entry["total_providers"] = len(providers_order)
+        entry["name"] = name
+        if text:
+            total_latency = int((time.time() - total_t0) * 1000)
+            return {"ok": True, "text": text, "provider": name,
+                    "model": entry.get("model", ""),
+                    "latency_ms": total_latency,
+                    "attempts": attempts + [entry]}
+        attempts.append(entry)
+        last_entry = entry
+        # Only retry on soft failures (429, empty, network). 401/403/HTTP
+        # other than 429 usually mean that provider is misconfigured — but
+        # we still try remaining providers since another one may work.
+        if idx + 1 < len(providers_order):
+            time.sleep(0.5)  # tiny pause between provider switches
+    total_latency = int((time.time() - total_t0) * 1000)
+    return {"ok": False, "error": last_entry["error"] if last_entry else "no provider answered",
+            "provider": last_entry.get("provider", ""),
+            "latency_ms": total_latency, "attempts": attempts}
+
+
+
 def load_ai_jobs() -> dict:
     """Return {"jobs": {id: config}, "activity": [...]} merged with defaults."""
     try:
@@ -503,35 +604,28 @@ def run_analysis(cfg: dict, channel: dict, rows: dict) -> dict:
     prompt = ANALYSIS_PROMPT.format(domain=domain, length=length, table=table)
     max_tokens = int(job.get("max_tokens") or 2000)
     timeout_s = int(job.get("timeout_s") or 90)
-    t0 = time.time()
-    text = ""
-    last_err = ""
-    for attempt in range(3):
-        try:
-            # max_tokens must cover reasoning_content + content (2000+):
-            # local reasoning routers return EMPTY content when starved.
-            text = _chat_completion(prov, prompt, max_tokens=max_tokens,
-                                    timeout=timeout_s)
-            if text:
-                break
-            last_err = "پاسخ خالی از مدل دریافت شد (تلاش %d)" % (attempt + 1)
-        except urllib.error.HTTPError as e:
-            last_err = "HTTP %d: %s" % (e.code, e.reason)
-            break  # HTTP errors won't fix themselves
-        except Exception as e:
-            last_err = str(e)[:200]
-        time.sleep(1.0)  # brief pause between retries
-    latency_ms = int((time.time() - t0) * 1000)
-    if not text:
+    # Enhancement 6: try providers in fallback order
+    cfg_for_ai = cfg if cfg else load_ai_config()
+    result = try_providers(cfg_for_ai, prompt, max_tokens, timeout_s,
+                            job_id="analysis")
+    latency_ms = result.get("latency_ms", 0)
+    if not result.get("ok"):
+        attempts_info = result.get("attempts", [])
+        err = result.get("error", "provider chain failed")
         record_ai_activity({"job": "analysis", "channel": cid,
-                            "status": "error", "error": last_err,
-                            "latency_ms": latency_ms, "provider": provider_name})
-        return {"ok": False, "error": last_err or "پاسخ خالی از مدل دریافت شد"}
+                            "status": "error", "error": err,
+                            "latency_ms": latency_ms,
+                            "provider": result.get("provider", provider_name),
+                            "attempts": attempts_info})
+        return {"ok": False, "error": err}
+    text = result.get("text", "")
+    used_provider = result.get("provider", provider_name)
+    used_model = result.get("model", model)
     record_ai_activity({"job": "analysis", "channel": cid, "status": "ok",
-                        "latency_ms": latency_ms, "provider": provider_name,
-                        "model": model, "chars": len(text)})
-    return {"ok": True, "text": text, "provider": provider_name,
-            "model": model, "latency_ms": latency_ms}
+                        "latency_ms": latency_ms, "provider": used_provider,
+                        "model": used_model, "chars": len(text)})
+    return {"ok": True, "text": text, "provider": used_provider,
+            "model": used_model, "latency_ms": latency_ms}
 
 
 def route_category(cfg: dict, category: str) -> list:

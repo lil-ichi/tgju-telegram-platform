@@ -40,6 +40,18 @@ def _next_post_type(c: dict, now: datetime) -> str:
     for the channel AND its interval elapsed, analysis REPLACES this tick's
     post — so enabling analysis NEVER steals price slots permanently.
     """
+
+    # Enhancement 1: one-shot force override from scheduler_force.json
+    force_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "state", "scheduler_force.json")
+    try:
+        import json as _json
+        with open(force_path, encoding="utf-8") as f:
+            force = _json.load(f)
+        if force.get(c.get("id", "")):
+            return force[c["id"]]
+    except Exception:
+        pass
+
     # 1) Analysis function (interval-driven, independent of rotation)
     try:
         from tgju_engine_functions import load_functions, function_channel_enabled, function_channel_interval
@@ -136,12 +148,136 @@ def _next_post_type(c: dict, now: datetime) -> str:
     idx = now.hour % len(pts)
     return pts[idx]
 
+def _next_post_reason(c: dict, now: datetime) -> dict:
+    """Return {"next_type", "reason", "due_in_seconds", "last_*"} for a channel without mutating state."""
+    from tgju_engine_functions import load_functions, function_channel_enabled, function_channel_interval
+    from tgju_core.settings import load_settings
+    reason = {"next_type": "prices", "due_in_seconds": 0, "last_poll_at": None,
+              "last_analysis_at": None, "last_news_at": None, "last_type": None,
+              "reason": "", "intervals": {}}
+    fns = load_functions()
+    ivs = {}
+    # analysis
+    try:
+        fn = fns.get("analysis") or {}
+        if function_channel_enabled(fn, c.get("id", "")):
+            iv = function_channel_interval(fn, c.get("id", ""), 6)
+            ivs["analysis"] = iv
+            st = load_channel_state(c.get("id", ""))
+            la = st.get("last_analysis_at")
+            if not la:
+                reason["next_type"] = "analysis"
+                reason["reason"] = "تحلیل فعال — نوبت اول پس از فعال‌سازی"
+                reason["last_analysis_at"] = None
+                return reason
+            la_dt = datetime.fromisoformat(la)
+            due = (now - la_dt).total_seconds()
+            if due >= iv * 3600:
+                reason["next_type"] = "analysis"
+                reason["reason"] = f"تحلیل: فاصلهِ {iv} ساعت سپری شد"
+                reason["due_in_seconds"] = 0
+                reason["last_analysis_at"] = la
+                return reason
+            else:
+                reason["due_in_seconds"] = max(0, iv*3600 - int(due))
+                reason["last_analysis_at"] = la
+    except Exception:
+        pass
+    # poll
+    try:
+        pfn = fns.get("poll") or {}
+        poll_on = function_channel_enabled(pfn, c.get("id", ""))
+        if not poll_on and c.get("poll_enabled"):
+            poll_on = True
+        if poll_on:
+            poll_iv = function_channel_interval(pfn, c.get("id", ""),
+                                                int(load_settings().get("poll_interval_hours", 4)))
+            ivs["poll"] = poll_iv
+            st = load_channel_state(c.get("id", ""))
+            lp = st.get("last_poll_at")
+            slot = "%s/%d" % (now.date().isoformat(), now.hour - now.hour % poll_iv)
+            if st.get("last_poll_slot") == slot:
+                reason["last_poll_at"] = lp
+            elif lp:
+                lp_dt = datetime.fromisoformat(lp)
+                if (now - lp_dt) < timedelta(hours=poll_iv):
+                    reason["last_poll_at"] = lp
+                else:
+                    reason["next_type"] = "poll"
+                    reason["reason"] = f"نظرسنجی: بازه {poll_iv} ساعتی رسید"
+                    reason["due_in_seconds"] = 0
+                    reason["last_poll_at"] = lp
+                    return reason
+            else:
+                reason["next_type"] = "poll"
+                reason["reason"] = f"نظرسنجی: بازه {poll_iv} ساعتی رسید"
+                reason["due_in_seconds"] = 0
+                reason["last_poll_at"] = None
+                return reason
+            reason["last_poll_at"] = lp
+    except Exception:
+        pass
+    # news
+    try:
+        nfn = fns.get("news") or {}
+        if function_channel_enabled(nfn, c.get("id", "")):
+            news_iv = function_channel_interval(nfn, c.get("id", ""), 6)
+            ivs["news"] = news_iv
+            st = load_channel_state(c.get("id", ""))
+            ln = st.get("last_news_at")
+            if not ln:
+                reason["next_type"] = "news"
+                reason["reason"] = "خبر: نوبت اول پس از فعال‌سازی"
+                reason["last_news_at"] = None
+                return reason
+            ln_dt = datetime.fromisoformat(ln)
+            if (now - ln_dt) >= timedelta(hours=news_iv):
+                reason["next_type"] = "news"
+                reason["reason"] = f"خبر: فاصله {news_iv} ساعت سپری شد"
+                reason["due_in_seconds"] = 0
+                reason["last_news_at"] = ln
+                return reason
+            reason["last_news_at"] = ln
+    except Exception:
+        pass
+    # rotation fallback
+    pts = [p for p in _channel_post_types(c) if p != "poll"]
+    if not pts:
+        reason["next_type"] = "prices"
+        reason["reason"] = "چکیده قیمت (پیش‌فرض)"
+    elif "all" in pts:
+        reason["next_type"] = "all"
+        reason["reason"] = "همه‌ی نوع‌ها"
+    else:
+        idx = now.hour % len(pts)
+        reason["next_type"] = pts[idx]
+        reason["reason"] = f"چرخش {pts} (ساعت {idx})"
+    reason["intervals"] = ivs
+    reason["last_type"] = load_channel_state(c.get("id", "")).get("last_type")
+    return reason
+
 
 async def _scheduler_tick():
     settings = load_settings()
     if not settings.get("auto_post", True):
         return  # master kill-switch
     chans = reload_channels()
+
+    # Enhancement 1: consume one-shot force overrides from UI
+    force_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "state", "scheduler_force.json")
+    st_forces = {}
+    try:
+        with open(force_path, encoding="utf-8") as f:
+            st_forces = json.load(f)
+    except Exception:
+        pass
+    if st_forces:
+        tmp = force_path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({}, f)
+        os.replace(tmp, force_path)
+        log_line("scheduler force consumed: %s" % list(st_forces.keys()))
+
     now = datetime.now()
     for c in chans:
         try:

@@ -32,6 +32,7 @@ from tgju_engine_ai import (  # noqa: E402
     auto_build_routing, run_analysis, load_ai_jobs, save_ai_jobs,
     record_ai_activity, _channel_domain)
 from tgju_engine_format import SEP as _FORMAT_SEP, FA_WEEKDAYS, fa_num, TEMPLATE_DEFAULT  # noqa: E402
+from tgju_core.scheduler import _next_post_reason  # noqa: E402
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -992,6 +993,61 @@ async def api_settings_put(req: Request):
 @router.get("/api/providers")
 def api_providers():
     return {"providers": PROVIDERS, "models": MODEL_SUGGESTIONS}
+
+# ── Enhancement 1: Scheduler Observatory ─────────────────────────────────
+
+@router.get("/api/scheduler/preview")
+def api_scheduler_preview():
+    """Non-mutating preview of what each channel will post next."""
+    from datetime import datetime
+    chans = get_channels()
+    now = datetime.now()
+    out = []
+    for c in chans:
+        if not c.get("enabled"):
+            continue
+        r = _next_post_reason(c, now)
+        out.append({
+            "id": c["id"],
+            "name": c.get("name", ""),
+            "telegram_id": c.get("telegram_id", ""),
+            "next_type": r["next_type"],
+            "reason": r["reason"],
+            "due_in_seconds": r["due_in_seconds"],
+            "last_poll_at": r["last_poll_at"],
+            "last_analysis_at": r["last_analysis_at"],
+            "last_news_at": r["last_news_at"],
+            "last_type": r["last_type"],
+            "intervals": r["intervals"],
+        })
+    return {"channels": out, "now": now.isoformat()}
+
+@router.post("/api/scheduler/force/{cid}")
+async def api_scheduler_force(cid: str, req: Request):
+    """Force the next tick for one channel to a specific post_type (one-shot)."""
+    ch = get_channel(cid)
+    if not ch:
+        return JSONResponse({"error": "unknown channel"}, status_code=404)
+    try:
+        body = await req.json()
+    except Exception:
+        body = {}
+    post_type = (body.get("type") or "prices").strip()
+    if post_type not in ("prices", "poll", "analysis", "news"):
+        return JSONResponse({"error": "type must be prices|poll|analysis|news"}, status_code=400)
+    force_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "state", "scheduler_force.json")
+    try:
+        with open(force_path, encoding="utf-8") as f:
+            force = json.load(f)
+    except Exception:
+        force = {}
+    force[cid] = post_type
+    tmp = force_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(force, f)
+    os.replace(tmp, force_path)
+    log_line("scheduler force: %s -> %s" % (cid, post_type))
+    return {"ok": True, "forced": cid, "to": post_type}
 
 @router.get("/api/logs")
 def api_logs():

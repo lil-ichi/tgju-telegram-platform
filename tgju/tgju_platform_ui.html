@@ -529,6 +529,27 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
 /* Fallback for browsers without :has — direct hide */
 #f_news, #bale_news, #rub_news, #eit_news, #fn_news_interval, #fn_news_items, #fn_news_template, #fn_news_master, #fn_news_result, #s_news { display:none !important; }
 #panel_functions .card:nth-child(3) { display:none !important; } /* وظایف news card fallback */
+
+/* ══ Enhancement 3: Price Health Ribbon ══ */
+.health-ribbon {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  font-size: 12.5px; font-weight: 600; color: var(--dim);
+  animation: fadeIn 160ms ease;
+}
+.health-ribbon .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ok); box-shadow: 0 0 8px var(--ok-line);
+}
+.health-ribbon.live    .dot { background: var(--ok);   box-shadow: 0 0 8px var(--ok-line); }
+.health-ribbon.fallback .dot { background: var(--warn); box-shadow: 0 0 8px var(--warn-line); }
+.health-ribbon.stale   .dot { background: var(--bad);  box-shadow: 0 0 8px var(--bad-line); }
+.health-ribbon .lbl { margin-inline-start: 2px; color: var(--txt); }
+.health-ribbon .ts { margin-inline-start: auto; font-size: 11.5px; color: var(--faint);
+  font-family: Consolas, Menlo, monospace; }
+.health-ribbon .ts[data-age]::after { content: " · " attr(data-age); }
+
 </style>
 </head>
 <body>
@@ -619,6 +640,12 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
       </div>
 
       <div id="banner" class="banner"></div>
+
+      <div id="health_ribbon" class="health-ribbon live" hidden>
+        <span class="dot"></span>
+        <span class="lbl" id="health_lbl">زنده</span>
+        <span class="ts" id="health_ts" data-age=""></span>
+      </div>
 
     <!-- ── کانال‌ها (default landing) ── -->
     <div id="panel_channels" class="panel active">
@@ -5021,5 +5048,54 @@ document.addEventListener('keydown', e=>{
 })();
 </script>
 
+<script>
+/* ── Enhancement 3: health ribbon updates from /api/status ── */
+function updateHealthRibbon() {
+  fetch("/api/status")
+    .then(function(r){ return r.json(); })
+    .then(function(s){
+      var el = document.getElementById("health_ribbon");
+      if (!el) return;
+      var aging = s.fetch_age_seconds;
+      var degraded = !!s.degraded;
+      var fallbackAge = s.fallback_age_seconds;
+      var lbl = document.getElementById("health_lbl");
+      var ts = document.getElementById("health_ts");
+      var now = new Date();
+      function fmtAgo(sec){
+        if (sec == null || sec < 0) return "";
+        if (sec < 60) return faNum(sec) + " ثانیه پیش";
+        var m = Math.floor(sec/60);
+        if (m < 60) return faNum(m) + " دقیقه پیش";
+        return faNum(Math.floor(m/60)) + " ساعت پیش";
+      }
+      if (degraded) {
+        el.classList.remove("live","stale");
+        el.classList.add("fallback");
+        lbl.textContent = "حالت پشتیبان";
+        if (fallbackAge != null) {
+          ts.setAttribute("data-age", "داده از " + faNum(Math.round(fallbackAge/60)) + " دقیقه پیش");
+        }
+      } else {
+        el.classList.remove("fallback","stale");
+        el.classList.add("live");
+        lbl.textContent = "زنده";
+        ts.setAttribute("data-age", "بروزرسانی " + fmtAgo(aging));
+      }
+      if (aging == null || degraded) {
+        if (fallbackAge == null) {
+          el.classList.remove("live","fallback");
+          el.classList.add("stale");
+          lbl.textContent = "داده قدیمی";
+          ts.setAttribute("data-age", "");
+        }
+      }
+      el.hidden = false;
+    })
+    .catch(function(){ /* ribbon stays hidden on auth/401 */ });
+}
+var healthRibbonTimer = setInterval(updateHealthRibbon, 30000);
+updateHealthRibbon();
+</script>
 </body>
 </html>

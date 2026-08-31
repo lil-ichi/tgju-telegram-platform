@@ -24,6 +24,80 @@ def load_yaml(path: str) -> dict:
         return yaml.safe_load(f) or {}
 
 
+def _collect_used_slugs(channels: list) -> set:
+    """Every slug mentioned anywhere across all channels — for hygiene checks."""
+    used = set()
+    for c in channels:
+        for s in (c.get("slugs") or []):
+            used.add(s)
+        for slugs in (c.get("slug_groups") or {}).values():
+            for s in slugs:
+                used.add(s)
+    return used
+
+
+def _dupe_slugs_in_channels(channels: list) -> list:
+    """Return any slugs that appear more than once across channels (already used)."""
+    seen = {}          # slug -> first channel id
+    dups = []
+    for c in channels:
+        for s in _collect_used_slugs([c]):
+            if s in seen:
+                dups.append((s, seen[s], c.get("id")))
+            else:
+                seen[s] = c.get("id")
+    return dups
+
+
+def normalize_channels(channels: list) -> dict:
+    """Dedup slugs inside each channel + across channels; make slug_groups canonical.
+
+    Returns {\"changed\": bool, \"channels\": list} — channels may be mutated in place.
+    Called on save and on first-boot migration if the file has duplicates.
+    """
+    if not channels:
+        return {"changed": False, "channels": channels}
+    changed = False
+    out = []
+    for c in channels:
+        c = dict(c)             # shallow copy
+        slug_groups = dict(c.get("slug_groups") or {})
+        slugs = list(c.get("slugs") or [])
+
+        # 1) dedup within each group (preserve order)
+        for gname, group_slugs in list(slug_groups.items()):
+            uniq = list(dict.fromkeys(group_slugs))
+            if uniq != group_slugs:
+                slug_groups[gname] = uniq
+                changed = True
+            if not slug_groups[gname]:
+                del slug_groups[gname]
+                changed = True
+
+        # 2) canonicalize: if slug_groups has all wanted slugs, drop redundant flat slugs.
+        #    Keep slugs that are NOT in any group (so channels without groups keep their slugs).
+        if slug_groups:
+            grouped_set = set()
+            for slugs2 in slug_groups.values():
+                grouped_set.update(slugs2)
+            redundant = [s for s in slugs if s in grouped_set]
+            if redundant:
+                slugs = [s for s in slugs if s not in grouped_set]
+                changed = True
+
+        # 3) if a channel has no groups and its flat slugs has duplicates, dedupe.
+        if not slug_groups and slugs:
+            uniq = list(dict.fromkeys(slugs))
+            if uniq != slugs:
+                slugs = uniq
+                changed = True
+
+        c["slug_groups"] = slug_groups
+        c["slugs"] = slugs
+        out.append(c)
+    return {"changed": changed, "channels": out}
+
+
 def load_channels() -> list:
     cfg = load_yaml(CONFIG_PATH)
     chans = cfg.get("channels") or []
@@ -72,10 +146,18 @@ def load_channels() -> list:
 def save_channels(channels: list):
     """Rewrite channels.yaml from the in-memory list (pretty).
 
+    Also normalizes duplicates in-place so the on-disk file stays clean.
     All string values are emitted with PyYAML's safe_dump (double-quoted
     when needed) so special chars like '@', ':', '#', '*' never corrupt
     the YAML file (a bare '@test' telegram_id used to break parsing).
     """
+    chans = list(channels)
+    res = normalize_channels(chans)
+    if res["changed"]:
+        log_line("channels.yaml normalized on save (%d channels)" % len(chans))
+        channels.clear()
+        channels.extend(chans)
+
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         f.write("# TGJU Telegram Platform — channel definitions\n")
         f.write("# Edit here OR via the webapp UI (localhost:8791).\n\n")
