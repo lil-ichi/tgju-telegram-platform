@@ -61,7 +61,7 @@ if errorlevel 1 (
 
 REM ---- 4. start platform + open browser ------------------------
 echo  [OK] Starting TGJU platform...
-start "" http://127.0.0.1:8791
+start "" "http://127.0.0.1:8791" 2>nul || echo  [i] Open http://127.0.0.1:8791 in your browser manually.
 cd tgju
 "%VPY%" tgju_platform.py
 if errorlevel 1 (

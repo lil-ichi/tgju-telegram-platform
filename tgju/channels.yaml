@@ -4,7 +4,7 @@
 channels:
   - id: "ch1"
     name: "نرخ ارز"
-    telegram_id: "***REMOVED***"
+    telegram_id: ""
     enabled: true
     icon: "💰"
     header: "نرخ ارز"
