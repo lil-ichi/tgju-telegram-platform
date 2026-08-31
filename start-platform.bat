@@ -61,8 +61,8 @@ if errorlevel 1 (
 
 REM ---- 4. start platform + open browser ------------------------
 echo  [OK] Starting TGJU platform...
-echo  [i] Dashboard will open at: http://127.0.0.1:8791
-start "" "http://127.0.0.1:8791" >nul 2>&1
+echo  [i] Dashboard: http://127.0.0.1:8791
+"%VPY%" -c "import webbrowser; webbrowser.open('http://127.0.0.1:8791')" >nul 2>nul
 cd tgju
 "%VPY%" tgju_platform.py
 if errorlevel 1 (
