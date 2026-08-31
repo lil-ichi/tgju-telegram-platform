@@ -6,6 +6,7 @@ rotation, the Telegram _scheduler_tick and scheduler_loop, plus the Bale
 mirror tick (lines 2716–2787).  No behavior change.
 """
 import asyncio
+import json
 import os
 from datetime import datetime, timedelta
 
@@ -26,7 +27,7 @@ def _channel_post_types(c: dict) -> list:
     return [p for p in pts if p in ("prices", "news", "poll", "analysis", "all")]
 
 
-def _next_post_type(c: dict, now: datetime) -> str:
+def _next_post_type(c: dict, now: datetime, force_overrides: dict = None) -> str:
     """Rotation: cycle the channel's post_types (default ['prices']); a
     channel with poll_enabled gets a poll on every poll_interval boundary
     (default: hours 0,4,8,12,16,20 — matches the legacy `0 */4 * * *` cron).
@@ -43,15 +44,8 @@ def _next_post_type(c: dict, now: datetime) -> str:
     """
 
     # Enhancement 1: one-shot force override from scheduler_force.json
-    force_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "state", "scheduler_force.json")
-    try:
-        import json as _json
-        with open(force_path, encoding="utf-8") as f:
-            force = _json.load(f)
-        if force.get(c.get("id", "")):
-            return force[c["id"]]
-    except Exception:
-        pass
+    if force_overrides and force_overrides.get(c.get("id", "")):
+        return force_overrides[c["id"]]
 
     # 1) Analysis function (interval-driven, independent of rotation)
     try:
@@ -268,10 +262,10 @@ async def _scheduler_tick():
     force_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "state", "scheduler_force.json")
     st_forces = {}
     try:
-        with open(force_path, encoding="utf-8") as f:
-            st_forces = json.load(f)
+        raw = open(force_path, encoding="utf-8").read()
+        st_forces = json.loads(raw) if raw.strip() else {}
     except Exception:
-        pass
+        st_forces = {}
     if st_forces:
         tmp = force_path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
@@ -300,16 +294,19 @@ async def _scheduler_tick():
                 except Exception:
                     due = True
             if not due:
-                continue
+                # Force overrides bypass the interval check
+                if st_forces and st_forces.get(cid):
+                    due = True
+                else:
+                    continue
             # cached rows; force-refresh ONLY if older than 2x fetch_ttl
             rows = cached_rows()
             ttl = max(int(settings.get("fetch_ttl_seconds", 60)), 10)
             if not rows or not RUNTIME["last_fetch"] or \
                     (now - RUNTIME["last_fetch"]) > timedelta(seconds=2 * ttl):
                 rows = await asyncio.to_thread(refresh_prices, True)
-            post_type = _next_post_type(c, now)
+            post_type = _next_post_type(c, now, force_overrides=st_forces)
             # Empty-cache guard: NEVER send a prices/analysis post built from
-            # nothing (AI would produce «داده‌ای در دسترس نیست» filler, or the
             # build collapses to an empty message Telegram rejects). Wait for
             # data instead — the next tick retries.
             if not rows and post_type in ("prices", "analysis", "all"):
