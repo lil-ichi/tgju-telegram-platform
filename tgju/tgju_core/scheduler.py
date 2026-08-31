@@ -6,6 +6,7 @@ rotation, the Telegram _scheduler_tick and scheduler_loop, plus the Bale
 mirror tick (lines 2716–2787).  No behavior change.
 """
 import asyncio
+import os
 from datetime import datetime, timedelta
 
 from tgju_engine_config import (load_channel_state, save_channel_state,  # noqa: E402
