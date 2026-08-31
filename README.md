@@ -82,20 +82,21 @@ git clone https://github.com/lil-ichi/tgju-telegram-platform.git
 cd tgju-telegram-platform
 ```
 
-### 2. Install
+### 2. Install & Run
 
+**Windows** — double-click `start-platform.bat` (handles everything automatically).
+
+**Or manually (any OS):**
 ```bash
 python -m venv .venv
-
 # Windows
 .venv\Scripts\activate
 # Linux / macOS / git-bash
 source .venv/bin/activate
 
 pip install -r requirements.txt
+cd tgju && python tgju_platform.py
 ```
-
-### 3. Configure your bot token
 
 The token is read from (highest priority first):
 
@@ -106,16 +107,6 @@ The token is read from (highest priority first):
 
 The `state/` directory is **auto-created on first boot** and is git-ignored —
 you never need to commit anything to run the app.
-
-### 4. Run
-
-```bash
-# Windows
-start-platform.bat
-
-# Linux / macOS / git-bash
-./start-platform.sh
-```
 
 Then open **http://localhost:8791** — you'll see the login screen. The
 platform ships with a default login account. Log in with the username below

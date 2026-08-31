@@ -1,16 +1,29 @@
 #!/bin/bash
-# TGJU Telegram Platform launcher (git-bash / Linux/macOS) — portable
-# Resolution order:
-#   1. $TGJU_PYTHON   (explicit override, if set)
-#   2. .venv/bin/python or .venv/Scripts/python.exe inside this repo
-#   3. python on PATH
+# TGJU Platform launcher — works on Linux, macOS, and git-bash (Windows)
 set -e
 cd "$(dirname "$0")"
 
-PYEXE="${TGJU_PYTHON:-}"
-if [ -z "$PYEXE" ] && [ -x ".venv/bin/python" ]; then PYEXE=".venv/bin/python"; fi
-if [ -z "$PYEXE" ] && [ -x ".venv/Scripts/python.exe" ]; then PYEXE=".venv/Scripts/python.exe"; fi
-if [ -z "$PYEXE" ]; then PYEXE="python"; fi
+# Find python
+PY="${TGJU_PYTHON:-}"
+if [ -z "$PY" ] && [ -x ".venv/bin/python" ]; then PY=".venv/bin/python"; fi
+if [ -z "$PY" ] && [ -x ".venv/Scripts/python.exe" ]; then PY=".venv/Scripts/python.exe"; fi
+if [ -z "$PY" ]; then PY="python"; fi
 
+# Create venv if missing
+if [ ! -x ".venv/bin/python" ] && [ ! -x ".venv/Scripts/python.exe" ]; then
+  echo "  [1/3] Creating virtual environment..."
+  "$PY" -m venv .venv
+  if [ -x ".venv/bin/python" ]; then PY=".venv/bin/python"; else PY=".venv/Scripts/python.exe"; fi
+fi
+
+# Install deps if fastapi missing
+if ! "$PY" -c "import fastapi" 2>/dev/null; then
+  echo "  [2/3] Installing dependencies..."
+  "$PY" -m pip install -r requirements.txt --quiet
+fi
+
+# Run
+echo "  [3/3] Starting TGJU Platform..."
+echo "         Open http://127.0.0.1:8791 in your browser"
 cd tgju
-exec "$PYEXE" tgju_platform.py
+exec "$PY" tgju_platform.py
