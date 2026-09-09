@@ -454,8 +454,7 @@ def news_reply(us: dict) -> str:
 def analysis_reply(us: dict) -> str:
     """AI market analysis (uses the shared AI engine with the global/market channel)."""
     try:
-        from tgju_engine_ai import run_analysis
-        from tgju_engine_config import load_ai_config
+        from tgju_engine_ai import run_analysis, load_ai_config
         cfg = load_ai_config()
         # Build a synthetic channel so the shared engine works unchanged
         channel = {

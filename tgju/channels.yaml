@@ -69,14 +69,6 @@ channels:
       - "mesghal"
       - "geram18"
       - "geram24"
-      - "gold_futures"
-      - "mesghal"
-      - "geram18"
-      - "geram24"
-      - "gold_futures"
-      - "mesghal"
-      - "geram18"
-      - "geram24"
     news_categories:
       - "اخبار-طلا-و-سکه"
     analysis_tags:
@@ -87,7 +79,7 @@ channels:
     with_star: true
     with_analysis: true
     with_footer: true
-    footer: "???????????: ?? ?? ????? | ????: tgju.org"
+    footer: "به‌روزرسانی: هر ۱۰ دقیقه | منبع: tgju.org"
     format: "chips"
     post_types:
       - "prices"
@@ -231,17 +223,6 @@ channels:
         - "bourse_nikkei-225"
         - "bourse_hang-seng"
     slugs:
-      - "ons"
-      - "silver"
-      - "platinum"
-      - "palladium"
-      - "bourse_sp-500"
-      - "indices-dji-indx"
-      - "bourse_nasdaq"
-      - "indices-gdaxi-indx"
-      - "bourse_ftse-100"
-      - "bourse_nikkei-225"
-      - "bourse_hang-seng"
       - "ons"
       - "silver"
       - "platinum"

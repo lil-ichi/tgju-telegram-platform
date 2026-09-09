@@ -29,6 +29,5 @@ if errorlevel 1 (
 REM -- run --
 echo  [3/3] Starting TGJU Platform...
 echo         Open http://127.0.0.1:8791 in your browser
-cd tgju
-".venv\Scripts\python.exe" tgju_platform.py
+".venv\Scripts\python.exe" tgju/tgju_platform.py
 pause

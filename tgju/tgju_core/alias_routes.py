@@ -16,8 +16,10 @@ import json
 import os
 import time
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
+
+from tgju_core import auth
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))                     # repo root
@@ -147,8 +149,8 @@ async def resolver_loop():
 
 
 # ── routes ────────────────────────────────────────────────────────────────
-
-router = APIRouter()
+ 
+router = APIRouter(dependencies=[Depends(auth.require_auth)])
 
 
 @router.get("/api/polling")

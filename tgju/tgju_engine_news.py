@@ -176,14 +176,16 @@ def pick_rotating(channel_id: str, arts: list) -> dict:
             break
     if pick is None and candidates:
         # every top article was seen -> rotate to the next one after
-        # the last-picked instead of always arts[0]; if the last-picked is
-        # at the end, wrap to the newest unseen-by-last
+        # the last-picked instead of always arts[0]
         try:
-            last_pos = next(i for i, a in enumerate(candidates)
-                            if a["id"] == last_id)
+            last_pos = next(i for i, a in enumerate(arts) if a["id"] == last_id)
+            for step in range(1, len(arts)):
+                candidate_art = arts[(last_pos + step) % len(arts)]
+                if candidate_art["id"] != last_id:
+                    pick = candidate_art
+                    break
         except StopIteration:
-            last_pos = -1
-        pick = candidates[(last_pos + 1) % len(candidates)]
+            pick = candidates[0]
     if pick is None:
         pick = arts[0]
     used.add(pick["id"])

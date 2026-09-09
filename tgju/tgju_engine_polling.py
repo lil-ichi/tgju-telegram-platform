@@ -37,7 +37,7 @@ import urllib.request
 import urllib.error
 from typing import Callable, Optional
 
-STATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "state")
+STATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state")
 OFFSET_FILE = os.path.join(STATE_DIR, "polling_offsets.json")
 
 # per-platform defaults — tuned conservatively to respect server load

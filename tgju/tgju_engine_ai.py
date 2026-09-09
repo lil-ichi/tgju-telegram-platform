@@ -114,14 +114,19 @@ _ACTIVITY_MAX = 50  # ring buffer size
 
 
 # ── Enhancement 6: AI provider fallback chain ─────────────────────────────
-def _enabled_providers_order(cfg: dict) -> list:
-    """Return [(name, provider_dict), ...] in priority order: first enabled
-    non-mock providers with a base_url, then disabled as last resort."""
+def _enabled_providers_order(cfg: dict, preferred_provider: str = None) -> list:
+    """Return [(name, provider_dict), ...] in priority order: preferred provider first,
+    then enabled non-mock providers with a base_url, then disabled as last resort."""
     providers = cfg.get("providers") or {}
     ordered = []
+    if preferred_provider and preferred_provider in providers:
+        p = providers[preferred_provider]
+        if p.get("kind") != "mock" and p.get("base_url"):
+            ordered.append((preferred_provider, dict(p)))
     for name, p in providers.items():
         if p.get("kind") != "mock" and p.get("base_url"):
-            ordered.append((name, dict(p)))
+            if (name, dict(p)) not in ordered:
+                ordered.append((name, dict(p)))
     # keep disabled providers as fallback (no base_url or mock) — but sort
     # so the ones the user enabled + configured come first
     for name, p in providers.items():
@@ -174,11 +179,11 @@ def _call_provider(provider: dict, prompt: str, max_tokens: int,
         return ("", entry)
 
 def try_providers(cfg: dict, prompt: str, max_tokens: int, timeout_s: int,
-                  job_id: str = "") -> dict:
+                  job_id: str = "", preferred_provider: str = None) -> dict:
     """Try enabled providers in order; if one 401s/429s/empty, try next.
     After all tried, return {"ok": bool, "text": str, "provider": str,
     "model": str, "latency_ms": int, "attempts": [...]} or final error."""
-    providers_order = _enabled_providers_order(cfg)
+    providers_order = _enabled_providers_order(cfg, preferred_provider=preferred_provider)
     if not providers_order:
         return {"ok": False, "error": "no provider configured"}
     last_entry = None
@@ -607,7 +612,7 @@ def run_analysis(cfg: dict, channel: dict, rows: dict) -> dict:
     # Enhancement 6: try providers in fallback order
     cfg_for_ai = cfg if cfg else load_ai_config()
     result = try_providers(cfg_for_ai, prompt, max_tokens, timeout_s,
-                            job_id="analysis")
+                            job_id="analysis", preferred_provider=provider_name)
     latency_ms = result.get("latency_ms", 0)
     if not result.get("ok"):
         attempts_info = result.get("attempts", [])

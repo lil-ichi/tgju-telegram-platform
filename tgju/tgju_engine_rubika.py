@@ -235,8 +235,9 @@ def preview_channel(channel: dict, post_type: str = "prices") -> str:
     if post_type == "news":
         try:
             from tgju_engine_news import channel_articles
-            items = channel_articles(channel, rows) or []
-            return "\n".join("%s\n%s" % (it.get("title", ""), it.get("url", ""))
+            items = channel_articles(channel.get("news_categories", []),
+                                     channel.get("analysis_tags", [])) or []
+            return "\n".join("%s\n%s" % (it.get("text", ""), it.get("url", ""))
                              for it in items[:1])
         except Exception as e:
             return "error: %s" % e

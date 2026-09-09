@@ -43,6 +43,13 @@ import os
 import sys
 import threading
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from fastapi import Depends, FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles  # noqa: F401  (historical import)

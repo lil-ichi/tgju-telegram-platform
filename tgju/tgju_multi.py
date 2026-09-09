@@ -8,6 +8,7 @@ Usage:
     (--real sends to the channel via bot; default prints only)
 """
 import argparse
+import os
 import re
 import sys
 import urllib.parse
@@ -19,6 +20,13 @@ from tgju_engine_scrape import get_all_prices
 
 
 def get_bot_token() -> str:
+    try:
+        from tgju_core.sender import get_bot_token as _core_get_token
+        token = _core_get_token()
+        if token:
+            return token
+    except Exception:
+        pass
     env_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "hermes", ".env")
     try:
         env = open(env_path, encoding="utf-8").read()

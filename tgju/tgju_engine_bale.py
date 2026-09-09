@@ -202,18 +202,18 @@ def preview_channel(channel: dict, post_type: str = "prices") -> str:
     if post_type == "news":
         try:
             from tgju_engine_news import channel_articles
-            items = channel_articles(channel, rows)
+            items = channel_articles(channel.get("news_categories", []),
+                                     channel.get("analysis_tags", [])) or []
             return "\n".join(
-                "<b>%s</b>\n<a href=\"%s\">%s</a>" % (it.get("title", ""),
-                                it.get("url", ""), it.get("title", ""))
-                for it in items) or ""
+                '<a href="%s">%s</a>' % (it.get("url", ""), it.get("text", ""))
+                for it in items[:1]) or ""
         except Exception as e:
             return "error: %s" % e
     if post_type == "analysis":
         try:
-            from tgju_engine_ai import run_analysis
-            text = run_analysis(channel, rows)
-            return text or ""
+            from tgju_engine_ai import run_analysis, load_ai_config
+            res = run_analysis(load_ai_config(), channel, rows)
+            return res.get("text") if res.get("ok") else ("error: %s" % res.get("error"))
         except Exception as e:
             return "error: %s" % e
     return ""
