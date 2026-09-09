@@ -45,3 +45,7 @@ Thumbs.db
 # UI backups
 *.bak-*
 *.js
+
+# Local archives & session bridges (contain live cookies — never commit)
+_archive/
+assets/
