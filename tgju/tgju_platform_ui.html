@@ -604,6 +604,7 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
         <div class="nav-group-title">⚙️ سامانه</div>
         <div class="nav-item sys-item" data-panel="data">🔗 داده‌ها و لینک‌ها</div>
         <div class="nav-item sys-item" data-panel="ai">🧠 هوش مصنوعی</div>
+        <div class="nav-item sys-item" data-panel="kb">📚 پایگاه دانش</div>
         <div class="nav-item sys-item" data-panel="functions">⚙️ وظایف</div>
         <div class="nav-item sys-item" data-panel="settings">تنظیمات سامانه</div>
         <div class="nav-item sys-item" data-panel="activity">📋 فعالیت‌ها</div>
@@ -1063,6 +1064,198 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
             </div>
             <div id="ai_chan_result" style="margin-top:12px"></div>
           </div>
+        </div>
+
+        <!-- ── پایگاه دانش هوش مصنوعی (Knowledge Base) ── -->
+        <div id="panel_kb" class="panel">
+          <div class="flex-between">
+            <div>
+              <h1>📚 پایگاه دانش هوش مصنوعی (Knowledge Base)</h1>
+              <div class="sub">تعریف پوشه‌ها، فایل‌های سیستم، و لینک‌های اینترنتی برای هدایت عامل هوش مصنوعی در تولید نظرسنجی‌ها، تحلیل‌ها، پست‌ها و اتوماسیون‌های آینده.</div>
+            </div>
+            <div class="row" style="gap:8px">
+              <button class="small primary" onclick="loadKbData()">🔄 به‌روزرسانی داده‌ها</button>
+            </div>
+          </div>
+
+          <!-- آمار پایگاه دانش -->
+          <div class="grid cards" style="margin-top:16px">
+            <div class="card"><h4>منابع ثبت‌شده</h4><div class="big" id="kb_stat_sources">—</div></div>
+            <div class="card"><h4>منابع فعال</h4><div class="big gold" id="kb_stat_active">—</div></div>
+            <div class="card"><h4>کل واژگان دانش‌نامه</h4><div class="big" id="kb_stat_words">—</div></div>
+            <div class="card"><h4>وضعیت سامانه</h4><div class="big" id="kb_stat_status">—</div></div>
+          </div>
+
+          <!-- تنظیمات اتصال به جاب‌های هوش مصنوعی -->
+          <h2>⚙️ اتصال به موتور هوش مصنوعی و وظایف (Automation & Jobs)</h2>
+          <div class="card">
+            <p class="muted" style="font-size:12.5px;line-height:1.9;margin-top:0">
+              هوش مصنوعی هنگام اجرای هر یک از وظایف زیر، مرتبط‌ترین بخش‌های پایگاه دانش را بازیابی کرده و به پرامپت خود اضافه می‌کند تا خروجی دقیق‌تر و مطابق با اهداف شما تولید شود.
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));gap:12px;margin-bottom:14px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);border:1px solid var(--border)">
+                <input type="checkbox" id="kb_cfg_enabled" checked onchange="saveKbSettings()">
+                <span><b>فعال بودن پایگاه دانش</b></span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);border:1px solid var(--border)">
+                <input type="checkbox" id="kb_job_poll_gen" checked onchange="saveKbSettings()">
+                <span>🗳 تولید نظرسنجی (Poll Gen)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);border:1px solid var(--border)">
+                <input type="checkbox" id="kb_job_poll_sel" checked onchange="saveKbSettings()">
+                <span>🎯 انتخاب نظرسنجی (Poll Select)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);border:1px solid var(--border)">
+                <input type="checkbox" id="kb_job_analysis" checked onchange="saveKbSettings()">
+                <span>📈 تحلیل بازار و پست‌ها</span>
+              </label>
+            </div>
+            <div class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
+              <label style="margin:0">حداکثر سقف کانتکست (کاراکتر):</label>
+              <input type="number" id="kb_cfg_max_chars" value="1800" min="200" max="8000" style="max-width:140px;width:auto">
+              <button class="small primary" onclick="saveKbSettings()">💾 ذخیره تنظیمات اتصال</button>
+              <span id="kb_cfg_msg" class="muted" style="font-size:12px"></span>
+            </div>
+          </div>
+
+          <!-- افزودن منبع دانش جدید -->
+          <h2>➕ افزودن منبع دانش جدید (فایل، پوشه، یا لینک)</h2>
+          <div class="card">
+            <!-- Selector for 3 Modes -->
+            <div class="row" style="gap:10px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
+              <button type="button" class="small primary" id="kb_btn_tab_dir" onclick="setKbAddTab('dir')">📁 پوشه یا فایل سیستم</button>
+              <button type="button" class="small" id="kb_btn_tab_url" onclick="setKbAddTab('url')">🌐 لینک و استخراج وب (URL Find)</button>
+              <button type="button" class="small" id="kb_btn_tab_snp" onclick="setKbAddTab('snp')">📝 یادداشت و قوانین محتوایی</button>
+            </div>
+
+            <!-- تب ۱: پوشه یا فایل محلی -->
+            <div id="kb_sec_dir">
+              <p class="muted" style="font-size:12.5px;margin-top:0">
+                می‌توانید مسیر یک پوشه کامل روی کامپیوتر را وارد کنید تا هوش مصنوعی تمام فایل‌های متنی داخل آن را به عنوان دانشنامه بخواند، یا مستقیماً یک یا چند فایل را از کامپیوتر آپلود کنید.
+              </p>
+              <div class="form-grid">
+                <div style="grid-column:1/-1">
+                  <label>مسیر کامل پوشه یا فایل در سرور/سیستم</label>
+                  <div class="row" style="gap:8px">
+                    <input id="kb_input_path" placeholder="مثال: D:\Hermes\data یا C:\market_reports" style="flex:1">
+                    <button class="primary small" onclick="kbAddFolderOrFile()">➕ ثبت مسیر</button>
+                  </div>
+                </div>
+                <div>
+                  <label>عنوان اختیاری</label>
+                  <input id="kb_input_dir_title" placeholder="عنوان دلخواه برای منبع">
+                </div>
+                <div>
+                  <label>برچسب‌ها (با کاما جدا کنید)</label>
+                  <input id="kb_input_dir_tags" placeholder="طلا، ارز، فاندامنتال">
+                </div>
+                <div style="grid-column:1/-1;border-top:1px dashed var(--border);padding-top:12px;margin-top:4px">
+                  <label>یا انتخاب و آپلود فایل(ها) از سیستم (.txt, .md, .json, .csv, .pdf, .html):</label>
+                  <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+                    <input type="file" id="kb_file_upload" multiple style="flex:1;background:var(--surface-2);padding:6px;border-radius:var(--r-sm);border:1px solid var(--border)">
+                    <button class="small" onclick="kbUploadSelectedFiles()">📤 آپلود و ایندکس فایل‌ها</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- تب ۲: دریافت از URL -->
+            <div id="kb_sec_url" style="display:none">
+              <p class="muted" style="font-size:12.5px;margin-top:0">
+                آدرس اینترنتی یک مقاله، گزارش تحلیلی، صفحه اخبار یا سند آنلاین را وارد کنید. سیستم محتوای متنی آن را استخراج، پاک‌سازی و در پایگاه دانش ثبت می‌کند.
+              </p>
+              <div class="form-grid">
+                <div style="grid-column:1/-1">
+                  <label>آدرس اینترنتی (URL)</label>
+                  <div class="row" style="gap:8px">
+                    <input id="kb_input_url" placeholder="https://tgju.org/... یا لینک گزارش اقتصادی" style="flex:1">
+                    <button class="primary small" onclick="kbAddUrl()">🌐 استخراج و ثبت لینک</button>
+                  </div>
+                </div>
+                <div>
+                  <label>عنوان اختصاصی (اختیاری)</label>
+                  <input id="kb_input_url_title" placeholder="در صورت خالی بودن، عنوان خود صفحه ثبت می‌شود">
+                </div>
+                <div>
+                  <label>برچسب‌ها (با کاما جدا کنید)</label>
+                  <input id="kb_input_url_tags" placeholder="گزارش، اخبار، انس">
+                </div>
+              </div>
+            </div>
+
+            <!-- تب ۳: یادداشت و قوانین محتوایی -->
+            <div id="kb_sec_snp" style="display:none">
+              <p class="muted" style="font-size:12.5px;margin-top:0">
+                دستورالعمل‌های مستقیم متنی برای عامل هوش مصنوعی ثبت کنید (پرسونای کانال، قوانین نگارش نظرسنجی‌ها، اصطلاحات کلیدی بازار و نکات ویژه).
+              </p>
+              <div class="form-grid">
+                <div>
+                  <label>عنوان دستورالعمل یا یادداشت</label>
+                  <input id="kb_input_snp_title" placeholder="مثال: دستورالعمل نظرسنجی کانال طلا">
+                </div>
+                <div>
+                  <label>برچسب‌ها</label>
+                  <input id="kb_input_snp_tags" placeholder="دستورالعمل، پرامپت">
+                </div>
+                <div style="grid-column:1/-1">
+                  <label>متن کامل دستورالعمل یا دانش فاندامنتال</label>
+                  <textarea id="kb_input_snp_text" rows="5" placeholder="قوانین یا اطلاعات مدنظر خود را اینجا بنویسید..."></textarea>
+                  <div class="row" style="margin-top:8px">
+                    <button class="primary small" onclick="kbAddSnippet()">💾 ثبت یادداشت متنی</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="kb_add_status" class="muted" style="margin-top:10px;font-size:12.5px"></div>
+          </div>
+
+          <!-- نمایشگر محتوای سند ایندکس‌شده (Content Viewer) -->
+          <div id="kb_viewer_box" class="card" style="display:none;margin-top:18px;border:1px solid var(--accent-line)">
+            <div class="flex-between" style="margin-bottom:8px">
+              <h3 id="kb_viewer_title" style="margin:0;font-size:14px">📄 محتوای سند ایندکس‌شده</h3>
+              <button class="small" onclick="$('kb_viewer_box').style.display='none'">✕ بستن نمایشگر</button>
+            </div>
+            <div id="kb_viewer_meta" class="muted" style="font-size:11.5px;margin-bottom:8px"></div>
+            <pre id="kb_viewer_content" style="max-height:300px;overflow:auto;background:var(--surface-2);padding:12px;border-radius:var(--r-sm);font-size:12px;line-height:1.7;white-space:pre-wrap;font-family:inherit"></pre>
+          </div>
+
+          <!-- جدول فهرست منابع -->
+          <h2>📚 منابع و اسناد ثبت‌شده در دانشنامه</h2>
+          <div class="card" style="padding:0;overflow:hidden">
+            <div style="overflow-x:auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:50px">وضعیت</th>
+                    <th>نوع</th>
+                    <th>عنوان منبع</th>
+                    <th>مسیر یا آدرس</th>
+                    <th>حجم / کلمات</th>
+                    <th>آخرین همگام‌سازی</th>
+                    <th style="width:140px">عملیات</th>
+                  </tr>
+                </thead>
+                <tbody id="kb_sources_table">
+                  <tr><td colspan="7" class="center muted" style="padding:24px">در حال بارگذاری منابع...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- جستجو و آزمایشگاه بازیابی هوش مصنوعی (Search & Context Playground) -->
+          <h2>🔍 آزمایشگاه جستجو و بازیابی کانتکست (Context Playground)</h2>
+          <div class="card">
+            <p class="muted" style="font-size:12.5px;line-height:1.9;margin-top:0">
+              با جستجوی هر کلمه یا موضوع (مثل «طلا»، «نظرسنجی»، «دلار»، «فدرال رزرو»)، بررسی کنید مدل دقیقاً چه قطعاتی از پایگاه دانش را برای تحلیل یا ساخت نظرسنجی دریافت خواهد کرد.
+            </p>
+            <div class="row" style="gap:8px;margin-bottom:12px">
+              <input id="kb_search_query" placeholder="کلمه کلیدی یا عبارت جستجو..." style="flex:1" onkeydown="if(event.key==='Enter') kbDoSearch()">
+              <button class="small primary" onclick="kbDoSearch()">🔎 تست بازیابی زنده</button>
+            </div>
+            <div id="kb_search_results"></div>
+          </div>
+
         </div>
 
     <!-- ── وظایف (Functions) ── -->
@@ -2234,6 +2427,7 @@ function refresh(){
   if(p==='panel_data'){ loadSlugData(); loadAliasStatus(); }
   if(p==='panel_custom_data') loadCustomDataPanel();
   if(p==='panel_ai') loadAiPage();
+  if(p==='panel_kb') loadKbPage();
   if(p==='panel_functions') loadFunctions();
   if(p==='panel_help') initHelp();
   if(p==='panel_settings') loadSettings();
@@ -3361,6 +3555,323 @@ async function testAiChannel(){
   else $('ai_chan_result').innerHTML=`<span class="err">❌ ${esc(r.error||'')}</span>`;
 }
 $('ai_chan').addEventListener('change', ()=>loadAiChannelConfig($('ai_chan').value));
+
+// ── Knowledge Base (پایگاه دانش هوش مصنوعی) ──
+let KB_DATA = null;
+
+function setKbAddTab(tab){
+  ['dir','url','snp'].forEach(t=>{
+    const sec = $('kb_sec_'+t);
+    const btn = $('kb_btn_tab_'+t);
+    if(sec) sec.style.display = (t===tab)?'':'none';
+    if(btn) {
+      if(t===tab){ btn.classList.add('primary'); }
+      else { btn.classList.remove('primary'); }
+    }
+  });
+  $('kb_add_status').textContent = '';
+}
+
+async function loadKbPage(){
+  await loadKbData();
+}
+
+async function loadKbData(){
+  try{
+    const d = await jget('/api/kb');
+    KB_DATA = d;
+    const stats = d.stats || {};
+    $('kb_stat_sources').textContent = faNum(stats.sources_count || 0);
+    $('kb_stat_active').textContent = faNum(stats.active_count || 0);
+    $('kb_stat_words').textContent = faNum(stats.total_words || 0);
+    $('kb_stat_status').innerHTML = d.enabled ? '<span class="ok" style="font-size:16px">فعال</span>' : '<span class="err" style="font-size:16px">غیرفعال</span>';
+
+    // settings
+    $('kb_cfg_enabled').checked = !!d.enabled;
+    $('kb_cfg_max_chars').value = d.max_context_chars || 1800;
+    const jobs = d.jobs || {};
+    $('kb_job_poll_gen').checked = !!(jobs.poll_generate && jobs.poll_generate.enabled);
+    $('kb_job_poll_sel').checked = !!(jobs.poll_select && jobs.poll_select.enabled);
+    $('kb_job_analysis').checked = !!(jobs.analysis && jobs.analysis.enabled);
+
+    renderKbSources(d.sources || []);
+  }catch(e){
+    $('kb_sources_table').innerHTML = `<tr><td colspan="7" class="center err" style="padding:20px">خطا در دریافت اطلاعات دانشنامه: ${esc(e.message||e)}</td></tr>`;
+  }
+}
+
+function renderKbSources(sources){
+  const tb = $('kb_sources_table');
+  if(!sources || !sources.length){
+    tb.innerHTML = '<tr><td colspan="7" class="center muted" style="padding:28px">هنوز هیچ منبع دانشی ثبت نشده است. از بخش فوق یک پوشه، فایل یا لینک وب اضافه کنید.</td></tr>';
+    return;
+  }
+
+  const typeLabels = {
+    folder: '<span class="badge" style="background:#e0f2fe;color:#0369a1">📁 پوشه</span>',
+    file: '<span class="badge" style="background:#fef3c7;color:#92400e">📄 فایل</span>',
+    url: '<span class="badge" style="background:#dcfce7;color:#15803d">🌐 لینک وب</span>',
+    snippet: '<span class="badge" style="background:#f3e8ff;color:#7e22ce">📝 یادداشت</span>'
+  };
+
+  tb.innerHTML = sources.map(s=>{
+    const checked = s.enabled ? 'checked' : '';
+    const typeBadge = typeLabels[s.type] || esc(s.type);
+    const words = faNum(s.word_count || 0) + ' کلمه';
+    const chars = s.char_count ? ` (${faNum(s.char_count)} حرف)` : '';
+    const lastSync = s.last_synced ? faNum(s.last_synced) : '—';
+    const isUrl = s.type === 'url' && (s.path_or_url||'').startsWith('http');
+    const pathHtml = isUrl ? `<a href="${esc(s.path_or_url)}" target="_blank" rel="noopener" style="color:var(--accent);direction:ltr;display:inline-block">${esc(s.path_or_url)}</a>` : `<span style="direction:ltr;display:inline-block;font-size:12px">${esc(s.path_or_url||'')}</span>`;
+    const filesCount = s.files_count ? ` <span class="muted" style="font-size:11px">(${faNum(s.files_count)} فایل)</span>` : '';
+
+    return `
+      <tr>
+        <td class="center">
+          <input type="checkbox" ${checked} onchange="kbToggleSource('${s.id}')" title="فعال/غیرفعال">
+        </td>
+        <td>${typeBadge}</td>
+        <td>
+          <b>${esc(s.title || s.id)}</b>${filesCount}
+          ${(s.tags && s.tags.length) ? `<div style="margin-top:2px">${s.tags.map(t=>`<span class="badge muted" style="font-size:10px;padding:1px 5px">${esc(t)}</span>`).join(' ')}</div>` : ''}
+        </td>
+        <td>${pathHtml}</td>
+        <td>${words}${chars}</td>
+        <td class="muted" style="font-size:11.5px">${lastSync}</td>
+        <td>
+          <div class="row" style="gap:4px">
+            <button class="small" onclick="kbViewContent('${s.id}')" title="مشاهده محتوای ایندکس‌شده">👁️</button>
+            <button class="small" onclick="kbSyncSource('${s.id}')" title="همگام‌سازی مجدد">🔄</button>
+            <button class="small danger" onclick="kbDeleteSource('${s.id}')" title="حذف">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function saveKbSettings(){
+  const msg = $('kb_cfg_msg');
+  msg.textContent = 'در حال ذخیره…';
+  const body = {
+    enabled: $('kb_cfg_enabled').checked,
+    max_context_chars: parseInt($('kb_cfg_max_chars').value) || 1800,
+    jobs: {
+      poll_generate: { enabled: $('kb_job_poll_gen').checked },
+      poll_select: { enabled: $('kb_job_poll_sel').checked },
+      analysis: { enabled: $('kb_job_analysis').checked }
+    }
+  };
+  try{
+    const r = await jpost('/api/kb/config', body);
+    if(r.ok){
+      msg.innerHTML = '<span class="ok">✅ ذخیره شد</span>';
+      setTimeout(()=>msg.textContent='', 2500);
+      loadKbData();
+    } else {
+      msg.innerHTML = `<span class="err">❌ ${esc(r.error||'خطا')}</span>`;
+    }
+  }catch(e){
+    msg.innerHTML = `<span class="err">❌ ${esc(e.message||e)}</span>`;
+  }
+}
+
+async function kbAddFolderOrFile(){
+  const path = $('kb_input_path').value.trim();
+  const title = $('kb_input_dir_title').value.trim();
+  const tags = $('kb_input_dir_tags').value.split(/[,،]+/).map(x=>x.trim()).filter(Boolean);
+  const st = $('kb_add_status');
+  if(!path){ alert('لطفاً مسیر پوشه یا فایل را وارد کنید.'); return; }
+
+  st.innerHTML = '<span class="muted">⏳ در حال اسکن و ایندکس اسناد…</span>';
+  try{
+    let r = await jpost('/api/kb/sources/folder', { path, title, tags });
+    if(!r.ok && r.error && r.error.includes('پوشه وجود ندارد')){
+      r = await jpost('/api/kb/sources/file', { path, title, tags });
+    }
+    if(r.ok){
+      st.innerHTML = '<span class="ok">✅ منبع با موفقیت در پایگاه دانش ثبت شد.</span>';
+      $('kb_input_path').value = '';
+      $('kb_input_dir_title').value = '';
+      $('kb_input_dir_tags').value = '';
+      loadKbData();
+    } else {
+      st.innerHTML = `<span class="err">❌ خطا: ${esc(r.error||'امکان ثبت منبع وجود ندارد')}</span>`;
+    }
+  }catch(e){
+    st.innerHTML = `<span class="err">❌ خطا: ${esc(e.message||e)}</span>`;
+  }
+}
+
+async function kbUploadSelectedFiles(){
+  const finput = $('kb_file_upload');
+  const files = finput.files;
+  const st = $('kb_add_status');
+  if(!files || !files.length){ alert('لطفاً ابتدا حداقل یک فایل را انتخاب کنید.'); return; }
+
+  st.innerHTML = `<span class="muted">⏳ در حال آپلود و پردازش ${faNum(files.length)} فایل…</span>`;
+  const fd = new FormData();
+  for(let i=0; i<files.length; i++){
+    fd.append('files', files[i]);
+  }
+
+  try{
+    const resp = await fetch('/api/kb/sources/upload', { method: 'POST', body: fd });
+    const r = await resp.json();
+    if(r.ok){
+      st.innerHTML = `<span class="ok">✅ ${faNum(files.length)} فایل با موفقیت آپلود و ایندکس شد.</span>`;
+      finput.value = '';
+      loadKbData();
+    } else {
+      st.innerHTML = `<span class="err">❌ خطا: ${esc(r.error||'خطا در آپلود')}</span>`;
+    }
+  }catch(e){
+    st.innerHTML = `<span class="err">❌ خطا در آپلود: ${esc(e.message||e)}</span>`;
+  }
+}
+
+async function kbAddUrl(){
+  const url = $('kb_input_url').value.trim();
+  const title = $('kb_input_url_title').value.trim();
+  const tags = $('kb_input_url_tags').value.split(/[,،]+/).map(x=>x.trim()).filter(Boolean);
+  const st = $('kb_add_status');
+  if(!url){ alert('لطفاً آدرس اینترنتی (URL) را وارد کنید.'); return; }
+
+  st.innerHTML = '<span class="muted">⏳ در حال ارتباط و استخراج محتوای صفحه…</span>';
+  try{
+    const r = await jpost('/api/kb/sources/url', { url, title, tags });
+    if(r.ok){
+      st.innerHTML = `<span class="ok">✅ لینک با موفقیت خوانده و ثبت شد: «${esc(r.source.title)}» (${faNum(r.source.word_count)} واژه).</span>`;
+      $('kb_input_url').value = '';
+      $('kb_input_url_title').value = '';
+      $('kb_input_url_tags').value = '';
+      loadKbData();
+    } else {
+      st.innerHTML = `<span class="err">❌ خطا: ${esc(r.error||'امکان فچ صفحه وجود ندارد')}</span>`;
+    }
+  }catch(e){
+    st.innerHTML = `<span class="err">❌ خطا: ${esc(e.message||e)}</span>`;
+  }
+}
+
+async function kbAddSnippet(){
+  const title = $('kb_input_snp_title').value.trim();
+  const text = $('kb_input_snp_text').value.trim();
+  const tags = $('kb_input_snp_tags').value.split(/[,،]+/).map(x=>x.trim()).filter(Boolean);
+  const st = $('kb_add_status');
+  if(!text){ alert('متن یادداشت نمی‌تواند خالی باشد.'); return; }
+
+  try{
+    const r = await jpost('/api/kb/sources/snippet', { title, text, tags });
+    if(r.ok){
+      st.innerHTML = '<span class="ok">✅ یادداشت دستوری با موفقیت ثبت شد.</span>';
+      $('kb_input_snp_title').value = '';
+      $('kb_input_snp_text').value = '';
+      $('kb_input_snp_tags').value = '';
+      loadKbData();
+    } else {
+      st.innerHTML = `<span class="err">❌ خطا: ${esc(r.error||'امکان ذخیره یادداشت نیست')}</span>`;
+    }
+  }catch(e){
+    st.innerHTML = `<span class="err">❌ خطا: ${esc(e.message||e)}</span>`;
+  }
+}
+
+async function kbToggleSource(id){
+  try{
+    await jpost(`/api/kb/sources/${id}/toggle`, {});
+    loadKbData();
+  }catch(e){}
+}
+
+async function kbSyncSource(id){
+  const st = $('kb_add_status');
+  st.innerHTML = '<span class="muted">⏳ در حال همگام‌سازی مجدد منبع…</span>';
+  try{
+    const r = await jpost(`/api/kb/sources/${id}/sync`, {});
+    if(r.ok){
+      st.innerHTML = '<span class="ok">✅ منبع با موفقیت به‌روزرسانی و مجدداً ایندکس شد.</span>';
+      loadKbData();
+    } else {
+      st.innerHTML = `<span class="err">❌ ${esc(r.error||'خطا')}</span>`;
+    }
+  }catch(e){
+    st.innerHTML = `<span class="err">❌ ${esc(e.message||e)}</span>`;
+  }
+}
+
+async function kbDeleteSource(id){
+  if(!confirm('آیا از حذف این منبع از دانشنامه اطمینان دارید؟')) return;
+  try{
+    await jdel(`/api/kb/sources/${id}`);
+    loadKbData();
+  }catch(e){}
+}
+
+async function kbViewContent(id){
+  const box = $('kb_viewer_box');
+  const title = $('kb_viewer_title');
+  const meta = $('kb_viewer_meta');
+  const cont = $('kb_viewer_content');
+
+  box.style.display = '';
+  title.textContent = 'در حال دریافت محتوا…';
+  cont.textContent = '⏳ لطفاً شکیبا باشید…';
+
+  try{
+    const r = await jget(`/api/kb/sources/${id}/content`);
+    if(r.ok && r.doc){
+      const doc = r.doc;
+      title.textContent = `📄 ${doc.title || id}`;
+      meta.textContent = `نوع: ${doc.type} • حجم: ${faNum(doc.word_count||0)} کلمه • قطعات (Chunks): ${faNum((doc.chunks||[]).length)} • تاریخ ایندکس: ${faNum(doc.indexed_at||'—')}`;
+      cont.textContent = doc.raw_text || (doc.chunks||[]).join('\n\n---\n\n') || '(بدون متن)';
+    } else {
+      cont.textContent = 'خطا در نمایش سند: ' + (r.error || 'سند خالی است');
+    }
+  }catch(e){
+    cont.textContent = 'خطا: ' + (e.message || e);
+  }
+}
+
+async function kbDoSearch(){
+  const q = $('kb_search_query').value.trim();
+  const out = $('kb_search_results');
+  if(!q){ alert('لطفاً عبارت جستجو را وارد کنید.'); return; }
+
+  out.innerHTML = '<div class="muted">⏳ در حال جستجو در پایگاه دانش…</div>';
+  try{
+    const r = await jpost('/api/kb/search', { query: q, top_k: 4 });
+    if(r.ok){
+      const matches = r.matches || [];
+      const ctx = r.context_preview || '';
+      if(!matches.length){
+        out.innerHTML = '<div class="muted" style="padding:10px 0">هیچ سند یا قطعهٔ مرتبطی با این کلمه کلیدی در پایگاه دانش یافت نشد.</div>';
+        return;
+      }
+      out.innerHTML = `
+        <div style="margin-top:12px">
+          <h4>قطعات منطبق (${faNum(matches.length)} مورد):</h4>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+            ${matches.map(m=>`
+              <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px">
+                <div class="flex-between">
+                  <b>📌 ${esc(m.title)} <span class="muted" style="font-size:11px">(${esc(m.type)})</span></b>
+                  <span class="badge" style="font-size:10px">امتیاز تطابق: ${faNum(m.score)}</span>
+                </div>
+                <div style="font-size:12.5px;line-height:1.7;margin-top:6px;color:var(--txt)">${esc(m.text)}</div>
+              </div>
+            `).join('')}
+          </div>
+          <h4>متن نهایی ارسال‌شونده به پرامپت هوش مصنوعی (Context Preview):</h4>
+          <pre style="background:var(--surface-2);border:1px solid var(--accent-line);border-radius:var(--r-sm);padding:12px;font-size:12px;line-height:1.8;white-space:pre-wrap;font-family:inherit">${esc(ctx || '(کانتکستی ساخته نشد)')}</pre>
+        </div>
+      `;
+    } else {
+      out.innerHTML = `<div class="err">❌ خطا: ${esc(r.error||'خطا در جستجو')}</div>`;
+    }
+  }catch(e){
+    out.innerHTML = `<div class="err">❌ خطا: ${esc(e.message||e)}</div>`;
+  }
+}
 
 // ── Custom Data (داده‌های سفارشی) ──
 let CUSTOM_DATA_CHANNEL = null;

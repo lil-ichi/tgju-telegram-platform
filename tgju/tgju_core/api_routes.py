@@ -1189,8 +1189,21 @@ async def api_polls_generate(req: Request):
                 table_lines.append("%s | %s | %s%%" % (
                     row.get("name") or s, row["price"], row.get("change_pct") or "—"))
     table = "\n".join(table_lines[:25]) or "(داده‌ای در دسترس نیست)"
+    kb_extra = ""
+    try:
+        from tgju_engine_kb import get_kb_context
+        ch_name = ""
+        for c in get_channels():
+            if c.get("id") == cid:
+                ch_name = c.get("name") or ""
+                break
+        kb_ctx = get_kb_context(query=f"{ch_name} نظرسنجی بازار طلا ارز بورس", job="poll_generate", max_chars=1000)
+        if kb_ctx:
+            kb_extra = f"\n\nنکات و دانسته‌های تکمیلی پایگاه دانش جهت ایده‌پردازی نظرسنجی:\n{kb_ctx}"
+    except Exception:
+        pass
     from tgju_engine_ai import POLL_GEN_PROMPT
-    prompt = POLL_GEN_PROMPT % (count, table)
+    prompt = POLL_GEN_PROMPT % (count, table + kb_extra)
     from tgju_engine_ai import _parse_poll_json
     polls = []
     last_error = ""
@@ -2703,6 +2716,199 @@ def api_bale_delete_channel(cid: str):
         data["channels"] = [c for c in data["channels"] if c.get("id") != cid]
         bale.save_bale(data)
         return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+# ── Knowledge Base (KB) API ───────────────────────────────────────────────
+
+@router.get("/api/kb")
+def api_kb_get():
+    """Return knowledge base status, statistics, and all registered sources."""
+    try:
+        import tgju_engine_kb as kb
+        cfg = kb.load_kb_config()
+        sources = list(cfg.get("sources", {}).values())
+        total_words = sum(s.get("word_count", 0) for s in sources)
+        total_chars = sum(s.get("char_count", 0) for s in sources)
+        active_count = sum(1 for s in sources if s.get("enabled", True))
+        return {
+            "ok": True,
+            "enabled": cfg.get("enabled", True),
+            "max_context_chars": cfg.get("max_context_chars", 1800),
+            "jobs": cfg.get("jobs", {}),
+            "stats": {
+                "sources_count": len(sources),
+                "active_count": active_count,
+                "total_words": total_words,
+                "total_chars": total_chars,
+            },
+            "sources": sources,
+        }
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/config")
+async def api_kb_save_config(req: Request):
+    """Update general Knowledge Base settings and job linkages."""
+    try:
+        body = await req.json()
+        import tgju_engine_kb as kb
+        cfg = kb.load_kb_config()
+        if "enabled" in body:
+            cfg["enabled"] = bool(body["enabled"])
+        if "max_context_chars" in body:
+            cfg["max_context_chars"] = max(200, int(body["max_context_chars"]))
+        if "jobs" in body and isinstance(body["jobs"], dict):
+            for jname, jcfg in body["jobs"].items():
+                if jname in cfg["jobs"]:
+                    cfg["jobs"][jname].update(jcfg)
+        kb.save_kb_config(cfg)
+        return {"ok": True, "config": cfg}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+@router.post("/api/kb/sources/folder")
+async def api_kb_add_folder(req: Request):
+    """Direct AI to a local directory as knowledge base."""
+    try:
+        body = await req.json()
+        path = (body.get("path") or "").strip()
+        title = (body.get("title") or "").strip()
+        tags = body.get("tags") or []
+        if not path:
+            return JSONResponse({"ok": False, "error": "مسیر پوشه الزامی است"}, status_code=400)
+        import tgju_engine_kb as kb
+        res = await asyncio.to_thread(kb.add_folder_source, path, title=title, tags=tags)
+        return JSONResponse(res, status_code=200 if res.get("ok") else 400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/sources/file")
+async def api_kb_add_file(req: Request):
+    """Direct AI to a specific local file path."""
+    try:
+        body = await req.json()
+        path = (body.get("path") or "").strip()
+        title = (body.get("title") or "").strip()
+        tags = body.get("tags") or []
+        if not path:
+            return JSONResponse({"ok": False, "error": "مسیر فایل الزامی است"}, status_code=400)
+        import tgju_engine_kb as kb
+        res = await asyncio.to_thread(kb.add_file_source, path, title=title, tags=tags)
+        return JSONResponse(res, status_code=200 if res.get("ok") else 400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/sources/upload")
+async def api_kb_upload_files(req: Request):
+    """Upload one or more documents directly into the Knowledge Base."""
+    try:
+        form = await req.form()
+        files = form.getlist("files")
+        if not files:
+            single = form.get("file")
+            if single:
+                files = [single]
+        if not files:
+            return JSONResponse({"ok": False, "error": "هیچ فایلی برای آپلود انتخاب نشده است"}, status_code=400)
+        import tgju_engine_kb as kb
+        results = []
+        for file in files:
+            filename = getattr(file, "filename", "uploaded_doc.txt")
+            content = await file.read()
+            res = kb.save_uploaded_file(filename, content)
+            results.append(res)
+        return {"ok": True, "results": results}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/sources/url")
+async def api_kb_add_url(req: Request):
+    """Fetch, clean, and store an online URL or TGJU report."""
+    try:
+        body = await req.json()
+        url = (body.get("url") or "").strip()
+        title = (body.get("title") or "").strip()
+        tags = body.get("tags") or []
+        if not url:
+            return JSONResponse({"ok": False, "error": "آدرس اینترنتی (URL) الزامی است"}, status_code=400)
+        import tgju_engine_kb as kb
+        res = await asyncio.to_thread(kb.add_url_source, url, title=title, tags=tags)
+        return JSONResponse(res, status_code=200 if res.get("ok") else 400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/sources/snippet")
+async def api_kb_add_snippet(req: Request):
+    """Add a direct textual guideline, persona, or market rule."""
+    try:
+        body = await req.json()
+        title = (body.get("title") or "").strip()
+        text = (body.get("text") or "").strip()
+        tags = body.get("tags") or []
+        if not text:
+            return JSONResponse({"ok": False, "error": "متن دستورالعمل الزامی است"}, status_code=400)
+        import tgju_engine_kb as kb
+        res = kb.add_snippet_source(title=title, text=text, tags=tags)
+        return JSONResponse(res, status_code=200 if res.get("ok") else 400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/sources/{source_id}/sync")
+async def api_kb_sync_source(source_id: str):
+    """Re-sync and re-index an existing knowledge source."""
+    try:
+        import tgju_engine_kb as kb
+        res = await asyncio.to_thread(kb.sync_source, source_id)
+        return JSONResponse(res, status_code=200 if res.get("ok") else 400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/sources/{source_id}/toggle")
+def api_kb_toggle_source(source_id: str):
+    """Enable or disable a knowledge source."""
+    try:
+        import tgju_engine_kb as kb
+        res = kb.toggle_source(source_id)
+        return JSONResponse(res, status_code=200 if res.get("ok") else 400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.delete("/api/kb/sources/{source_id}")
+def api_kb_delete_source(source_id: str):
+    """Delete a knowledge source."""
+    try:
+        import tgju_engine_kb as kb
+        res = kb.delete_source(source_id)
+        return JSONResponse(res)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.get("/api/kb/sources/{source_id}/content")
+def api_kb_get_content(source_id: str):
+    """Inspect the full indexed text and chunks of a source."""
+    try:
+        import tgju_engine_kb as kb
+        doc = kb.get_source_doc(source_id)
+        if not doc:
+            return JSONResponse({"ok": False, "error": "محتوای سند یافت نشد"}, status_code=404)
+        return {"ok": True, "doc": doc}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@router.post("/api/kb/search")
+async def api_kb_search(req: Request):
+    """Search Knowledge Base and retrieve matching chunks and sample context."""
+    try:
+        body = await req.json()
+        query = (body.get("query") or "").strip()
+        tags = body.get("tags") or []
+        top_k = int(body.get("top_k") or 5)
+        import tgju_engine_kb as kb
+        matches = kb.search_kb(query, top_k=top_k, tags=tags)
+        context = kb.get_kb_context(query, tags=tags)
+        return {"ok": True, "matches": matches, "context_preview": context}
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 

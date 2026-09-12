@@ -41,7 +41,7 @@ ANALYSIS_PROMPT = (
     "به زبان فارسی و با لحن حرفه‌ای و بی‌طرفانه خلاصه کن. به بیشترین رشدها و "
     "افت‌ها اشاره کن، ارزش‌های قابل توجه را ذکر کن، و هیچ توصیه‌ای برای خرید "
     "یا فروش نده. از داده نبودن چیزی خیال‌پردازی نکن.\n\n"
-    "{table}"
+    "{table}{kb_section}"
 )
 
 POLL_GEN_PROMPT = (
@@ -65,6 +65,7 @@ DEFAULT_JOBS = {
         "model": "",
         "max_tokens": 2000,
         "timeout_s": 90,
+        "use_kb": True,
         "channels": [],          # empty = همه کانال‌های فعال AI
     },
     "poll_select": {
@@ -75,6 +76,7 @@ DEFAULT_JOBS = {
         "model": "",
         "max_tokens": 500,
         "timeout_s": 25,
+        "use_kb": True,
         "channels": [],
     },
     "poll_generate": {
@@ -85,6 +87,7 @@ DEFAULT_JOBS = {
         "model": "",
         "max_tokens": 2000,
         "timeout_s": 90,
+        "use_kb": True,
         "default_count": 3,
     },
     "news_summary": {
@@ -605,8 +608,15 @@ def run_analysis(cfg: dict, channel: dict, rows: dict) -> dict:
     job = resolve_job(cfg, "analysis")
     if job.get("effort"):                     # AI-tab job setting wins over functions.json
         effort = job["effort"]
-    length = "۸ تا ۱۲ جمله جامع و تفصیلی" if effort == "deep" else "۳ تا ۵ جمله"
-    prompt = ANALYSIS_PROMPT.format(domain=domain, length=length, table=table)
+    kb_section = ""
+    try:
+        from tgju_engine_kb import get_kb_context
+        kb_text = get_kb_context(query=f"{domain} بازار تحلیل", job="analysis")
+        if kb_text:
+            kb_section = f"\n\nاطلاعات تکمیلی و نکات راهنمای پایگاه دانش:\n{kb_text}"
+    except Exception:
+        pass
+    prompt = ANALYSIS_PROMPT.format(domain=domain, length=length, table=table, kb_section=kb_section)
     max_tokens = int(job.get("max_tokens") or 2000)
     timeout_s = int(job.get("timeout_s") or 90)
     # Enhancement 6: try providers in fallback order

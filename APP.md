@@ -66,6 +66,7 @@ bash D:\Hermes\TGJU-Telegram\start-platform.sh
 | `tgju/tgju_engine_orchestrator.py` | `get_channel_rows` (slug pool + overrides + throttled backfill), `build_for_channel` |
 | `tgju/tgju_engine_news.py` | Category/tag pages → rotating article → TGJU og:description hyperlink |
 | `tgju/tgju_engine_ai.py` | AI providers, `run_analysis`, `_chat_completion`, AI Orchestrator jobs + activity |
+| `tgju/tgju_engine_kb.py` | **Knowledge Base (KB) engine (NEW)**: local folder/file scan, URL scraping, document chunking, BM25 context retrieval, prompt injection |
 | `tgju/tgju_engine_functions.py` | Interval functions (analysis/poll/news) in `state/functions.json` |
 | `tgju/tgju_engine_bot.py` | Multi-bot profiles `state/bot_profile.json`, legacy .env migration |
 | `tgju/tgju_engine_whatsapp.py` | **WhatsApp interactive bot (NEW)**: config `state/whatsapp.json`, menus/categories, Meta Cloud API sender + mock, webhook processing, conversation sim, keyword lookup |
@@ -75,7 +76,7 @@ bash D:\Hermes\TGJU-Telegram\start-platform.sh
 | `tgju/tgju_core_integration.py` | Legacy↔core bridge: `orchestrated_post()`, `explain_run()`, `command_center()` |
 | `tgju/tgju_core_sources.py` | Data sources: TgjuPricesSource / TgjuNewsSource / TgjuProfileSource |
 | `tgju/tgju_multi.py` | CLI: `--list`, `--preview ch1`, `--post ch1 --real` (routes through core) |
-| `tgju/state/` | settings.json, ai_config.json, ai_jobs.json, functions.json, bot_profile.json, polls.json, slug_overrides.json, profile_cache.json, fallback_*.json, platform.log, runs/, events/, approvals/, idempotency/ |
+| `tgju/state/` | settings.json, ai_config.json, ai_jobs.json, kb_config.json, knowledge_base/, functions.json, bot_profile.json, polls.json, slug_overrides.json, profile_cache.json, fallback_*.json, platform.log, runs/, events/, approvals/, idempotency/ |
 | `APP.md` | This file |
 | `start-platform.bat` / `.sh` | Launchers |
 
@@ -247,6 +248,23 @@ valid), bools for auto_post/poll_anonymous, unknown keys dropped.
   `📈 تحلیل بازار {name} | {weekday} {time}`.
 - 429 bursts → retry 3× with 5s backoff (poll generate); `content: null` →
   `.get("content") or ""`.
+
+## 13b. Knowledge Base subsystem (`state/kb_config.json` + `state/knowledge_base/`)
+
+- **Role & Capabilities:** Centralized knowledge base enabling the AI agent and future automation workflows to consume local documents, folders, web URLs, and manual rules.
+- **Source Types**:
+  1. `folder`: Directs AI to a local system directory, recursively indexing `.txt`, `.md`, `.json`, `.csv`, `.pdf`, `.html`, `.log`.
+  2. `file`: Single file pointer or direct multi-file upload (`state/knowledge_base/uploads/`).
+  3. `url`: Web scraper/cleaner extracting articles/reports into structured text (URL Find).
+  4. `snippet`: Direct admin instructions, channel personas, and fundamental market rules.
+- **Chunking & Indexing**: Overlapping chunker (1200 char window, 200 overlap); persisted per source in `state/knowledge_base/<id>.json`.
+- **Context Retrieval Engine**: Pure Python BM25/keyword relevance scoring with Persian tokenization, title boosting, and frequency weighting. Exposes `get_kb_context(query, job, tags, max_chars)`.
+- **Job Linkages**:
+  - `poll_generate`: Injects top matching knowledge chunks into `POLL_GEN_PROMPT` to ground generated polls in recent reports/knowledge.
+  - `poll_select` (`pick_poll`): Enhances poll selection prompt with channel domain knowledge.
+  - `analysis` (`run_analysis`): Enhances market analysis prompt with fundamental insights from KB.
+- **API Endpoints**: `GET /api/kb`, `POST /api/kb/config`, `POST /api/kb/sources/folder`, `POST /api/kb/sources/file`, `POST /api/kb/sources/upload`, `POST /api/kb/sources/url`, `POST /api/kb/sources/snippet`, `POST /api/kb/sources/{id}/sync`, `POST /api/kb/sources/{id}/toggle`, `DELETE /api/kb/sources/{id}`, `GET /api/kb/sources/{id}/content`, `POST /api/kb/search`.
+- **Dashboard Panel**: «📚 پایگاه دانش» in sidebar `sys_group` with live stats, 3-mode source creation (folder/file, URL find, snippet), document viewer, search playground, and AI automation toggles.
 
 ## 14. Polls (`state/polls.json` + POLL_POOL)
 
@@ -726,4 +744,15 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   glyphs). comic.ttf/comicbd.ttf verified installed on the host; remote
   visitors without it fall back to IRANSansDN/Vazirmatn. Pushed as
   01aaeb3.
+- **2026-09-12 (18)** — Knowledge Base (KB) Subsystem added:
+  Engine `tgju_engine_kb.py`, state `state/kb_config.json` and `state/knowledge_base/`.
+  Supports local directory scan (recursive text/md/json/csv/pdf/html), single file directing,
+  multi-file browser uploads, web URL scraping/cleaning (URL Find), and direct text prompt rules.
+  Built pure Python BM25/keyword relevance context retrieval engine with Persian tokenization.
+  Integrated context injection into `poll_generate`, `poll_select` (`pick_poll`), and market
+  `analysis` (`run_analysis`). Added full API route suite `/api/kb/*` (CRUD, sync, toggle, upload,
+  search). Added dedicated Persian dashboard panel `#panel_kb` («📚 پایگاه دانش») in `sys_group`
+  with stats cards, 3-mode creation UI, document viewer, search playground, and AI automation toggles.
+  All 81 unit/integration tests pass hermetically.
+
 

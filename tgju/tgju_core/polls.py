@@ -220,13 +220,22 @@ def pick_poll(channel: dict, ai_pick: bool = True) -> dict:
                             i + 1, p["question"], " / ".join(p["options"]))
                         for i, p in enumerate(pool))
                     recent_txt = "، ".join(recent_q[:4]) or "هیچ"
+                    kb_txt = ""
+                    try:
+                        from tgju_engine_kb import get_kb_context
+                        c_name = channel.get("name") or "طلا و ارز"
+                        kb_ctx = get_kb_context(query=f"{c_name} نظرسنجی بازار", job="poll_select", max_chars=600)
+                        if kb_ctx:
+                            kb_txt = f"\nنکات تکمیلی پایگاه دانش:\n{kb_ctx}\n"
+                    except Exception:
+                        pass
                     prompt = (
                         "شما مدیر محتوای کانال تلگرام بازار طلا و ارز هستید.\n"
-                        "وضعیت فعلی بازار:\n%s\n\n"
+                        "وضعیت فعلی بازار:\n%s\n%s\n"
                         "سؤالات نظرسنجی موجود:\n%s\n\n"
                         "سؤالات اخیر (تکرار نکن): %s\n\n"
                         "فقط شماره یک سؤال را که بیشترین ارتباط را با وضعیت بازار دارد "
-                        "انتخاب کن (عدد، بدون توضیح)." % (table, pool_txt, recent_txt))
+                        "انتخاب کن (عدد، بدون توضیح)." % (table, kb_txt, pool_txt, recent_txt))
                     prov_cfg = dict(prov)
                     prov_cfg["model"] = (analysis.get("model")
                                          or ch_cfg.get("model") or prov.get("model") or "")
