@@ -16,6 +16,9 @@ import sys
 import json
 import time
 import glob
+import ipaddress
+import socket
+import uuid
 import urllib.request
 import urllib.parse
 import html
@@ -42,6 +45,29 @@ DEFAULT_KB_CONFIG = {
 _CHUNK_SIZE = 1200
 _CHUNK_OVERLAP = 200
 _MAX_FILE_BYTES = 10 * 1024 * 1024  # 10MB safety limit per file
+
+
+def _public_http_url(raw_url: str) -> tuple:
+    """Validate an HTTP(S) URL and reject local/private network targets."""
+    value = (raw_url or "").strip()
+    if not value.startswith(("http://", "https://")):
+        value = "https://" + value
+    parsed = urllib.parse.urlparse(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("آدرس اینترنتی معتبر نیست")
+    if parsed.username or parsed.password:
+        raise ValueError("URL نباید اطلاعات ورود داشته باشد")
+    host = parsed.hostname.rstrip(".").lower()
+    try:
+        addresses = {item[4][0] for item in socket.getaddrinfo(host, parsed.port or 443,
+                                                               type=socket.SOCK_STREAM)}
+    except OSError as exc:
+        raise ValueError("میزبان URL قابل دسترسی نیست") from exc
+    for address in addresses:
+        ip = ipaddress.ip_address(address)
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+            raise ValueError("دسترسی به شبکه داخلی یا آدرس خصوصی مجاز نیست")
+    return value, host
 
 
 def _ensure_dirs():
@@ -124,9 +150,10 @@ def _clean_html_text(raw_html: str) -> str:
 
 def fetch_url_content(url: str, timeout: int = 15) -> Dict[str, Any]:
     """Fetch and parse an online URL or TGJU article into readable text."""
-    url = url.strip()
-    if not url.startswith("http://") and not url.startswith("https://"):
-        url = "https://" + url
+    try:
+        url, _ = _public_http_url(url)
+    except ValueError as exc:
+        return {"ok": False, "url": url, "error": str(exc)}
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -134,8 +161,12 @@ def fetch_url_content(url: str, timeout: int = 15) -> Dict[str, Any]:
         "Accept-Language": "fa,en-US;q=0.9,en;q=0.8",
     }
     req = urllib.request.Request(url, headers=headers)
+    class _NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+    opener = urllib.request.build_opener(_NoRedirect)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with opener.open(req, timeout=timeout) as resp:
             content_type = resp.headers.get("Content-Type", "").lower()
             charset = "utf-8"
             if "charset=" in content_type:
@@ -339,7 +370,7 @@ def add_folder_source(dir_path: str, title: str = "", tags: list = None) -> dict
             total_words += res["word_count"]
 
     full_text = "\n".join(combined_texts).strip()
-    source_id = "fld_" + str(int(time.time() * 1000))[-8:]
+    source_id = "fld_" + uuid.uuid4().hex[:12]
     src_title = title.strip() or f"پوشه {os.path.basename(dir_path)} ({len(files)} فایل)"
 
     index_source_content(source_id, src_title, full_text, "folder", dir_path, tags=tags)
@@ -368,7 +399,7 @@ def add_file_source(file_path: str, title: str = "", tags: list = None) -> dict:
     if not res.get("ok"):
         return res
 
-    source_id = "fil_" + str(int(time.time() * 1000))[-8:]
+    source_id = "fil_" + uuid.uuid4().hex[:12]
     src_title = title.strip() or res["title"]
     index_source_content(source_id, src_title, res["text"], "file", file_path, tags=tags)
 
@@ -394,7 +425,7 @@ def add_url_source(url: str, title: str = "", tags: list = None) -> dict:
     if not res.get("ok"):
         return res
 
-    source_id = "url_" + str(int(time.time() * 1000))[-8:]
+    source_id = "url_" + uuid.uuid4().hex[:12]
     src_title = title.strip() or res["title"]
     index_source_content(source_id, src_title, res["text"], "url", res["url"], tags=tags)
 
@@ -421,7 +452,7 @@ def add_snippet_source(title: str, text: str, tags: list = None) -> dict:
     if not text:
         return {"ok": False, "error": "متن یادداشت نمی‌تواند خالی باشد"}
 
-    source_id = "snp_" + str(int(time.time() * 1000))[-8:]
+    source_id = "snp_" + uuid.uuid4().hex[:12]
     index_source_content(source_id, title, text, "snippet", "manual", tags=tags)
 
     cfg = load_kb_config()
@@ -443,6 +474,8 @@ def add_snippet_source(title: str, text: str, tags: list = None) -> dict:
 def save_uploaded_file(filename: str, content_bytes: bytes, title: str = "", tags: list = None) -> dict:
     """Save an uploaded file directly into state/knowledge_base/uploads/ and index it."""
     _ensure_dirs()
+    if len(content_bytes) > _MAX_FILE_BYTES:
+        return {"ok": False, "error": "حجم فایل بیش از سقف مجاز (۱۰ مگابایت) است"}
     safe_name = re.sub(r'[^a-zA-Z0-9_\u0600-\u06FF\.\-]', '_', filename)
     target_path = os.path.join(KB_UPLOAD_DIR, safe_name)
     # Avoid collision
@@ -471,12 +504,35 @@ def sync_source(source_id: str) -> dict:
     tags = src.get("tags") or []
 
     if stype == "folder":
-        return add_folder_source(path_or_url, title=title, tags=tags)
+        refreshed = add_folder_source(path_or_url, title=title, tags=tags)
     elif stype == "file":
-        return add_file_source(path_or_url, title=title, tags=tags)
+        refreshed = add_file_source(path_or_url, title=title, tags=tags)
     elif stype == "url":
-        return add_url_source(path_or_url, title=title, tags=tags)
-    return {"ok": True, "source": src, "note": "یادداشت متنی نیازی به همگام‌سازی ندارد"}
+        refreshed = add_url_source(path_or_url, title=title, tags=tags)
+    else:
+        return {"ok": True, "source": src, "note": "یادداشت متنی نیازی به همگام‌سازی ندارد"}
+    if not refreshed.get("ok"):
+        return refreshed
+
+    # Preserve the configured source ID so UI references and toggles remain valid.
+    new_id = refreshed["source"]["id"]
+    new_doc = get_source_doc(new_id)
+    if new_doc:
+        new_doc["id"] = source_id
+        with open(_source_storage_path(source_id), "w", encoding="utf-8") as f:
+            json.dump(new_doc, f, ensure_ascii=False, indent=2)
+    cfg = load_kb_config()
+    cfg.get("sources", {}).pop(new_id, None)
+    refreshed_meta = dict(refreshed["source"])
+    refreshed_meta["id"] = source_id
+    cfg.setdefault("sources", {})[source_id] = refreshed_meta
+    save_kb_config(cfg)
+    if new_id != source_id:
+        try:
+            os.remove(_source_storage_path(new_id))
+        except OSError:
+            pass
+    return {"ok": True, "source": refreshed_meta}
 
 
 def toggle_source(source_id: str, enabled: Optional[bool] = None) -> dict:

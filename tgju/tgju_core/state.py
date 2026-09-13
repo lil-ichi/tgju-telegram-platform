@@ -71,6 +71,7 @@ def refresh_prices(force=False):
         if rows:
             RUNTIME["last_rows"] = rows
             RUNTIME["last_fetch"] = datetime.now()
+            RUNTIME["degraded"] = False
             # ── Fallback: persist the good data to disk so a TGJU outage
             #    doesn't blank the bot (survives restarts) ──
             try:
@@ -104,7 +105,16 @@ def cached_rows() -> dict:
 async def background_refresh(force=True):
     """Schedule a refresh in a worker thread; returns immediately."""
     RUNTIME["refreshing"] = True
-    asyncio.get_running_loop().run_in_executor(None, refresh_prices, force)
+    future = asyncio.get_running_loop().run_in_executor(None, refresh_prices, force)
+
+    def _complete(done):
+        try:
+            done.result()
+        except Exception as exc:
+            RUNTIME["refreshing"] = False
+            log_line("background refresh failed: %s" % exc)
+
+    future.add_done_callback(_complete)
 
 
 async def refresher_loop():

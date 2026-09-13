@@ -2816,7 +2816,7 @@ async def api_kb_upload_files(req: Request):
         results = []
         for file in files:
             filename = getattr(file, "filename", "uploaded_doc.txt")
-            content = await file.read()
+            content = await file.read(kb._MAX_FILE_BYTES + 1)
             res = kb.save_uploaded_file(filename, content)
             results.append(res)
         return {"ok": True, "results": results}

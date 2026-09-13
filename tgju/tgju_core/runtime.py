@@ -18,7 +18,7 @@ import threading
 RUNTIME = {"channels": None, "last_rows": {}, "last_fetch": None,
            "last_fetch_duration": None, "refreshing": False,
            "last_preview": {}, "scheduler": None, "scheduler_running": False,
-           "refresh_lock": threading.Lock()}
+           "refresh_lock": threading.Lock(), "background_tasks": []}
 
 # 60s cache for the live Bot API connection probes
 CONN_PROBE_CACHE = {"entry": 0.0, "data": None}
