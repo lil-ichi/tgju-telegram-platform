@@ -11,7 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY tgju/ tgju/
 
 # Runtime state dir (git-ignored locally, created here)
-RUN mkdir -p /app/tgju/state
+RUN useradd --create-home --uid 10001 tgju \
+    && mkdir -p /app/tgju/state \
+    && chown -R tgju:tgju /app
+
+USER tgju
 
 # The dashboard listens on 8791
 EXPOSE 8791

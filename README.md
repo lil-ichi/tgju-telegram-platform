@@ -109,17 +109,16 @@ The `state/` directory is **auto-created on first boot** and is git-ignored —
 you never need to commit anything to run the app.
 
 Then open **http://localhost:8791** — you'll see the login screen. The
-platform ships with a default login account. Log in with the username below
-and the password you were given privately (stored only as a salted hash in
-the code; not reversible). Share it only with trusted members:
+dashboard requires an explicit credential before first startup; no default
+username or password is embedded in the repository. Provision it first:
 
-| Username |
-|----------|
-| `tgadmin` |
+```bash
+python scripts/setup_auth_local.py --username tgadmin --password 'new-secret'
+```
 
-> 🔐 The dashboard is login-protected — anyone who downloads the code must
-> log in. The password is **not** in this repo (only its PBKDF2 hash is).
-> There is **no signup, no password-change UI** — only one account.
+> 🔐 The dashboard is login-protected and the credential is stored only in
+> the ignored `state/auth.local.json` file before being hashed into
+> `state/auth.json`. There is no signup or password-change UI.
 >
 > **To change the password** (trusted members only), you must know the
 > current master password:
@@ -163,6 +162,7 @@ tgju-telegram-platform/
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/status` | All channels + data age (instant, cached — never blocks on network) |
+| GET | `/healthz` | Minimal unauthenticated liveness probe for deployments |
 | GET | `/api/channels` | Full channel configuration |
 | GET/POST/PUT/DELETE | `/api/channels[/{id}]` | Channel CRUD |
 | GET | `/api/preview/{id}?type=prices\|news\|poll\|analysis\|all` | Post preview (never sends) |

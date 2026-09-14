@@ -78,11 +78,9 @@ class TestDefaultAdmin:
         with open(auth.LOCAL_AUTH_FILE, "w", encoding="utf-8") as f:
             json.dump({"username": u, "password": p}, f)
 
-    def test_no_local_creds_falls_back_to_bootstrap(self):
-        # no local file, no env vars → the baked bootstrap account is seeded
-        assert auth.ensure_default_admin()
-        assert auth.setup_complete()
-        assert auth.verify_credentials(auth.BOOTSTRAP_USERNAME, "admin@tg")
+    def test_no_local_creds_requires_explicit_provisioning(self):
+        assert not auth.ensure_default_admin()
+        assert not auth.setup_complete()
 
     def test_seed_from_local_file(self):
         self._write_local("owner", "local-pass-1")
@@ -176,13 +174,27 @@ class TestBypass:
         finally:
             rt.RUNTIME.pop("auth_disabled", None)
 
-    def test_bypass_header(self):
+    def test_loopback_bypass_requires_explicit_flag(self, monkeypatch):
         import asyncio
+        monkeypatch.setenv("TGJU_AUTH_BYPASS", "1")
         class FakeReq:
             url = type("U", (), {"scheme": "http", "path": "/api/channels"})()
             headers = {"x-tgju-auth-bypass": "1"}
             cookies = {}
+            client = type("C", (), {"host": "127.0.0.1"})()
         assert asyncio.run(auth.require_auth(FakeReq())) is None
+
+    def test_bypass_flag_cannot_disable_auth_remotely(self, monkeypatch):
+        import asyncio
+        from fastapi import HTTPException
+        monkeypatch.setenv("TGJU_AUTH_BYPASS", "1")
+        class FakeReq:
+            url = type("U", (), {"scheme": "http", "path": "/api/channels"})()
+            headers = {}
+            cookies = {}
+            client = type("C", (), {"host": "10.0.0.5"})()
+        with pytest.raises(HTTPException):
+            asyncio.run(auth.require_auth(FakeReq()))
 
     def test_public_auth_paths_are_exempt(self):
         import asyncio

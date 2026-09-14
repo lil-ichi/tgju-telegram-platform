@@ -17,6 +17,14 @@ import tgju_engine_kb as kb
 
 
 class TestKnowledgeBaseEngine:
+    def test_private_url_is_rejected(self):
+        res = kb.fetch_url_content("http://127.0.0.1:8080/internal")
+        assert res["ok"] is False
+
+    def test_upload_size_is_limited(self):
+        res = kb.save_uploaded_file("large.txt", b"x" * (kb._MAX_FILE_BYTES + 1))
+        assert res["ok"] is False
+
     def test_load_save_config(self):
         cfg = kb.load_kb_config()
         assert "enabled" in cfg
@@ -120,9 +128,13 @@ class TestKnowledgeBaseApi:
     def client(self):
         from fastapi.testclient import TestClient
         from tgju.tgju_platform import app
+        from tgju_core.runtime import RUNTIME
+        RUNTIME["auth_disabled"] = True
         c = TestClient(app)
-        c.headers.update({"x-tgju-auth-bypass": "1"})
-        return c
+        try:
+            yield c
+        finally:
+            RUNTIME.pop("auth_disabled", None)
 
     def test_api_kb_lifecycle(self, client):
         # 1. GET /api/kb

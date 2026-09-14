@@ -76,7 +76,7 @@
 **فرم افزودن ارائه‌دهنده:**
 - فیلدها: name، provider، api_key، base_url (اختیاری)
 - دکمه «ذخیره» → `POST /api/ai/providers`
-- دکمه «تست» → `POST /api/ai/test-provider`
+- دکمه «تست» → `POST /api/ai/test/{name}` (نام ارائه‌دهنده در مسیر)
 
 **جدول مدل‌ها:**
 - `name` — مدل انتخابی

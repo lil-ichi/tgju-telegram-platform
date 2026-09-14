@@ -2193,10 +2193,18 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
 const $ = id => document.getElementById(id);
 let CHANNELS = [];
 
-async function jget(u){ const r = await fetch(u); return r.json(); }
-async function jpost(u,b){ const r = await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined}); return r.json(); }
-async function jput(u,b){ const r = await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); return r.json(); }
-async function jdel(u){ const r = await fetch(u,{method:'DELETE'}); return r.json(); }
+async function jsonResult(r){
+  const text = await r.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; }
+  catch(e){ data = {ok:false, error:'پاسخ نامعتبر از سرور'}; }
+  if(!r.ok && r.status===401 && typeof authShow==='function') authShow();
+  return data;
+}
+async function jget(u){ return jsonResult(await fetch(u)); }
+async function jpost(u,b){ return jsonResult(await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined})); }
+async function jput(u,b){ return jsonResult(await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})); }
+async function jdel(u){ return jsonResult(await fetch(u,{method:'DELETE'})); }
 
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escAttr(s){ return esc(s).replace(/`/g,'&#96;'); }
@@ -2209,7 +2217,7 @@ function showModal(html){
 function closeModal(){ $('modal').style.display='none'; }
 function faNum(n){ try{ return String(n).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]); }catch(e){ return n; } }
 function pill(s){ const m={'completed':'pill-ok','success':'pill-ok','running':'pill-warn','failed':'pill-bad','cancelled':'pill-dim','ok_admin':'pill-ok','not_admin':'pill-warn','not_set':'pill-dim','error':'pill-bad','enabled':'pill-ok','disabled':'pill-dim'}; return `<span class="pill ${m[s]||'pill-dim'}">${esc(s)}</span>`; }
-function showBanner(msg, good){ const b=$('banner'); b.style.display='block'; b.innerHTML=msg; b.style.background= good?'#f0fdf4':'#fef2f2'; b.style.borderColor= good?'#bbf7d0':'#fecaca'; b.style.color= good?'#166534':'#991b1b'; setTimeout(()=>b.style.display='none',6000); }
+function showBanner(msg, good){ const b=$('banner'); b.style.display='block'; b.textContent=String(msg??''); b.style.background= good?'#f0fdf4':'#fef2f2'; b.style.borderColor= good?'#bbf7d0':'#fecaca'; b.style.color= good?'#166534':'#991b1b'; setTimeout(()=>b.style.display='none',6000); }
 
 // ── Auth (ورود / خروج) ──
 const AUTH = { username: null };

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Create or update the single local login credential for the TGJU dashboard.
 
-The dashboard is NOT publicly accessible: it ships with a baked PBKDF2 hash
-of the owner's password in state/auth.json.  This script is the ONLY way
-to change it — and it REQUIRES the current master password as proof of
-authorization.
+The dashboard is NOT publicly accessible. This script provisions the first
+credential and updates it later; updates REQUIRE the current master password
+as proof of authorization.
 
 Usage (from the repo root, before starting the platform):
     python scripts/setup_auth_local.py                          # prompt
@@ -27,7 +26,7 @@ AUTH_JSON_FILE = os.path.join(BASE, "tgju", "state", "auth.json")
 
 
 def _load_auth_json():
-    """Load the current auth.json (contains the baked hash)."""
+    """Load the current auth.json."""
     if not os.path.exists(AUTH_JSON_FILE):
         return None
     with open(AUTH_JSON_FILE, encoding="utf-8") as f:

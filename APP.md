@@ -5,7 +5,7 @@
 > accurate by a watchdog cron (see §2) and by a hard rule: **any agent that
 > changes the app must update this file in the same turn.**
 
-**Repo:** `D:\Hermes\TGJU-Telegram` • **Webapp:** FastAPI on **:8791** • **Doc language:** English (app UI/messages are Persian RTL)
+**Repo:** repository root (the checkout path is environment-specific) • **Webapp:** FastAPI on **:8791** • **Doc language:** English (app UI/messages are Persian RTL)
 
 ## 1. What this app is
 
@@ -35,18 +35,20 @@ price refresher run inside the same FastAPI process.
 ## 3. Quick start
 
 ```bash
-# Windows double-click (venv python is hard-coded; bare `python` from
-# Explorer resolves to a WindowsApps stub with no fastapi)
-D:\Hermes\TGJU-Telegram\start-platform.bat
+# Windows double-click (the launcher resolves the repository-local venv)
+start-platform.bat
 # or git-bash
-bash D:\Hermes\TGJU-Telegram\start-platform.sh
+bash start-platform.sh
 # then open http://localhost:8791
 ```
 
 - **Interpreter:** any Python 3.11+ with `fastapi`, `uvicorn`, `PyYAML`
   (see `requirements.txt`); the launcher scripts resolve it automatically
   (local `.venv` → `python` on PATH, or `TGJU_PYTHON` override).
-- **Verify up:** `curl -s localhost:8791/api/status` → expect `rows` ~230, small `fetch_age_seconds`.
+- **Verify up:** `curl -s localhost:8791/healthz` → expect
+  `{"ok":true,"service":"tgju-platform"}`. Detailed `/api/health` and
+  `/api/status` responses are authenticated; use a session cookie from
+  `/api/auth/login` for those checks.
 - **Restart after code/UI edits:** find PID via `netstat -ano | grep :8791`, then
   `taskkill /PID <pid> /F`, then relaunch. The UI HTML is cached in the module
   global `UI_PAGE` on first request — a stale process serves the OLD dashboard.
@@ -57,7 +59,9 @@ bash D:\Hermes\TGJU-Telegram\start-platform.sh
 
 | Path | Role |
 |---|---|
-| `tgju/tgju_platform.py` | FastAPI app (~2,600 lines): all `/api/*` routes, RUNTIME cache, refresher_loop + scheduler_loop (Telegram + WhatsApp ticks), UI serving |
+| `tgju/tgju_platform.py` | FastAPI entrypoint, lifecycle wiring, RUNTIME cache, refresher/scheduler task startup and UI serving |
+| `tgju/tgju_core/api_routes.py` | Authenticated `/api/*` route handlers |
+| `tgju/tgju_core/status.py` / `scheduler.py` | Status/health endpoints and background scheduler logic |
 | `tgju/tgju_platform_ui.html` | Single-file RTL Persian dashboard (CSS + JS inline, Vazirmatn base64 font) — control-center header with platform menu |
 | `tgju/channels.yaml` | Telegram channel definitions (slug groups, headers, news cats, schedule, post_types) — Telegram config untouched by the WhatsApp platform |
 | `tgju/tgju_engine_config.py` | channels.yaml load/save (json.dumps quoting), per-channel state `state/analysis_ch*.json`, slug overrides, `rename_slug()` |
@@ -485,6 +489,16 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
 
 ## 21. Changelog
 
+- 2026-09-13: Removed the repository-baked dashboard bootstrap credential;
+  first boot now requires explicit local or environment provisioning, and the
+  HTTP auth bypass is loopback-only and opt-in.
+- 2026-09-13: Hardened lifecycle shutdown, public URL ingestion, upload
+  limits, the POSIX launcher, Docker state handling, and dashboard JSON/error
+  rendering; corrected the authenticated health-check and AI test endpoint
+  documentation.
+- 2026-09-13: Added a minimal unauthenticated `/healthz` probe for container
+  and load-balancer health checks; operational health details remain protected.
+
 - **2026-08-17** — Form-row alignment fix: `.row.form-row` (align-items:
   flex-end) + `.btn-group` class. Preview/send buttons now sit on the same
   baseline as their selects in EVERY panel (Bale پیش‌نمایش و ارسال, Telegram
@@ -754,5 +768,3 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   search). Added dedicated Persian dashboard panel `#panel_kb` («📚 پایگاه دانش») in `sys_group`
   with stats cards, 3-mode creation UI, document viewer, search playground, and AI automation toggles.
   All 81 unit/integration tests pass hermetically.
-
-

@@ -1,12 +1,13 @@
 #!/bin/bash
 # TGJU Platform launcher — works on Linux, macOS, and git-bash (Windows)
 set -e
-cd "$(dirname "$0")"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
 
 # Find python
 PY="${TGJU_PYTHON:-}"
-if [ -z "$PY" ] && [ -x ".venv/bin/python" ]; then PY=".venv/bin/python"; fi
-if [ -z "$PY" ] && [ -x ".venv/Scripts/python.exe" ]; then PY=".venv/Scripts/python.exe"; fi
+if [ -z "$PY" ] && [ -x ".venv/bin/python" ]; then PY="$ROOT/.venv/bin/python"; fi
+if [ -z "$PY" ] && [ -x ".venv/Scripts/python.exe" ]; then PY="$ROOT/.venv/Scripts/python.exe"; fi
 if [ -z "$PY" ]; then PY="python"; fi
 
 # Create venv if missing
@@ -25,5 +26,4 @@ fi
 # Run
 echo "  [3/3] Starting TGJU Platform..."
 echo "         Open http://127.0.0.1:8791 in your browser"
-cd tgju
-exec "$PY" tgju_platform.py
+exec "$PY" "$ROOT/tgju/tgju_platform.py"

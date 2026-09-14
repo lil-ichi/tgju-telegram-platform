@@ -6,9 +6,7 @@ Pure-stdlib authentication for the TGJU platform dashboard:
 - Credentials + sessions live in ``tgju/state/auth.json`` (never in git):
   ``{"users": {name: {"password_hash", "salt"}}, "active_sessions": {token: {username, expires}},
     "setup_complete": false}``
-- Password hashing: SHA-256 over ``salt_hex + password`` (salt = 16 random
-  bytes hex).  Deliberately simple on purpose — local admin dashboard, no
-  external deps allowed, requirements.txt untouched.
+- Password hashing: PBKDF2-HMAC-SHA256 with a random 16-byte salt.
 - Sessions: UUID4 tokens, 24h expiry, stored in auth.json.  The HTTP cookie
   ``tgju_session`` is HttpOnly + SameSite=Lax; ``Secure`` is set ONLY when the
   request arrived over HTTPS (``request.url.scheme == "https"`` or
@@ -17,11 +15,9 @@ Pure-stdlib authentication for the TGJU platform dashboard:
   unconditional Secure flag silently kills the session.
 - Lockout: 5 failed logins for a username within 5 minutes ⇒ 429 for the next
   5 minutes.
-- Test bypass: the ``require_auth`` dependency is skipped whenever
-  ``RUNTIME.get("auth_disabled")`` is truthy (existing tests import functions
-  directly and never go through HTTP, but this keeps any future HTTP-level
-  test suite painless), or when the request carries
-  ``X-TGJU-AUTH-BYPASS: 1`` (intended for local non-browser automation only).
+- Test/local bypass: the ``require_auth`` dependency is skipped whenever
+  ``RUNTIME.get("auth_disabled")`` is truthy. HTTP bypass requires an explicit
+  environment flag and is restricted to loopback clients.
 
 NOTE: sessions are pruned lazily (on load/validate) so auth.json never grows
 unbounded; the file is rewritten only when something actually changed.
@@ -104,8 +100,17 @@ def _save(data: dict):
 
 def _prune_expired(data: dict) -> bool:
     now = time.time()
-    dead = [t for t, s in (data.get("active_sessions") or {}).items()
-            if not isinstance(s, dict) or float(s.get("expires", 0)) <= now]
+    dead = []
+    for token, session in (data.get("active_sessions") or {}).items():
+        if not isinstance(session, dict):
+            dead.append(token)
+            continue
+        try:
+            expired = float(session.get("expires", 0)) <= now
+        except (TypeError, ValueError):
+            expired = True
+        if expired:
+            dead.append(token)
     if dead:
         for t in dead:
             data["active_sessions"].pop(t, None)
@@ -117,32 +122,16 @@ def setup_complete() -> bool:
     return bool(load_auth().get("setup_complete"))
 
 
-# ── baked bootstrap credential (NEVER plaintext — only a PBKDF2 hash) ──────
-# This is the SOLE login account for the dashboard (per owner mandate:
-# single account, no signup, no password change UI).  The username and a
-# salted hash are the only things in source; the original password text is
-# not recoverable from the hash.  Anyone who clones the repo gets the login
-# screen but cannot log in — the owner rotates the hash via
-# `python scripts/setup_auth_local.py` which OVERWRITES this user on next
-# boot (so the owner's chosen credential wins; this is just a default).
-BOOTSTRAP_USERNAME = "tgadmin"
-# PBKDF2-HMAC-SHA256, 310,000 iterations (OWASP 2023)
-_BOOTSTRAP_SALT = "cc04c83e2530e84c0fcb9b17a45341e1"
-_BOOTSTRAP_HASH = ("52acad9db130d3f412d60c182b6778b8f8adcea8"
-                   "02365744d4374caa4ec0d2e1")
-
 # optional local override source (state/auth.local.json — git-ignored) that
-# the owner can use to replace the baked bootstrap account
+# the owner can use to seed the first account
 LOCAL_AUTH_FILE = os.path.join(BASE_DIR, "state", "auth.local.json")
 
 
 def ensure_default_admin():
     """Seed the single login account (idempotent).
 
-    Priority: local credential source (state/auth.local.json or env vars)
-    wins if present; otherwise the baked bootstrap hash (tgadmin) is used
-    so the dashboard is always loggable for the owner.  Never overwrites an
-    existing user.  Returns True when a user exists after seeding.
+    Seed only from an explicit local credential source or environment
+    variables. There is no repository-baked fallback password.
     """
     data = load_auth()
     users = data.get("users") or {}
@@ -157,14 +146,9 @@ def ensure_default_admin():
         log_line("auth: seeded local account '%s' (from local credential source)"
                  % username)
         return True
-    # fallback: baked bootstrap (never plaintext in repo)
-    data["users"][BOOTSTRAP_USERNAME] = {
-        "password_hash": _BOOTSTRAP_HASH, "salt": _BOOTSTRAP_SALT,
-        "iterations": PBKDF2_ITERATIONS}
-    data["setup_complete"] = True
-    _save(data)
-    log_line("auth: seeded bootstrap account '%s' (default hash)" % BOOTSTRAP_USERNAME)
-    return True
+    log_line("auth: no credentials configured; provision auth.local.json or "
+             "TGJU_AUTH_USERNAME/TGJU_AUTH_PASSWORD")
+    return False
 
 
 def _read_local_credentials():
@@ -224,9 +208,19 @@ def verify_password(password: str, salt: str, expected_hash: str,
     """Verify against a stored hash.  Supports both PBKDF2 (has
     'iterations') and legacy sha256 records (iterations falsy)."""
     if iterations:
-        return _hash_bits(password, salt) == expected_hash
+        try:
+            iterations = int(iterations)
+        except (TypeError, ValueError):
+            return False
+        if iterations < 1:
+            return False
+        candidate = hashlib.pbkdf2_hmac(
+            "sha256", password.encode("utf-8"), salt.encode("utf-8"),
+            iterations, dklen=PBKDF2_DKLEN).hex()
+        return secrets.compare_digest(candidate, expected_hash)
     # legacy: sha256(salt_hex + password)
-    return hashlib.sha256((salt + password).encode("utf-8")).hexdigest() == expected_hash
+    candidate = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+    return secrets.compare_digest(candidate, expected_hash)
 
 
 # ── setup / users ──────────────────────────────────────────────────────────
@@ -361,14 +355,20 @@ def _request_is_https(request: Request) -> bool:
 
 
 def auth_disabled(request: Request) -> bool:
-    """Test/local bypass hook — RUNTIME flag or explicit bypass header."""
+    """Test/local bypass hook with a loopback-only HTTP escape hatch."""
     try:
         from tgju_core.runtime import RUNTIME
         if RUNTIME.get(AUTH_DISABLED_KEY):
             return True
     except Exception:
         pass
-    return request.headers.get("x-tgju-auth-bypass", "") == "1"
+    if os.environ.get("TGJU_AUTH_BYPASS") != "1":
+        return False
+    client = getattr(request, "client", None)
+    host = getattr(client, "host", "") if client else ""
+    if not host:
+        host = request.headers.get("host", "").split(":", 1)[0].strip("[]")
+    return host in {"127.0.0.1", "::1", "localhost"}
 
 
 # Endpoints the UI must reach before any login exists.  The router-wide

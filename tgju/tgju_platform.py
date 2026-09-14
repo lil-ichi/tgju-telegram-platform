@@ -102,6 +102,12 @@ from tgju_core.auth import require_auth  # noqa: E402
 app = FastAPI(title="TGJU Telegram Platform", version="1.1.0",
               docs_url=None, redoc_url=None, openapi_url=None)
 
+# Deliberately unauthenticated and side-effect free for load balancers and
+# container probes; operational details remain behind /api/health.
+@app.get("/healthz")
+def healthz():
+    return {"ok": True, "service": "tgju-platform"}
+
 # Attach every route handler (URLs/responses unchanged).
 app.include_router(api_router)
 app.include_router(alias_router)
@@ -131,11 +137,33 @@ async def startup():
         print("TGJU Auth: login account ready.")
     RUNTIME["channels"] = load_channels()
     # warm the cache immediately (background), then keep it warm
-    asyncio.create_task(refresher_loop())
+    refresh_task = asyncio.create_task(refresher_loop(), name="tgju-refresher")
+    RUNTIME["background_tasks"] = [refresh_task]
     task = asyncio.create_task(scheduler_loop())
+    task.set_name("tgju-scheduler")
+    RUNTIME["background_tasks"].append(task)
     RUNTIME["scheduler"] = task
-    asyncio.create_task(resolver_loop())   # alias resolver — bounded, safe
+    resolver_task = asyncio.create_task(resolver_loop(), name="tgju-alias-resolver")
+    RUNTIME["background_tasks"].append(resolver_task)
     _start_bot_pollers()                   # بله/روبیکا/ایتا long-poll receivers
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    """Stop background tasks and platform pollers during graceful shutdown."""
+    try:
+        import tgju_engine_polling as polling
+        polling.stop_all()
+    except Exception as e:
+        print("polling shutdown failed: %s" % e)
+    tasks = list(RUNTIME.get("background_tasks") or [])
+    for task in tasks:
+        if not task.done():
+            task.cancel()
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
+    RUNTIME["background_tasks"] = []
+    RUNTIME["scheduler"] = None
 
 
 def _start_bot_pollers():
