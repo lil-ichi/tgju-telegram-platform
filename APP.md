@@ -802,3 +802,14 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   search). Added dedicated Persian dashboard panel `#panel_kb` («📚 پایگاه دانش») in `sys_group`
   with stats cards, 3-mode creation UI, document viewer, search playground, and AI automation toggles.
   All 81 unit/integration tests pass hermetically.
+- **2026-09-19 (19)** — Telegram AI Assistant Bot & Latency Optimization:
+  Dedicated Telegram AI Assistant bot (`tgju_engine_ai_assistant.py`, `state/ai_assistant.json`,
+  `state/assistant_conversations.json`, `/api/assistant/*`) with private/group chat polling, multi-turn
+  context, live TGJU price injection, and KB context grounding.
+  Optimized response latency and TTFT: suppressed reasoning/scratchpad delays in English, set bounded
+  token caps (`max_tokens: 300-400`, `timeout_seconds: 15-20`), streamlined prompt structure for instant
+  Persian generation without preambles.
+  Rewrote system prompt and conversation rules to a formal («شما»), warm, welcoming, and supportive
+  Persian financial advisor persona for TGJU, ensuring empathetic guidance, natural speech without machine
+  clichés, and high-precision answers. 107 unit/integration tests pass.
+
