@@ -123,24 +123,43 @@ _ACTIVITY_MAX = 50  # ring buffer size
 
 
 # ── Enhancement 6: AI provider fallback chain ─────────────────────────────
+_PROVIDER_FAILURES: dict = {}  # name -> expiry timestamp
+
 def _enabled_providers_order(cfg: dict, preferred_provider: str = None) -> list:
     """Return [(name, provider_dict), ...] in priority order: preferred provider first,
-    then enabled non-mock providers with a base_url, then disabled as last resort."""
+    then enabled non-mock providers with a base_url, then disabled as last resort.
+    Providers on temporary failure cooldown are pushed to the end."""
     providers = cfg.get("providers") or {}
+    now = time.time()
     ordered = []
+    cooldown = []
+
+    def is_cooling_down(pname):
+        return pname in _PROVIDER_FAILURES and now < _PROVIDER_FAILURES[pname]
+
     if preferred_provider and preferred_provider in providers:
         p = providers[preferred_provider]
         if p.get("kind") != "mock" and p.get("base_url"):
-            ordered.append((preferred_provider, dict(p)))
+            if is_cooling_down(preferred_provider):
+                cooldown.append((preferred_provider, dict(p)))
+            else:
+                ordered.append((preferred_provider, dict(p)))
     for name, p in providers.items():
         if p.get("kind") != "mock" and p.get("base_url"):
-            if (name, dict(p)) not in ordered:
-                ordered.append((name, dict(p)))
+            item = (name, dict(p))
+            if item not in ordered and item not in cooldown:
+                if is_cooling_down(name):
+                    cooldown.append(item)
+                else:
+                    ordered.append(item)
     # keep disabled providers as fallback (no base_url or mock) — but sort
     # so the ones the user enabled + configured come first
     for name, p in providers.items():
-        if (name, dict(p)) not in ordered:
-            ordered.append((name, dict(p)))
+        item = (name, dict(p))
+        if item not in ordered and item not in cooldown:
+            ordered.append(item)
+    # Append cooling down providers at the end as last resort
+    ordered.extend(cooldown)
     return ordered
 
 def _call_provider(provider: dict, prompt: str, max_tokens: int,
@@ -156,6 +175,8 @@ def _call_provider(provider: dict, prompt: str, max_tokens: int,
         text, ttft_ms, latency_ms = _chat_completion_with_meta(
             prov, prompt, max_tokens=max_tokens, timeout=timeout_s, system=system
         )
+        if text:
+            _PROVIDER_FAILURES.pop(name, None)
         entry = {
             "status": "ok" if text else "error",
             "error": "" if text else "empty response",
@@ -166,12 +187,15 @@ def _call_provider(provider: dict, prompt: str, max_tokens: int,
         }
         if job_id:
             entry["job"] = job_id
+        if not text:
+            _PROVIDER_FAILURES[name] = time.time() + 45.0
         return (text, entry)
     except Exception as e:
         status_code = getattr(getattr(e, "response", None), "status_code", None)
         if status_code is None and isinstance(e, urllib.error.HTTPError):
             status_code = e.code
         latency_ms = int((time.time() - t0) * 1000)
+        _PROVIDER_FAILURES[name] = time.time() + 60.0
         if status_code == 429:
             error = "rate limited (HTTP 429)"
         elif status_code in (401, 403):
@@ -204,11 +228,15 @@ def try_providers(cfg: dict, prompt: str, max_tokens: int, timeout_s: int,
     last_entry = None
     total_t0 = time.time()
     used_timeout = timeout_s
+    if job_id == "assistant_answer":
+        used_timeout = min(used_timeout, 15)
     attempts = []
     for idx, (name, prov) in enumerate(providers_order):
         remaining_attempts = len(providers_order) - idx
-        # time-box this attempt so total stays bounded
-        attempt_timeout = max(8, used_timeout // max(1, remaining_attempts))
+        # time-box this attempt so total stays bounded; interactive tasks get snappy timeout
+        attempt_timeout = max(4, used_timeout // max(1, remaining_attempts))
+        if job_id == "assistant_answer":
+            attempt_timeout = min(attempt_timeout, 10)
         text, entry = _call_provider(prov, prompt, max_tokens,
                                       attempt_timeout, job_id, system=system)
         entry["attempt"] = idx + 1
@@ -223,14 +251,13 @@ def try_providers(cfg: dict, prompt: str, max_tokens: int, timeout_s: int,
                     "attempts": attempts + [entry]}
         attempts.append(entry)
         last_entry = entry
-        if idx + 1 < len(providers_order):
-            time.sleep(0.5)  # tiny pause between provider switches
     total_latency = int((time.time() - total_t0) * 1000)
     return {"ok": False, "error": last_entry["error"] if last_entry else "no provider answered",
             "provider": last_entry.get("provider", ""),
             "latency_ms": total_latency,
             "ttft_ms": last_entry.get("ttft_ms", total_latency) if last_entry else total_latency,
             "attempts": attempts}
+
 
 
 
@@ -400,6 +427,7 @@ def _extract_chat_content(raw: str) -> str:
                 index += 1
 
     chunks = []
+    reasoning_chunks = []
     for obj in objects:
         try:
             choice = (obj.get("choices") or [])[0]
@@ -409,12 +437,20 @@ def _extract_chat_content(raw: str) -> str:
         content = message.get("content")
         if content:
             return str(content).strip()
+        reasoning = message.get("reasoning") or message.get("reasoning_content")
+        if reasoning:
+            reasoning_chunks.append(str(reasoning))
         delta = choice.get("delta") or {}
         delta_content = delta.get("content")
         if delta_content:
             chunks.append(str(delta_content))
+        delta_reasoning = delta.get("reasoning") or delta.get("reasoning_content")
+        if delta_reasoning:
+            reasoning_chunks.append(str(delta_reasoning))
     if chunks:
         return "".join(chunks).strip()
+    if reasoning_chunks:
+        return "".join(reasoning_chunks).strip()
     raise ValueError("chat/completions response missing content: %s" % text[:160])
 
 
@@ -461,6 +497,8 @@ def stream_chat_completion(provider: dict, prompt: str, max_tokens: int = 1400,
         "messages": _msgs,
         "max_tokens": max_tokens,
         "stream": True,
+        "thinking": {"type": "disabled"},
+        "chat_template_kwargs": {"thinking": False},
     }
     headers = {"Content-Type": "application/json", "User-Agent": "tgju-platform/1.0"}
     if key:
@@ -556,7 +594,10 @@ def _chat_completion_with_meta(provider: dict, prompt: str, max_tokens: int = 40
                 ttft_ms = event.get("ttft_ms", 0)
         if full_text:
             return full_text, ttft_ms, latency_ms
-    except Exception:
+    except Exception as exc:
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        if status in (400, 401, 403, 404, 500, 502, 503):
+            raise
         pass
 
     # Standard non-streaming fallback
@@ -572,6 +613,8 @@ def _chat_completion_with_meta(provider: dict, prompt: str, max_tokens: int = 40
         "model": model,
         "messages": _msgs,
         "max_tokens": max_tokens,
+        "thinking": {"type": "disabled"},
+        "chat_template_kwargs": {"thinking": False},
     }, ensure_ascii=False).encode("utf-8")
     headers = {"Content-Type": "application/json", "User-Agent": "tgju-platform/1.0"}
     if key:

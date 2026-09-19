@@ -18,6 +18,7 @@ ASSISTANT_CONVERSATIONS_PATH = os.path.join(BASE_DIR, "state", "assistant_conver
 DEFAULT_SYSTEM_PROMPT = (
     "تو دستیار هوشمند و تحلیل‌گر ارشد TGJU (شبکه اطلاع‌رسانی طلا و ارز) هستی. "
     "نام تو فقط «دستیار هوشمند TGJU» است — هرگز خودت را Muse Spark، Spark، Meta AI، Claude، ChatGPT یا نام دیگری معرفی نکن. "
+    "بدون نوشتن فرآیند فکری، تحلیل انگلیسی یا حاشیه‌پردازی، مستقیماً و بی‌درنگ پاسخ فارسی را بنویس. "
     "پاسخ‌هایت باید بسیار روان، گرم، مؤدبانه، طبیعی و انسانی باشند؛ مانند یک کارشناس آگاه و همکار صمیمی در بازار مالی ایران، "
     "نه یک ربات ماشینی یا فرم‌محور. از مقدمه‌های کلیشه‌ای و تکراری («به عنوان یک هوش مصنوعی...»، «بر اساس اطلاعات دریافتی...») "
     "پرهیز کن و پاسخ را مستقیم و شفاف بده. در پاسخ به پرسش‌های بازار و قیمت، از داده‌های زنده و دانش مستند استفاده کن و اگر موضوعی "
@@ -397,9 +398,12 @@ _IDENTITY_LEAK_PATTERNS = [
 ]
 
 def _sanitize_identity(text: str) -> str:
-    """Strip upstream model self-identification; force TGJU identity."""
+    """Strip upstream model self-identification and thinking tags; force TGJU identity."""
     import re
     out = str(text or "")
+    # Strip <think>...</think> and any markdown scratchpads
+    out = re.sub(r"(?is)<think>.*?</think>", "", out)
+    out = re.sub(r"(?is)Here'?s a thinking process:.*?\n\n(?=[\u0600-\u06FF])", "", out)
     for pat in _IDENTITY_LEAK_PATTERNS:
         if pat.lower() in out.lower():
             out = re.sub(re.escape(pat), "دستیار هوشمند TGJU", out, flags=re.IGNORECASE)
@@ -462,7 +466,7 @@ def _build_prompt(
     live_block = (f"نرخ‌های لحظه‌ای بازار (سامانه TGJU):\n{live_prices}\n\n") if live_prices else ""
     return (
         f"راهنمای این پاسخ: {response_rule}\n"
-        "پاسخ را مستقیم و روان بنویس؛ از مقدمه‌ها و هشدارهای تکراری خودداری کن.\n\n"
+        "پاسخ را بسیار سریع، مستقیم، شفاف و روان بنویس؛ بدون مقدمه و کلمات اضافه (حداکثر ۲ تا ۴ جمله کاربردی).\n\n"
         f"{live_block}"
         f"{knowledge_block}"
         f"سابقه کوتاه گفت‌وگو:\n{history_text}\n\n"
@@ -524,8 +528,8 @@ def answer_question(
         }
         ai_cfg = {"providers": {"assistant_custom": custom}}
         preferred = "assistant_custom"
-        max_tokens = cfg["api"]["max_tokens"]
-        timeout_s = cfg["api"]["timeout_seconds"]
+        max_tokens = int(cfg["api"].get("max_tokens") or 400)
+        timeout_s = int(cfg["api"].get("timeout_seconds") or 60)
         response_model = cfg["api"]["model"]
     else:
         if ai_config is None:
@@ -535,8 +539,8 @@ def answer_question(
         preferred = cfg.get("provider") or None
         if preferred and preferred in (ai_cfg.get("providers") or {}) and cfg.get("model"):
             ai_cfg["providers"][preferred]["model"] = cfg["model"]
-        max_tokens = 1400
-        timeout_s = 60
+        max_tokens = int(cfg.get("max_tokens") or 400)
+        timeout_s = int(cfg.get("timeout_seconds") or 60)
         response_model = cfg.get("model") or ""
 
     if provider_runner is None:
@@ -669,8 +673,8 @@ def answer_question_stream(
         provider_name, provider_dict = ordered[0]
         if cfg.get("model"):
             provider_dict["model"] = cfg["model"]
-        max_tokens = 1400
-        timeout_s = 60
+        max_tokens = int(cfg.get("max_tokens") or 400)
+        timeout_s = min(20, int(cfg.get("timeout_seconds") or 15))
 
     prompt = _build_prompt(
         cfg, clean_question, matches, history=history, use_knowledge=use_knowledge, live_prices=live_prices
@@ -894,18 +898,32 @@ def poll_assistant_once(
             ignored += 1
             continue
         try:
-            if token and chat_id and not text.startswith("/"):
-                try:
-                    send_chat_action(token, chat_id, "typing")
-                except Exception:
-                    pass
             command = text.split()[0].lower()
-            if command.startswith("/reset"):
-                clear_conversation(chat_id)
-                history = []
-            else:
-                history = conversation_history(chat_id)
-            reply, answer_result = _reply_text(cfg, text, answer_fn, history=history)
+            is_cmd = command.startswith(("/", "!", "#"))
+            stop_typing = None
+            if token and chat_id and not is_cmd:
+                import threading
+                stop_typing = threading.Event()
+                def _heartbeat(tok=token, cid=chat_id, ev=stop_typing, act_fn=send_chat_action):
+                    while not ev.is_set():
+                        try:
+                            act_fn(tok, cid, "typing")
+                        except Exception:
+                            pass
+                        ev.wait(3.0)
+                threading.Thread(target=_heartbeat, daemon=True).start()
+
+            try:
+                if command.startswith("/reset"):
+                    clear_conversation(chat_id)
+                    history = []
+                else:
+                    history = conversation_history(chat_id)
+                reply, answer_result = _reply_text(cfg, text, answer_fn, history=history)
+            finally:
+                if stop_typing:
+                    stop_typing.set()
+
             for part in _split_message(reply):
                 send_message(token, chat_id, part)
             if answer_result and answer_result.get("ok"):
