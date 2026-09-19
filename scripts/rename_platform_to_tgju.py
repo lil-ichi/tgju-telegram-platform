@@ -60,8 +60,8 @@ REPLACEMENTS = {
         ("`platform/tgju_core/`", "`tgju/tgju_core/`"),
     ],
     "platform/apply_css.py": [
-        (r"D:\Hermes\TGJU-Telegram\platform\new_css_block.txt",
-         r"D:\Hermes\TGJU-Telegram\tgju\new_css_block.txt"),
+        (r"D:\AI\TGJU-Telegram\platform\new_css_block.txt",
+         r"D:\AI\TGJU-Telegram\tgju\new_css_block.txt"),
     ],
     "platform/tgju_multi.py": [
         ("python -m platform.tgju_multi", "python -m tgju.tgju_multi"),

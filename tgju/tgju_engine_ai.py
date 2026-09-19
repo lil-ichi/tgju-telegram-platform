@@ -27,6 +27,12 @@ DEFAULT_CONFIG = {
     "providers": {
         "mock": {"label": "بدون هوش مصنوعی", "kind": "mock",
                  "base_url": "", "api_key": "", "model": "", "enabled": True},
+        "opencode_zen": {"label": "OpenCode Zen (Free)", "kind": "openai_compat",
+                         "base_url": "https://opencode.ai/zen/v1",
+                         "api_key": "", "model": "opencode-free", "enabled": True},
+        "opencode_local": {"label": "OpenCode (Free) Local", "kind": "openai_compat",
+                         "base_url": "http://localhost:4000/v1",
+                         "api_key": "", "model": "opencode-free", "enabled": True},
         "gateway": {"label": "Hermes LLM Gateway", "kind": "openai_compat",
                     "base_url": "http://localhost:8788/v1",
                     "api_key": "", "model": "gpt-4o-mini", "enabled": True},
@@ -138,7 +144,7 @@ def _enabled_providers_order(cfg: dict, preferred_provider: str = None) -> list:
     return ordered
 
 def _call_provider(provider: dict, prompt: str, max_tokens: int,
-                   timeout_s: int, job_id: str = "") -> (str, dict):
+                   timeout_s: int, job_id: str = "", system: str = None) -> (str, dict):
     """Try ONE provider. Returns (text_or_empty, activity_entry)."""
     name = provider.get("name", "")
     model = provider.get("model", "") or provider.get("model")
@@ -147,45 +153,51 @@ def _call_provider(provider: dict, prompt: str, max_tokens: int,
     t0 = time.time()
     error = ""
     try:
-        text = _chat_completion(prov, prompt, max_tokens=max_tokens,
-                                timeout=timeout_s)
-        latency_ms = int((time.time() - t0) * 1000)
-        entry = {"status": "ok" if text else "error",
-                 "error": "" if text else "empty response",
-                 "latency_ms": latency_ms, "provider": name,
-                 "model": model}
+        text, ttft_ms, latency_ms = _chat_completion_with_meta(
+            prov, prompt, max_tokens=max_tokens, timeout=timeout_s, system=system
+        )
+        entry = {
+            "status": "ok" if text else "error",
+            "error": "" if text else "empty response",
+            "latency_ms": latency_ms,
+            "ttft_ms": ttft_ms,
+            "provider": name,
+            "model": model,
+        }
         if job_id:
             entry["job"] = job_id
         return (text, entry)
-    except urllib.error.HTTPError as e:
-        latency_ms = int((time.time() - t0) * 1000)
-        if e.code == 429:
-            error = "rate limited (HTTP 429)"
-        elif e.code in (401, 403):
-            error = "auth error (HTTP %d)" % e.code
-        else:
-            error = "HTTP %d" % e.code
-        entry = {"status": "error", "error": error,
-                 "latency_ms": latency_ms, "provider": name,
-                 "model": model}
-        if job_id:
-            entry["job"] = job_id
-        return ("", entry)
     except Exception as e:
+        status_code = getattr(getattr(e, "response", None), "status_code", None)
+        if status_code is None and isinstance(e, urllib.error.HTTPError):
+            status_code = e.code
         latency_ms = int((time.time() - t0) * 1000)
-        error = str(e)[:200]
-        entry = {"status": "error", "error": error,
-                 "latency_ms": latency_ms, "provider": name,
-                 "model": model}
+        if status_code == 429:
+            error = "rate limited (HTTP 429)"
+        elif status_code in (401, 403):
+            error = "auth error (HTTP %d)" % status_code
+        elif status_code:
+            error = "HTTP %d" % status_code
+        else:
+            error = str(e)[:200]
+        entry = {
+            "status": "error",
+            "error": error,
+            "latency_ms": latency_ms,
+            "ttft_ms": latency_ms,
+            "provider": name,
+            "model": model,
+        }
         if job_id:
             entry["job"] = job_id
         return ("", entry)
 
 def try_providers(cfg: dict, prompt: str, max_tokens: int, timeout_s: int,
-                  job_id: str = "", preferred_provider: str = None) -> dict:
+                  job_id: str = "", preferred_provider: str = None, system: str = None) -> dict:
     """Try enabled providers in order; if one 401s/429s/empty, try next.
     After all tried, return {"ok": bool, "text": str, "provider": str,
-    "model": str, "latency_ms": int, "attempts": [...]} or final error."""
+    "model": str, "latency_ms": int, "ttft_ms": int, "attempts": [...]} or final error.
+    When `system` is set it is sent as a real system-role message."""
     providers_order = _enabled_providers_order(cfg, preferred_provider=preferred_provider)
     if not providers_order:
         return {"ok": False, "error": "no provider configured"}
@@ -198,7 +210,7 @@ def try_providers(cfg: dict, prompt: str, max_tokens: int, timeout_s: int,
         # time-box this attempt so total stays bounded
         attempt_timeout = max(8, used_timeout // max(1, remaining_attempts))
         text, entry = _call_provider(prov, prompt, max_tokens,
-                                      attempt_timeout, job_id)
+                                      attempt_timeout, job_id, system=system)
         entry["attempt"] = idx + 1
         entry["total_providers"] = len(providers_order)
         entry["name"] = name
@@ -207,18 +219,18 @@ def try_providers(cfg: dict, prompt: str, max_tokens: int, timeout_s: int,
             return {"ok": True, "text": text, "provider": name,
                     "model": entry.get("model", ""),
                     "latency_ms": total_latency,
+                    "ttft_ms": entry.get("ttft_ms", total_latency),
                     "attempts": attempts + [entry]}
         attempts.append(entry)
         last_entry = entry
-        # Only retry on soft failures (429, empty, network). 401/403/HTTP
-        # other than 429 usually mean that provider is misconfigured — but
-        # we still try remaining providers since another one may work.
         if idx + 1 < len(providers_order):
             time.sleep(0.5)  # tiny pause between provider switches
     total_latency = int((time.time() - total_t0) * 1000)
     return {"ok": False, "error": last_entry["error"] if last_entry else "no provider answered",
             "provider": last_entry.get("provider", ""),
-            "latency_ms": total_latency, "attempts": attempts}
+            "latency_ms": total_latency,
+            "ttft_ms": last_entry.get("ttft_ms", total_latency) if last_entry else total_latency,
+            "attempts": attempts}
 
 
 
@@ -349,40 +361,243 @@ def list_provider_models(provider: dict) -> dict:
         return {"ok": False, "detail": str(e)[:160]}
 
 
-def _chat_completion(provider: dict, prompt: str, max_tokens: int = 400,
-                     timeout: int = 60) -> str:
-    """POST <base_url>/chat/completions; returns the assistant text.
+def _extract_chat_content(raw: str) -> str:
+    """Extract text from final responses or concatenated/SSE chunk objects."""
+    text = str(raw or "").strip()
+    if not text:
+        return ""
+    decoder = json.JSONDecoder()
+    objects = []
 
-    Raises urllib.error.HTTPError / OSError / ValueError on failure.
+    # SSE gateways prefix each JSON object with ``data:``.
+    for line in text.splitlines():
+        candidate = line.strip()
+        if candidate.startswith("data:"):
+            candidate = candidate[5:].strip()
+        if not candidate or candidate == "[DONE]":
+            continue
+        try:
+            objects.append(json.loads(candidate))
+        except json.JSONDecodeError:
+            pass
 
-    NOTE (2026-08-15): the local gateway routes to reasoning models
-    (deepseek-v4-flash-free) that spend tokens on `reasoning_content`
-    BEFORE producing content. Small max_tokens (<=120) starve the content
-    field → empty responses. Callers that need real text should pass
-    max_tokens >= 1000.
+    # Also support adjacent JSON objects without SSE/newline framing.
+    if not objects:
+        index = 0
+        while index < len(text):
+            while index < len(text) and text[index].isspace():
+                index += 1
+            if index >= len(text):
+                break
+            if text.startswith("data:", index):
+                index += 5
+                continue
+            try:
+                obj, end = decoder.raw_decode(text, index)
+                objects.append(obj)
+                index = end
+            except json.JSONDecodeError:
+                index += 1
+
+    chunks = []
+    for obj in objects:
+        try:
+            choice = (obj.get("choices") or [])[0]
+        except (AttributeError, IndexError, TypeError):
+            continue
+        message = choice.get("message") or {}
+        content = message.get("content")
+        if content:
+            return str(content).strip()
+        delta = choice.get("delta") or {}
+        delta_content = delta.get("content")
+        if delta_content:
+            chunks.append(str(delta_content))
+    if chunks:
+        return "".join(chunks).strip()
+    raise ValueError("chat/completions response missing content: %s" % text[:160])
+
+
+_HTTP_SESSION = None
+
+def get_http_session():
+    """Persistent HTTP session with connection pooling and keep-alive for ultra-fast TTFT."""
+    global _HTTP_SESSION
+    if _HTTP_SESSION is None:
+        try:
+            import requests
+            s = requests.Session()
+            adapter = requests.adapters.HTTPAdapter(
+                pool_connections=25,
+                pool_maxsize=25,
+                max_retries=1,
+                pool_block=False,
+            )
+            s.mount("http://", adapter)
+            s.mount("https://", adapter)
+            _HTTP_SESSION = s
+        except Exception:
+            _HTTP_SESSION = False
+    return _HTTP_SESSION if _HTTP_SESSION is not False else None
+
+
+def stream_chat_completion(provider: dict, prompt: str, max_tokens: int = 1400,
+                           timeout: int = 60, system: str = None):
+    """Stream token deltas from OpenAI-compatible chat/completions endpoint.
+    Yields dicts with:
+      {"type": "token", "content": chunk, "ttft_ms": int, "is_first": bool}
+      {"type": "done", "text": full_text, "ttft_ms": int, "latency_ms": int}
     """
     base = (provider.get("base_url") or "").rstrip("/")
     key = provider.get("api_key") or ""
     model = provider.get("model") or ""
     url = base + "/chat/completions"
+    _msgs = []
+    if system:
+        _msgs.append({"role": "system", "content": system})
+    _msgs.append({"role": "user", "content": prompt})
+    payload = {
+        "model": model,
+        "messages": _msgs,
+        "max_tokens": max_tokens,
+        "stream": True,
+    }
+    headers = {"Content-Type": "application/json", "User-Agent": "tgju-platform/1.0"}
+    if key:
+        headers["Authorization"] = "Bearer " + key
+
+    t0 = time.time()
+    session = get_http_session()
+    first_token_time = None
+    accumulated_content = []
+    accumulated_reasoning = []
+
+    if session:
+        resp = session.post(url, json=payload, headers=headers, stream=True, timeout=timeout)
+        resp.raise_for_status()
+        line_iter = resp.iter_lines()
+    else:
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+            headers=headers,
+            method="POST",
+        )
+        r = urllib.request.urlopen(req, timeout=timeout)
+        line_iter = r
+
+    for raw_line in line_iter:
+        if not raw_line:
+            continue
+        line = raw_line.decode("utf-8", errors="replace").strip() if isinstance(raw_line, bytes) else str(raw_line).strip()
+        if not line.startswith("data:"):
+            continue
+        body_part = line[5:].strip()
+        if not body_part or body_part == "[DONE]":
+            continue
+        try:
+            chunk_obj = json.loads(body_part)
+        except Exception:
+            continue
+        choices = chunk_obj.get("choices") or []
+        if not choices:
+            continue
+        delta = choices[0].get("delta") or {}
+        content_chunk = delta.get("content")
+        reasoning_chunk = delta.get("reasoning") or delta.get("reasoning_content")
+
+        if content_chunk:
+            is_first = (first_token_time is None)
+            if is_first:
+                first_token_time = time.time()
+            accumulated_content.append(content_chunk)
+            ttft_ms = int((first_token_time - t0) * 1000)
+            yield {
+                "type": "token",
+                "content": content_chunk,
+                "ttft_ms": ttft_ms,
+                "is_first": is_first,
+            }
+        elif reasoning_chunk:
+            accumulated_reasoning.append(reasoning_chunk)
+
+    t_end = time.time()
+    full_text = "".join(accumulated_content).strip()
+    if not full_text and accumulated_reasoning:
+        full_text = "".join(accumulated_reasoning).strip()
+
+    ttft_ms = int(((first_token_time or t_end) - t0) * 1000)
+    latency_ms = int((t_end - t0) * 1000)
+    yield {
+        "type": "done",
+        "text": full_text,
+        "ttft_ms": ttft_ms,
+        "latency_ms": latency_ms,
+    }
+
+
+def _chat_completion_with_meta(provider: dict, prompt: str, max_tokens: int = 400,
+                               timeout: int = 60, system: str = None) -> tuple:
+    """POST <base_url>/chat/completions; returns (text, ttft_ms, latency_ms)."""
+    t0 = time.time()
+    # Try fast streaming first for immediate first-token detection
+    try:
+        full_text = ""
+        ttft_ms = 0
+        latency_ms = 0
+        for event in stream_chat_completion(provider, prompt, max_tokens=max_tokens,
+                                            timeout=timeout, system=system):
+            if event["type"] == "done":
+                full_text = event["text"]
+                ttft_ms = event["ttft_ms"]
+                latency_ms = event["latency_ms"]
+                break
+            elif event.get("is_first"):
+                ttft_ms = event.get("ttft_ms", 0)
+        if full_text:
+            return full_text, ttft_ms, latency_ms
+    except Exception:
+        pass
+
+    # Standard non-streaming fallback
+    base = (provider.get("base_url") or "").rstrip("/")
+    key = provider.get("api_key") or ""
+    model = provider.get("model") or ""
+    url = base + "/chat/completions"
+    _msgs = []
+    if system:
+        _msgs.append({"role": "system", "content": system})
+    _msgs.append({"role": "user", "content": prompt})
     body = json.dumps({
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": _msgs,
         "max_tokens": max_tokens,
     }, ensure_ascii=False).encode("utf-8")
     headers = {"Content-Type": "application/json", "User-Agent": "tgju-platform/1.0"}
     if key:
         headers["Authorization"] = "Bearer " + key
-    req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        raw = r.read().decode("utf-8", errors="replace")
-    data = _parse_json_response(raw)
-    try:
-        content = data["choices"][0]["message"].get("content")
-        return (content or "").strip()
-    except (KeyError, IndexError, TypeError):
-        raise ValueError("chat/completions response missing choices: %s"
-                         % str(data)[:160])
+
+    session = get_http_session()
+    if session:
+        resp = session.post(url, data=body, headers=headers, timeout=timeout)
+        resp.raise_for_status()
+        raw = resp.text
+    else:
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            raw = r.read().decode("utf-8", errors="replace")
+
+    latency_ms = int((time.time() - t0) * 1000)
+    return _extract_chat_content(raw), latency_ms, latency_ms
+
+
+def _chat_completion(provider: dict, prompt: str, max_tokens: int = 400,
+                     timeout: int = 60, system: str = None) -> str:
+    """POST <base_url>/chat/completions; returns the assistant text."""
+    text, _, _ = _chat_completion_with_meta(
+        provider, prompt, max_tokens=max_tokens, timeout=timeout, system=system
+    )
+    return text
 
 
 def _parse_json_response(raw: str) -> dict:

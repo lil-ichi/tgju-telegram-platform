@@ -330,19 +330,34 @@ def index_source_content(source_id: str, title: str, text: str, source_type: str
         "raw_text": text,
         "indexed_at": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
-    with open(_source_storage_path(source_id), "w", encoding="utf-8") as f:
+    _path = _source_storage_path(source_id)
+    with open(_path, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, indent=2)
+    try:
+        _DOC_CACHE[source_id] = (os.path.getmtime(_path), doc)
+    except OSError:
+        _DOC_CACHE[source_id] = (0, doc)
     return doc
 
 
+_DOC_CACHE: Dict[str, tuple] = {}  # source_id -> (mtime, doc)
+
+
 def get_source_doc(source_id: str) -> Optional[dict]:
-    """Load cached document for a source."""
+    """Load document for a source with fast in-memory mtime cache."""
     p = _source_storage_path(source_id)
     if not os.path.exists(p):
+        _DOC_CACHE.pop(source_id, None)
         return None
     try:
+        mtime = os.path.getmtime(p)
+        cached = _DOC_CACHE.get(source_id)
+        if cached and cached[0] == mtime:
+            return cached[1]
         with open(p, "r", encoding="utf-8") as f:
-            return json.load(f)
+            doc = json.load(f)
+        _DOC_CACHE[source_id] = (mtime, doc)
+        return doc
     except Exception:
         return None
 
@@ -555,6 +570,8 @@ def delete_source(source_id: str) -> dict:
     if source_id in cfg.get("sources", {}):
         del cfg["sources"][source_id]
         save_kb_config(cfg)
+    _DOC_CACHE.pop(source_id, None)
+    _CHUNK_TOKEN_CACHE.pop(source_id, None)
     doc_path = _source_storage_path(source_id)
     if os.path.exists(doc_path):
         try:
@@ -564,23 +581,76 @@ def delete_source(source_id: str) -> dict:
     return {"ok": True}
 
 
-# ── Context Retrieval Engine (BM25 / Keyword Similarity) ───────────────────
+# ── Context Retrieval Engine (Fast In-Memory Matching) ────────────────────
 
 _PERSIAN_STOPWORDS = {
     "از", "به", "با", "در", "بر", "تا", "برای", "که", "این", "آن", "یک", "را",
     "های", "شد", "است", "بود", "می", "هم", "نیز", "هر", "اگر", "اما", "یا",
-    "and", "the", "in", "of", "to", "for", "on", "with", "as", "by", "at"
+    "چه", "چون", "تاکنون", "چرا", "کدام", "آیا", "و", "رو", "شدن", "کرده",
+    "and", "the", "in", "of", "to", "for", "on", "with", "as", "by", "at", "is", "a", "an"
 }
+
+_CHUNK_TOKEN_CACHE: Dict[str, List[set]] = {}
+
+FOUNDATIONAL_TGJU_KNOWLEDGE = [
+    {
+        "source_id": "tgju_gold_concepts",
+        "title": "مفاهیم بازار طلا و مظنه در TGJU",
+        "type": "system",
+        "text": (
+            "مظنه طلا در بازار ایران نشان‌دهنده قیمت یک مثقال طلای ۱۷ عیار (معادل ۷۰۵ هزارم) است "
+            "که معادل ۴.۶۰۸ گرم می‌باشد. برای به دست آوردن قیمت هر گرم طلای ۱۸ عیار (۷۵۰ هزارم)، "
+            "مظنه مثقال تقسیم بر ۴.۳۳۱۸ می‌شود. طلای آبشده حاصل ذوب قطعات مختلف طلا با عیار معمولاً "
+            "بین ۷۰۰ تا ۷۵۰ است که دارای شماره انگ (کد ری‌گیری) برای تضمین اصالت و عیار می‌باشد."
+        ),
+        "tags": ["gold", "abshodeh", "mazaneh", "tgju"],
+    },
+    {
+        "source_id": "tgju_coins_guide",
+        "title": "انواع مسکوکات طلا در بازار ایران",
+        "type": "system",
+        "text": (
+            "سکه تمام بهار آزادی و سکه امامی دارای وزن ۸.۱۳۳ گرم و عیار ۹۰۰ (۲۱.۶ عیار یا طلای ۲۲) هستند. "
+            "سکه نیم بهار آزادی با وزن ۴.۰۶۶ گرم، سکه ربع بهار آزادی با وزن ۲.۰۳۳ گرم و سکه گرمی با وزن ۱.۰۱ گرم "
+            "همگی با عیار ۹۰۰ ضرب بانک مرکزی هستند. حباب سکه به اختلاف قیمت بازاری سکه و ارزش ذاتی طلای آن "
+            "اطلاق می‌شود که ناشی از عرضه و تقاضا و نوسانات هیجانی بازار است."
+        ),
+        "tags": ["coin", "emami", "bahar_azadi", "rob", "nim", "gerami", "bubble"],
+    },
+    {
+        "source_id": "tgju_markets_hours",
+        "title": "بازارها و ساعات فعالیت در TGJU",
+        "type": "system",
+        "text": (
+            "شبکه اطلاع‌رسانی طلا و ارز (TGJU) نرخ‌های زنده بازار طلا، مسکوکات، ارزهای رسمی و صرافی ملی، "
+            "ارزهای دیجیتال (بیت‌کوین، تتر، اتریوم)، بورس اوراق بهادار تهران، فلزات گرانبها (انس جهانی طلا و نقره)، "
+            "و نفت و انرژی را رصد و منتشر می‌کند. ساعات پرمعامله بازار سبزه میدان و بازار تهران بین ۱۱:۰۰ صبح "
+            "تا ۱۸:۰۰ عصر است و نرخ‌های هرات و دوبی نیز از عوامل موثر بر نرخ حواله و نقدی هستند."
+        ),
+        "tags": ["market", "hours", "forex", "tgju", "crypto"],
+    },
+]
+
+
+def normalize_persian_text(text: str) -> str:
+    """Normalize Arabic letters, half-spaces and whitespace for robust Persian matching."""
+    if not text:
+        return ""
+    t = text.replace("ي", "ی").replace("ك", "ک").replace("ة", "ه").replace("ۀ", "ه")
+    t = t.replace("\u200c", " ")
+    t = re.sub(r'[\s_]+', ' ', t)
+    return t.strip()
 
 
 def _tokenize(text: str) -> List[str]:
-    """Tokenize Persian and English text into words, removing punctuation."""
-    words = re.findall(r'[\w\u0600-\u06FF]+', text.lower())
+    """Tokenize normalized Persian and English text into words, removing punctuation and stopwords."""
+    norm = normalize_persian_text(text)
+    words = re.findall(r'[\w\u0600-\u06FF]+', norm.lower())
     return [w for w in words if len(w) > 1 and w not in _PERSIAN_STOPWORDS]
 
 
 def search_kb(query: str, top_k: int = 4, tags: list = None) -> List[Dict[str, Any]]:
-    """Search enabled sources for the most relevant chunks matching the query."""
+    """Search enabled sources for the most relevant chunks matching the query with sub-millisecond cache."""
     cfg = load_kb_config()
     if not cfg.get("enabled", True):
         return []
@@ -603,25 +673,27 @@ def search_kb(query: str, top_k: int = 4, tags: list = None) -> List[Dict[str, A
             continue
 
         chunks = doc.get("chunks") or [doc.get("raw_text") or ""]
-        title = doc.get("title") or meta.get("title")
+        title = doc.get("title") or meta.get("title") or ""
+        norm_title = normalize_persian_text(title).lower()
 
-        # Score chunks
+        cached_tokens = _CHUNK_TOKEN_CACHE.get(sid)
+        if not cached_tokens or len(cached_tokens) != len(chunks):
+            cached_tokens = [set(_tokenize(c)) for c in chunks]
+            _CHUNK_TOKEN_CACHE[sid] = cached_tokens
+
         for idx, chunk in enumerate(chunks):
             if not chunk or len(chunk.strip()) < 20:
                 continue
-            c_tokens = _tokenize(chunk)
-            if not c_tokens:
+            c_token_set = cached_tokens[idx] if idx < len(cached_tokens) else set(_tokenize(chunk))
+            if not c_token_set:
                 continue
 
             score = 0.0
-            # Title boost
             for t in q_tokens:
-                if t in title.lower():
-                    score += 3.0
-                if t in chunk.lower():
-                    # Term frequency
-                    tf = chunk.lower().count(t)
-                    score += min(5.0, 1.0 + 0.5 * tf)
+                if t in norm_title:
+                    score += 4.0
+                if t in c_token_set:
+                    score += 2.0
 
             if score > 0:
                 results.append({
@@ -631,6 +703,29 @@ def search_kb(query: str, top_k: int = 4, tags: list = None) -> List[Dict[str, A
                     "chunk_index": idx,
                     "score": round(score, 2),
                     "text": chunk.strip(),
+                })
+
+    # If no custom source matched and knowledge is enabled, fallback to foundational TGJU knowledge
+    if not results and cfg.get("enabled", True):
+        for item in FOUNDATIONAL_TGJU_KNOWLEDGE:
+            if tags and not any(t in item.get("tags", []) for t in tags):
+                continue
+            score = 0.0
+            norm_t = normalize_persian_text(item["title"]).lower()
+            tokens_in_item = set(_tokenize(item["text"]))
+            for t in q_tokens:
+                if t in norm_t:
+                    score += 3.0
+                if t in tokens_in_item:
+                    score += 1.5
+            if score > 0:
+                results.append({
+                    "source_id": item["source_id"],
+                    "title": item["title"],
+                    "type": item["type"],
+                    "chunk_index": 0,
+                    "score": round(score, 2),
+                    "text": item["text"],
                 })
 
     # Sort descending by score

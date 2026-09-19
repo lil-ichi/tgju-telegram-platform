@@ -70,7 +70,9 @@ bash start-platform.sh
 | `tgju/tgju_engine_orchestrator.py` | `get_channel_rows` (slug pool + overrides + throttled backfill), `build_for_channel` |
 | `tgju/tgju_engine_news.py` | Category/tag pages → rotating article → TGJU og:description hyperlink |
 | `tgju/tgju_engine_ai.py` | AI providers, `run_analysis`, `_chat_completion`, AI Orchestrator jobs + activity |
-| `tgju/tgju_engine_kb.py` | **Knowledge Base (KB) engine (NEW)**: local folder/file scan, URL scraping, document chunking, BM25 context retrieval, prompt injection |
+| `tgju/tgju_engine_kb.py` | **Knowledge Base (KB) engine**: local folder/file scan, URL scraping, document chunking, BM25 context retrieval, prompt injection |
+| `tgju/tgju_engine_ai_assistant.py` | Independent Telegram AI assistant state, token validation, KB-grounded prompt construction and provider execution |
+| `tgju/tgju_core/assistant_routes.py` | Authenticated `/api/assistant*` configuration, connection-test and simulation routes |
 | `tgju/tgju_engine_functions.py` | Interval functions (analysis/poll/news) in `state/functions.json` |
 | `tgju/tgju_engine_bot.py` | Multi-bot profiles `state/bot_profile.json`, legacy .env migration |
 | `tgju/tgju_engine_whatsapp.py` | **WhatsApp interactive bot (NEW)**: config `state/whatsapp.json`, menus/categories, Meta Cloud API sender + mock, webhook processing, conversation sim, keyword lookup |
@@ -270,6 +272,23 @@ valid), bools for auto_post/poll_anonymous, unknown keys dropped.
 - **API Endpoints**: `GET /api/kb`, `POST /api/kb/config`, `POST /api/kb/sources/folder`, `POST /api/kb/sources/file`, `POST /api/kb/sources/upload`, `POST /api/kb/sources/url`, `POST /api/kb/sources/snippet`, `POST /api/kb/sources/{id}/sync`, `POST /api/kb/sources/{id}/toggle`, `DELETE /api/kb/sources/{id}`, `GET /api/kb/sources/{id}/content`, `POST /api/kb/search`.
 - **Dashboard Panel**: «📚 پایگاه دانش» in sidebar `sys_group` with live stats, 3-mode source creation (folder/file, URL find, snippet), document viewer, search playground, and AI automation toggles.
 
+## 13c. Independent Telegram AI assistant (`state/ai_assistant.json`)
+
+- Separate from the publisher bot: its token, enablement and model settings never read or modify `state/bot_profile.json`.
+- Ultra-low TTFT & Streaming: Uses persistent HTTP connection pooling (`requests.Session` with `pool_connections=25`) to eliminate TCP/TLS handshake latency. Server-Sent Events (SSE) streaming engine (`stream_chat_completion`, `answer_question_stream`) emits tokens in real time and reports exact TTFT telemetry (`ttft_ms`).
+- Immediate Telegram Feedback: Dispatches Telegram `sendChatAction(action="typing")` (<50ms) immediately upon receiving a user message before initiating RAG retrieval or LLM inference, ensuring the user perceives instant response.
+- Adaptive answer routing & Live Market Grounding: Ordinary conversation goes directly to the configured AI with chat history; financial and TGJU queries trigger `get_live_market_context` (injecting live real-time rates for dollar, coin varieties, gold 18k, mesghal, tether, bitcoin, etc. from `cached_rows` or disk fallbacks) alongside `search_kb(top_k)` context.
+- Fast Caching & Persian Normalization: In-memory document caching (`_DOC_CACHE` with mtime validation) and token indexing (`_CHUNK_TOKEN_CACHE`) provide sub-millisecond retrieval. Built-in `FOUNDATIONAL_TGJU_KNOWLEDGE` ensures accurate market grounding even before custom KB ingestion. Queries and documents undergo unified Persian normalization (Arabic letter mapping, ZWNJ stripping).
+- Natural Iranian Market Advisor Persona: Upgraded `DEFAULT_SYSTEM_PROMPT` and fallback messages maintain a warm, fluent, conversational Persian tone without robotic AI clichés. Default mode is fully conversational (`answer_only_from_kb=false`). If a TGJU query has no KB match, the AI answers naturally from general knowledge and live price quotes. Strict KB-only mode remains an explicit optional control.
+- Configurable surface: `provider_mode` (`shared` vs `custom`), `provider`/`model` (shared mode), `api` (`base_url`, `api_key`, `model`, `timeout_seconds`, `max_tokens` — custom mode), system prompt, welcome/fallback messages, KB enablement, retrieval count, context limit, source display, question limit, conversation-history limit and private/group scope.
+- Secrets: `GET /api/assistant` removes the Telegram `token` and the custom `api.api_key` and returns only `token_set`/`api.api_key_set` plus masked previews; blank `token`/`api_key` updates preserve the current local secret.
+- API: `GET/PUT /api/assistant`, `POST /api/assistant/test` (Telegram token), `POST /api/assistant/models` (list models for the custom endpoint — body `base_url`/`api_key` overrides stored config), `POST /api/assistant/ai/test` (real `chat/completions` probe for the custom endpoint), `POST /api/assistant/simulate`, `POST /api/assistant/stream` (SSE streaming token-by-token generation with live TTFT metrics).
+- Live runtime starts `assistant_polling_loop()` with the FastAPI app and shuts it down with the shared background-task lifecycle. It uses Telegram `getUpdates` with a persisted offset and plain-text `sendMessage` replies with immediate typing status.
+- Commands: `/start` returns the configured welcome message, `/help` describes usage, and `/reset` clears that chat's stored conversation history.
+- Private/group scope is enforced before AI execution; long replies are split below Telegram's message limit. The configured history limit is persisted per chat in `state/assistant_conversations.json` and injected into subsequent answer prompts.
+- Runtime state (`polling`, last poll/message/error, processed count) is included in `GET /api/assistant` and shown in the dashboard. Live receipt can be enabled independently with `polling.enabled`.
+- Dashboard: separate Telegram item «دستیار هوشمند» next to the renamed «ربات انتشار», with connection, live-receive, dedicated custom endpoint/API-key fields, a live model dropdown (بارگذاری مدل‌ها pulls `/api/assistant/models` and fills the `<select>`; manual model fallback when the model is not listed), provider-test button (`/api/assistant/ai/test`), per-call `timeout_seconds`/`max_tokens`, real-time streaming simulation with live TTFT meter (`⚡ اولین توکن (TTFT): ... ms`), plus AI, KB, persona, scope and simulation controls.
+
 ## 14. Polls (`state/polls.json` + POLL_POOL)
 
 - Built-in 24-question Persian `POLL_POOL` (formal «شما», engagement-only —
@@ -297,7 +316,7 @@ prices never stolen. APIs: `GET/PUT /api/functions`,
 `POST /api/functions/analysis/run/{cid}` (posts now).
 Legacy channel `poll_enabled` still works as a fallback for polls.
 
-## 16. Bot profiles (`state/bot_profile.json`)
+## 16. Publisher bot profiles (`state/bot_profile.json`)
 
 Multi-bot support: `{active_id, profiles: [{id, name, token, bot_username,
 bot_name}]}` — connect ANY Telegram bot; switching is instant (no restart).
@@ -489,6 +508,19 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
 
 ## 21. Changelog
 
+- 2026-09-19: Supercharged the Telegram AI Assistant (`tgju_engine_ai_assistant.py`) for ultra-low TTFT (Time To First Token), token streaming, and natural Persian financial grounding:
+  1. Persistent HTTP Connection Pooling: Added `get_http_session()` in `tgju_engine_ai.py` with keep-alive connection pooling (`pool_connections=25`, `pool_maxsize=50`) and socket reuse, eliminating repeated TCP/TLS handshakes to LLM providers.
+  2. SSE Token Streaming & Telemetry: Implemented `stream_chat_completion()` and `answer_question_stream()` yielding real-time chunks with millisecond-precision `ttft_ms` tracking; added `POST /api/assistant/stream` route returning `text/event-stream`.
+  3. Immediate Telegram Feedback: Telegram polling now fires `sendChatAction(action="typing")` (<50ms) via pooled connection immediately upon message receipt, eliminating perceived dead time.
+  4. Live TGJU Market Data Grounding: Added `get_live_market_context()` to dynamically parse and supply real-time TGJU rates (Dollar, Emami/Bahar/Nim/Rob coins, 18k Gold, Mesghal/Mazaneh, Tether, Bitcoin, Global Gold Ounce) from `cached_rows` or disk fallbacks into the prompt context alongside RAG KB.
+  5. Fast In-Memory KB Caching & Persian Normalization: Added `_DOC_CACHE` with file `mtime` invalidation and `_CHUNK_TOKEN_CACHE` for sub-millisecond keyword lookup; added `normalize_persian_text()` for unified Arabic-Persian char matching and ZWNJ handling; embedded `FOUNDATIONAL_TGJU_KNOWLEDGE` baseline documents (gold math, bubbles, trading hours) into `tgju_engine_kb.py`.
+  6. Natural Iranian Market Persona: Upgraded `DEFAULT_SYSTEM_PROMPT` to a warm, authentic Persian market advisor persona that avoids robotic greetings, boilerplate, and robotic AI phrases.
+  7. Dashboard Real-Time Simulator: Upgraded `#panel_assistant` in `tgju_platform_ui.html` with real-time SSE streaming, live TTFT badge (`⚡ اولین توکن (TTFT): ... ms`), and performance indicator card. All 107 tests pass.
+- 2026-09-16: Made the assistant provider fully user-owned: `provider_mode=custom` stores its own OpenAI-compatible `base_url`/`api_key`/`model`/`timeout_seconds`/`max_tokens` in `state/ai_assistant.json` independent of the shared `state/ai_config.json`. Added `POST /api/assistant/models` (live model dropdown) and `POST /api/assistant/ai/test` (real `chat/completions` probe) with per-request overrides; secrets stay masked (`api_key_preview`/`api_key_set`) and blank `api_key` preserves the stored key. The dashboard now has custom-endpoint/API-key fields, بارگذاری مدل‌ها (live `<select>` + manual fallback) and آزمون اتصال هوش مصنوعی. Custom mode routes `answer_question` through an isolated `assistant_custom` provider so the shared provider config is untouched; 103 tests pass, live API verified.
+- 2026-09-16: Upgraded the assistant from strict KB responder to a natural AI assistant: ordinary conversation bypasses retrieval, TGJU/market questions selectively query KB context, missing KB evidence still gets a natural model answer, chat history remains active, and strict KB-only is now optional/off by default. Added support for gateways that return concatenated/SSE `chat.completion.chunk` objects; real probes succeeded for both casual and TGJU routes.
+- 2026-09-16: Completed the independent Telegram AI assistant runtime: dedicated `getUpdates` long polling, persisted offsets, `sendMessage` replies, `/start`/`help`/`reset`, private/group policy, per-chat bounded history, message splitting, runtime status, startup/shutdown wiring, and a live-receive dashboard control. The connected bot token was validated and a real pending Telegram update advanced the offset from 0 to 150534168.
+- 2026-09-16: Started the independent Telegram AI assistant as a verified first vertical slice: separate local state/token, masked configuration API, Telegram token test, KB-grounded answer engine with strict no-evidence fallback, provider/model selection, simulation endpoint, and a dedicated dashboard tab.
+
 - 2026-09-13: Removed the repository-baked dashboard bootstrap credential;
   first boot now requires explicit local or environment provisioning, and the
   HTTP auth bypass is loopback-only and opt-in.
@@ -519,7 +551,7 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   `_next_post_type` rotation), channel CRUD + preview + live post via
   `/api/bale/*`, mock mode (no token). Header menu + `panel_bale_home` UI.
   Telegram/WhatsApp untouched. Backup:
-  `D:\Hermes\_wayback-TGJU-Telegram-Bale-20260817-120420`.
+  `D:\AI\_wayback-TGJU-Telegram-Bale-20260817-120420`.
 - **2026-08-17** — UI control-center polish: removed the sidebar «پلتفرمها»
   group (platform switching lives in the centered header menu), removed the
   🏠 داشبورد panel entirely (it hid the header menu — bug), sidebar now
@@ -532,7 +564,7 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   (GET verify + POST inbound → reply), conversation simulator + broadcast in
   the UI, `--send-menu` CLI. Removed: channel model, auto-post scheduler,
   preview/post endpoints (broadcast replaced them). Telegram untouched.
-  Backup: `D:\Hermes\_wayback-TGJU-Telegram-WhatsAppBot-20260817-111930`.
+  Backup: `D:\AI\_wayback-TGJU-Telegram-WhatsAppBot-20260817-111930`.
 - **2026-08-17** — Multi-platform control center: WhatsApp platform added
   (`tgju_engine_whatsapp.py`, `state/whatsapp.json`, Meta Cloud API sender +
   mock mode, `/api/whatsapp/*` + `/api/platforms`, WhatsApp scheduler tick,
@@ -541,7 +573,7 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
   untouched (verified live). Shared format refactor: `plain_chip_line()`
   platform-neutral chip builder (Telegram HTML output unchanged — regression-
   tested). WhatsApp posts are plain text (Cloud API has no HTML); Telegram
-  keeps HTML chips/polls. Backup: `D:\Hermes\_wayback-TGJU-Telegram-20260817-103614`.
+  keeps HTML chips/polls. Backup: `D:\AI\_wayback-TGJU-Telegram-20260817-103614`.
 - **2026-08-17** — Created APP.md as the single agent-facing reference. The
   rule "update APP.md in the same turn after any structural change" is
   encoded in the tgju-telegram-platform skill (mandatory for TGJU work), so

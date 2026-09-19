@@ -1,7 +1,9 @@
-import re, io
+import os, re, io
 
-SRC = r'D:\Hermes\TGJU-Telegram\platform\tgju_platform_ui.html'
-TMP = r'D:\Hermes\TGJU-Telegram\tgju\new_css_block.txt'
+# resolve next to this script so the folder can move freely
+_HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.join(_HERE, 'tgju_platform_ui.html')
+TMP = os.path.join(_HERE, 'new_css_block.txt')
 
 with io.open(SRC, encoding='utf-8') as f:
     src = f.read()

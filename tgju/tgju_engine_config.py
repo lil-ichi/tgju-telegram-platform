@@ -7,7 +7,7 @@ import re
 import yaml
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT = BASE_DIR                        # platform/  (D:\Hermes\TGJU-Telegram\platform)
+ROOT = BASE_DIR                        # platform/  (D:\AI\TGJU-Telegram\platform)
 CONFIG_PATH = os.path.join(BASE_DIR, "channels.yaml")
 STATE_DIR = os.path.join(BASE_DIR, "state")
 LOG_PATH = os.path.join(STATE_DIR, "platform.log")

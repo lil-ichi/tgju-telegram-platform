@@ -1,6 +1,7 @@
-import re
+import os, re
 
-SRC = r'D:\Hermes\TGJU-Telegram\platform\tgju_platform_ui.html'
+# resolve next to this script so the folder can move freely
+SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tgju_platform_ui.html')
 
 chk = open(SRC, encoding='utf-8').read()
 

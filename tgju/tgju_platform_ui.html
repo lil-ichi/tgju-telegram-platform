@@ -352,6 +352,8 @@ button + button { margin-inline-start:10px; }
 .settings-grid .card { display:flex; flex-direction:column; }
 .settings-grid .card .row { margin-top:auto; padding-top:16px; }
 .settings-grid .card .row .muted { margin-inline-start:auto; opacity:.75; font-size:11.5px; }
+.assistant-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:18px; align-items:start; }
+.assistant-grid textarea { resize:vertical; }
 
 /* ── Auth gate ───────────────────────────────────────────────── */
 .auth-gate { position:fixed; inset:0; z-index:1000;
@@ -440,7 +442,7 @@ button + button { margin-inline-start:10px; }
 
   .main { padding:16px 14px 56px; }
   button, .nav-item { min-height:42px; }
-  .settings-grid { grid-template-columns:1fr; }
+  .settings-grid, .assistant-grid { grid-template-columns:1fr; }
   .row > button { flex:1 1 45%; }
   .form-grid { grid-template-columns:1fr; }
   .platform-header { padding:14px 12px 10px; }
@@ -571,7 +573,8 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
         <div class="nav-item tg-item" data-panel="preview">📝 پیش‌نمایش و ارسال</div>
         <div class="nav-item tg-item" data-panel="polls">🗳 نظرسنجی‌ها</div>
         <div class="nav-item tg-item" data-panel="custom_data">📝 داده‌های سفارشی</div>
-        <div class="nav-item tg-item" data-panel="bot">🤖 ربات</div>
+        <div class="nav-item tg-item" data-panel="bot">📡 ربات انتشار</div>
+        <div class="nav-item tg-item" data-panel="assistant">🤖 دستیار هوشمند</div>
       </div>
       <div class="nav-group" id="bale_group" style="display:none">
         <div class="nav-group-title"><span class="pm-ico"><svg viewBox="0 0 24 24" width="15" height="15" fill="#00A886" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span> بله</div>
@@ -1137,7 +1140,7 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
                 <div style="grid-column:1/-1">
                   <label>مسیر کامل پوشه یا فایل در سرور/سیستم</label>
                   <div class="row" style="gap:8px">
-                    <input id="kb_input_path" placeholder="مثال: D:\Hermes\data یا C:\market_reports" style="flex:1">
+                    <input id="kb_input_path" placeholder="مثال: D:\AI\data یا C:\market_reports" style="flex:1">
                     <button class="primary small" onclick="kbAddFolderOrFile()">➕ ثبت مسیر</button>
                   </div>
                 </div>
@@ -1436,6 +1439,108 @@ button.tpl-tag[data-tag="{news}"] { display:none !important; }
 
       <h2>📋 ربات‌های ذخیره شده</h2>
       <div id="bot_list"></div>
+    </div>
+
+    <!-- ── دستیار هوشمند تلگرام ── -->
+    <div id="panel_assistant" class="panel">
+      <div class="flex-between" style="gap:16px;align-items:flex-start;flex-wrap:wrap">
+        <div>
+          <h1>🤖 دستیار هوشمند تلگرام</h1>
+          <div class="sub">یک ربات گفت‌وگویی مستقل از ربات انتشار قیمت؛ گفت‌وگوهای عادی را طبیعی پاسخ می‌دهد و فقط برای پرسش‌های مرتبط با TGJU و بازارها از پایگاه دانش کمک می‌گیرد.</div>
+        </div>
+        <button class="primary" onclick="saveAssistant()">💾 ذخیره تنظیمات</button>
+      </div>
+
+      <div class="grid cards" style="margin-top:16px">
+        <div class="card"><h4>وضعیت دستیار</h4><div id="as_status" class="big">—</div><div id="as_status_note" class="muted">—</div></div>
+        <div class="card"><h4>توکن مستقل</h4><div id="as_token_state" class="big">—</div><div id="as_token_preview" class="muted mono">—</div></div>
+        <div class="card"><h4>موتور پاسخ</h4><div class="big gold">AI + RAG</div><div class="muted">گفت‌وگوی طبیعی؛ دانش TGJU هنگام نیاز</div></div>
+        <div class="card"><h4>پاسخ‌دهی و TTFT</h4><div class="big green">استریم فوق‌سریع</div><div class="muted">تایپینگ آنی تلگرام + استخر اتصال</div></div>
+      </div>
+
+      <div class="assistant-grid">
+        <section class="card">
+          <h2 style="margin-top:0">اتصال و موتور پاسخ</h2>
+          <div class="form-grid">
+            <div style="grid-column:1/-1">
+              <label>توکن ربات دستیار</label>
+              <input id="as_token" type="password" autocomplete="off" placeholder="برای حفظ توکن فعلی، این فیلد را خالی بگذارید">
+              <div class="muted" style="margin-top:5px">این توکن با ربات انتشار قیمت مشترک نیست.</div>
+            </div>
+            <div><label>حالت ارائه‌دهنده</label><select id="as_provider_mode" onchange="assistantProviderModeChanged()"><option value="shared">ارائه‌دهنده مشترک سامانه</option><option value="custom">اتصال اختصاصی دستیار</option></select></div>
+            <div id="as_shared_provider_field"><label>ارائه‌دهنده مشترک</label><select id="as_provider" onchange="assistantProviderChanged()"></select></div>
+            <div id="as_custom_api_fields" style="grid-column:1/-1;display:none">
+              <div class="form-grid">
+                <div style="grid-column:1/-1"><label>نشانی API سازگار با OpenAI</label><input id="as_api_base_url" dir="ltr" placeholder="https://api.example.com/v1"></div>
+                <div style="grid-column:1/-1"><label>کلید API اختصاصی</label><input id="as_api_key" type="password" autocomplete="off" dir="ltr" placeholder="برای حفظ کلید فعلی، خالی بگذارید"><div id="as_api_key_state" class="muted" style="margin-top:5px">کلیدی ثبت نشده است.</div></div>
+                <div><label>مهلت پاسخ (ثانیه)</label><input id="as_api_timeout" type="number" min="8" max="180" value="60"></div>
+                <div><label>حداکثر توکن پاسخ</label><input id="as_api_max_tokens" type="number" min="128" max="8000" value="1400"></div>
+              </div>
+            </div>
+            <div><label>مدل پاسخ‌گو</label><select id="as_model"><option value="">ابتدا مدل‌ها را بارگذاری کنید</option></select></div>
+            <div><label>مدل دستی (اختیاری)</label><input id="as_model_manual" dir="ltr" placeholder="اگر مدل در فهرست نبود"></div>
+            <div class="row" style="grid-column:1/-1;margin:0">
+              <button type="button" onclick="loadAssistantModels()">بارگذاری مدل‌ها</button>
+              <button type="button" onclick="testAssistantProvider()">آزمون اتصال هوش مصنوعی</button>
+              <span id="as_ai_connection_result" class="muted" aria-live="polite"></span>
+            </div>
+          </div>
+          <div class="row" style="margin-top:14px">
+            <label style="display:flex;align-items:center;gap:8px;margin:0"><input id="as_enabled" type="checkbox" style="width:auto"> فعال بودن دستیار</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:0"><input id="as_polling" type="checkbox" style="width:auto"> دریافت زنده پیام‌های تلگرام</label>
+            <button onclick="testAssistantToken()">🧪 آزمون توکن</button>
+          </div>
+          <div id="as_connection_result" class="muted" style="margin-top:10px">وضعیت دریافت زنده پس از بارگذاری نمایش داده می‌شود.</div>
+        </section>
+
+        <section class="card">
+          <h2 style="margin-top:0">بازیابی دانش</h2>
+          <div class="form-grid">
+            <div><label>تعداد قطعه‌های بازیابی</label><input id="as_top_k" type="number" min="1" max="10" value="4"></div>
+            <div><label>حداکثر نویسه زمینه</label><input id="as_context_chars" type="number" min="500" max="12000" step="100" value="3000"></div>
+          </div>
+          <div style="display:grid;gap:10px;margin-top:14px">
+            <label style="display:flex;align-items:center;gap:8px;margin:0"><input id="as_kb_enabled" type="checkbox" style="width:auto" checked> استفاده از پایگاه دانش</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:0"><input id="as_kb_only" type="checkbox" style="width:auto"> حالت سخت‌گیرانه: برای پرسش‌های TGJU بدون منبع پاسخ ندهد</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:0"><input id="as_show_sources" type="checkbox" style="width:auto" checked> نمایش منابع بازیابی شده</label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 style="margin-top:0">شخصیت و پیام‌ها</h2>
+          <label>دستور اصلی دستیار</label>
+          <textarea id="as_system_prompt" rows="5" placeholder="لحن، نقش و محدودیت‌های پاسخ‌گویی"></textarea>
+          <label style="margin-top:12px">پیام خوش‌آمدگویی</label>
+          <textarea id="as_welcome" rows="3"></textarea>
+          <label style="margin-top:12px">پیام نبود پاسخ معتبر</label>
+          <textarea id="as_fallback" rows="3"></textarea>
+        </section>
+
+        <section class="card">
+          <h2 style="margin-top:0">محدوده گفت‌وگو</h2>
+          <div class="form-grid">
+            <div><label>تعداد پیام حافظه مکالمه</label><input id="as_history" type="number" min="0" max="20" value="6"></div>
+            <div><label>حداکثر طول پرسش</label><input id="as_question_chars" type="number" min="100" max="4000" value="1200"></div>
+          </div>
+          <div style="display:grid;gap:10px;margin-top:14px">
+            <label style="display:flex;align-items:center;gap:8px;margin:0"><input id="as_private" type="checkbox" style="width:auto" checked> پاسخ در گفت‌وگوی خصوصی</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:0"><input id="as_groups" type="checkbox" style="width:auto"> پاسخ در گروه‌ها</label>
+          </div>
+        </section>
+      </div>
+
+      <h2>آزمایش پاسخ مستند</h2>
+      <div class="card">
+        <label for="as_question">پرسش آزمایشی</label>
+        <textarea id="as_question" rows="3" placeholder="مثلاً: طلای آبشده چگونه ارزش‌گذاری می‌شود؟"></textarea>
+        <div class="row" style="margin-top:12px">
+          <button class="primary" onclick="simulateAssistant()">ارسال به دستیار</button>
+          <span id="as_sim_meta" class="muted" aria-live="polite"></span>
+        </div>
+        <div id="as_sim_answer" class="preview-box" style="margin-top:14px;min-height:90px">برای بررسی مسیر پایگاه دانش و موتور پاسخ، یک پرسش وارد کنید.</div>
+        <div id="as_sim_sources" style="margin-top:10px"></div>
+      </div>
+      <div id="as_save_result" aria-live="polite" style="margin-top:12px"></div>
     </div>
 
     <!-- ── فعالیت‌ها (unified cross-platform feed) ── -->
@@ -2440,6 +2545,7 @@ function refresh(){
   if(p==='panel_help') initHelp();
   if(p==='panel_settings') loadSettings();
   if(p==='panel_bot') loadBot();
+  if(p==='panel_assistant') loadAssistant();
   if(p==='panel_activity'){ loadActivity(); loadRuns(); loadHealth(); actLiveToggle(); }
   if(p.startsWith('panel_wa_')) loadWaHome();
   if(p.startsWith('panel_bale_')) loadBaleHome();
@@ -4205,6 +4311,275 @@ async function loadEvents(){
         ${e.error?`<span class="err">${esc(e.error)}</span>`:''}
       </div>`).join('') || '<div class="muted">—</div>';
   }catch(e){ $('events_list').innerHTML='<div class="muted">—</div>'; }
+}
+
+// ── AI Assistant (independent Telegram bot) ──
+let ASSISTANT_PROVIDERS = [];
+
+function setAssistantModels(models,current){
+  const unique = [...new Set((models||[]).filter(Boolean))];
+  if(current && !unique.includes(current)) unique.unshift(current);
+  $('as_model').innerHTML = unique.map(m=>`<option value="${escAttr(m)}">${esc(m)}</option>`).join('') || '<option value="">مدلی پیدا نشد</option>';
+  if(current) $('as_model').value = current;
+}
+
+function assistantProviderModeChanged(){
+  const custom = $('as_provider_mode').value==='custom';
+  $('as_custom_api_fields').style.display = custom ? '' : 'none';
+  $('as_shared_provider_field').style.display = custom ? 'none' : '';
+  if(!custom) assistantProviderChanged();
+}
+
+function assistantProviderChanged(){
+  const selected = ASSISTANT_PROVIDERS.find(p=>p.id===$('as_provider').value);
+  setAssistantModels(selected&&selected.model ? [selected.model] : [], selected&&selected.model || '');
+}
+
+function assistantApiOverrides(){
+  return {
+    base_url:$('as_api_base_url').value.trim(),
+    api_key:$('as_api_key').value.trim(),
+    model:$('as_model_manual').value.trim() || $('as_model').value
+  };
+}
+
+async function loadAssistantModels(){
+  const box=$('as_ai_connection_result');
+  if($('as_provider_mode').value!=='custom'){
+    const selected=ASSISTANT_PROVIDERS.find(p=>p.id===$('as_provider').value);
+    setAssistantModels(selected&&selected.model?[selected.model]:[],selected&&selected.model||'');
+    box.textContent='مدل ارائه‌دهنده مشترک بارگذاری شد.';
+    return;
+  }
+  box.textContent='در حال دریافت فهرست مدل‌ها…';
+  try{
+    const r=await jpost('/api/assistant/models',assistantApiOverrides());
+    if(!r.ok){box.textContent='بارگذاری مدل‌ها انجام نشد: '+(r.detail||r.error||'خطا');return;}
+    const current=$('as_model_manual').value.trim()||$('as_model').value;
+    setAssistantModels(r.models||[],current);
+    box.textContent=faNum((r.models||[]).length)+' مدل بارگذاری شد.';
+  }catch(e){box.textContent='بارگذاری مدل‌ها انجام نشد: '+e;}
+}
+
+async function testAssistantProvider(){
+  const box=$('as_ai_connection_result');
+  if($('as_provider_mode').value!=='custom'){
+    box.textContent='برای آزمون مستقیم، حالت «اتصال اختصاصی دستیار» را انتخاب کنید.';
+    return;
+  }
+  box.textContent='در حال آزمون واقعی chat/completions…';
+  try{
+    const r=await jpost('/api/assistant/ai/test',assistantApiOverrides());
+    box.textContent=r.ok?'اتصال هوش مصنوعی برقرار است.':'اتصال برقرار نشد: '+(r.detail||r.error||'خطا');
+  }catch(e){box.textContent='آزمون اتصال انجام نشد: '+e;}
+}
+
+async function loadAssistant(){
+  try{
+    const d = await jget('/api/assistant');
+    const k = d.knowledge||{}, c = d.conversation||{}, p = d.polling||{}, rt = d.runtime||{}, api = d.api||{};
+    ASSISTANT_PROVIDERS = d.providers||[];
+    $('as_enabled').checked = !!d.enabled;
+    $('as_polling').checked = !!p.enabled;
+    $('as_token').value = '';
+    $('as_token_state').textContent = d.token_set ? 'ثبت شده' : 'ثبت نشده';
+    $('as_token_preview').textContent = d.token_preview || '—';
+    const runtimeLabels = {polling:'در حال دریافت',starting:'در حال شروع',disabled:'غیرفعال',error:'خطای اتصال',stopped:'متوقف'};
+    $('as_status').textContent = runtimeLabels[rt.status] || (d.enabled ? 'در حال آماده‌سازی' : 'غیرفعال');
+    $('as_status_note').textContent = rt.last_error
+      ? rt.last_error
+      : (rt.last_poll_at ? 'آخرین بررسی: '+rt.last_poll_at : 'هنوز چرخه دریافت کامل نشده است.');
+    $('as_connection_result').textContent = rt.status==='polling'
+      ? 'دریافت زنده پیام‌ها فعال است.'
+      : (rt.last_error ? 'خطا: '+rt.last_error : 'برای پاسخ‌گویی، دستیار و دریافت زنده را فعال کنید.');
+    $('as_provider').innerHTML = ASSISTANT_PROVIDERS.map(p=>
+      `<option value="${escAttr(p.id)}" data-model="${escAttr(p.model||'')}">${esc(p.label||p.id)}${p.enabled?'':' — غیرفعال'}</option>`
+    ).join('') || '<option value="">ابتدا یک ارائه‌دهنده در بخش هوش مصنوعی بسازید</option>';
+    $('as_provider').value = d.provider || (ASSISTANT_PROVIDERS[0]||{}).id || '';
+    $('as_provider_mode').value = d.provider_mode || 'shared';
+    $('as_api_base_url').value = api.base_url || '';
+    $('as_api_key').value = '';
+    $('as_api_key_state').textContent = api.api_key_set ? 'کلید ذخیره شده: '+(api.api_key_preview||'ثبت شده') : 'کلیدی ثبت نشده است.';
+    $('as_api_timeout').value = api.timeout_seconds || 60;
+    $('as_api_max_tokens').value = api.max_tokens || 1400;
+    $('as_model_manual').value = '';
+    const activeModel = d.provider_mode==='custom' ? (api.model||'') : (d.model || ((ASSISTANT_PROVIDERS.find(p=>p.id===$('as_provider').value)||{}).model||''));
+    setAssistantModels(activeModel ? [activeModel] : [], activeModel);
+    assistantProviderModeChanged();
+    $('as_kb_enabled').checked = k.enabled !== false;
+    $('as_top_k').value = k.top_k || 4;
+    $('as_context_chars').value = k.max_context_chars || 3000;
+    $('as_kb_only').checked = k.answer_only_from_kb !== false;
+    $('as_show_sources').checked = k.show_sources !== false;
+    $('as_system_prompt').value = d.system_prompt || '';
+    $('as_welcome').value = d.welcome_message || '';
+    $('as_fallback').value = d.fallback_message || '';
+    $('as_history').value = c.history_messages ?? 6;
+    $('as_question_chars').value = c.max_question_chars || 1200;
+    $('as_private').checked = c.private_chats !== false;
+    $('as_groups').checked = !!c.group_chats;
+  }catch(e){
+    $('as_status').textContent = 'خطا';
+    $('as_status_note').textContent = String(e);
+  }
+}
+
+function assistantPayload(){
+  return {
+    enabled: $('as_enabled').checked,
+    token: $('as_token').value.trim(),
+    provider_mode: $('as_provider_mode').value,
+    provider: $('as_provider').value,
+    model: $('as_model_manual').value.trim() || $('as_model').value,
+    api: {
+      base_url: $('as_api_base_url').value.trim(),
+      api_key: $('as_api_key').value.trim(),
+      model: $('as_model_manual').value.trim() || $('as_model').value,
+      timeout_seconds: Number($('as_api_timeout').value||60),
+      max_tokens: Number($('as_api_max_tokens').value||1400)
+    },
+    system_prompt: $('as_system_prompt').value.trim(),
+    welcome_message: $('as_welcome').value.trim(),
+    fallback_message: $('as_fallback').value.trim(),
+    polling: {
+      enabled: $('as_polling').checked
+    },
+    knowledge: {
+      enabled: $('as_kb_enabled').checked,
+      top_k: Number($('as_top_k').value||4),
+      max_context_chars: Number($('as_context_chars').value||3000),
+      answer_only_from_kb: $('as_kb_only').checked,
+      show_sources: $('as_show_sources').checked
+    },
+    conversation: {
+      history_messages: Number($('as_history').value||0),
+      max_question_chars: Number($('as_question_chars').value||1200),
+      private_chats: $('as_private').checked,
+      group_chats: $('as_groups').checked
+    }
+  };
+}
+
+async function saveAssistant(showResult=true){
+  const result = $('as_save_result');
+  if(showResult) result.innerHTML = pill('در حال ذخیره تنظیمات…','warn');
+  try{
+    const r = await jput('/api/assistant', assistantPayload());
+    if(!r.ok){ if(showResult) result.innerHTML=pill('ذخیره انجام نشد: '+esc(r.error||'خطا'),'bad'); return false; }
+    $('as_token').value = '';
+    $('as_api_key').value = '';
+    if(showResult) result.innerHTML = pill('تنظیمات دستیار ذخیره شد','ok');
+    await loadAssistant();
+    return true;
+  }catch(e){
+    if(showResult) result.innerHTML = pill('ذخیره انجام نشد: '+esc(String(e)),'bad');
+    return false;
+  }
+}
+
+async function testAssistantToken(){
+  const box = $('as_connection_result');
+  box.textContent = 'در حال آزمون توکن مستقل…';
+  try{
+    const r = await jpost('/api/assistant/test', {token:$('as_token').value.trim()});
+    box.textContent = r.ok
+      ? `توکن معتبر است: ${r.bot_name||'ربات'}${r.bot_username?' (@'+r.bot_username+')':''}`
+      : 'توکن معتبر نیست: '+(r.error||'خطا');
+  }catch(e){ box.textContent = 'آزمون اتصال انجام نشد: '+e; }
+}
+
+async function simulateAssistant(){
+  const question = $('as_question').value.trim();
+  if(!question){ $('as_sim_meta').textContent='ابتدا پرسش را وارد کنید.'; return; }
+  const saved = await saveAssistant(false);
+  if(!saved){ $('as_sim_meta').textContent='تنظیمات ذخیره نشد.'; return; }
+  $('as_sim_meta').textContent = 'در حال برقراری اتصال سریع و تولید توکن…';
+  $('as_sim_answer').textContent = 'در حال آغاز جریان استریم…';
+  $('as_sim_sources').innerHTML = '';
+
+  try {
+    const response = await fetch('/api/assistant/stream', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question})
+    });
+
+    if(!response.ok || !response.body) {
+      const r = await jpost('/api/assistant/simulate', {question});
+      if(!r.ok){
+        $('as_sim_answer').textContent = r.error || 'پاسخی دریافت نشد.';
+        $('as_sim_meta').textContent = 'ناموفق';
+        return;
+      }
+      $('as_sim_answer').textContent = r.answer || 'پاسخ خالی بود.';
+      const routeLabel = r.route==='conversation' ? 'گفت‌وگوی هوشمند' : (r.knowledge_used ? 'پاسخ TGJU با پایگاه دانش' : 'پاسخ TGJU با دانش عمومی');
+      const ttftInfo = r.ttft_ms ? ` · TTFT: ${faNum(r.ttft_ms)}ms` : '';
+      $('as_sim_meta').textContent = `${routeLabel} · ${r.provider||'ارائه‌دهنده'}${ttftInfo} · کل: ${faNum(r.latency_ms||0)}ms`;
+      const sources = r.sources||[];
+      $('as_sim_sources').innerHTML = sources.length
+        ? '<b>منابع بازیابی شده:</b> ' + sources.map(s=>`<span class="pill pill-dim">${esc(s.title||s.id)}</span>`).join(' ')
+        : (r.live_prices_used ? '<span class="pill pill-ok">✨ نرخ‌های زنده TGJU اعمال شد</span>' : '<span class="muted">منبع مرتبطی بازیابی نشد.</span>');
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let fullText = '';
+    let finalMeta = null;
+    let started = false;
+
+    while(true) {
+      const {done, value} = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, {stream: true});
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for(const line of lines) {
+        const trimmed = line.trim();
+        if(!trimmed.startsWith('data:')) continue;
+        const jsonStr = trimmed.slice(5).trim();
+        if(!jsonStr) continue;
+        try {
+          const chunk = JSON.parse(jsonStr);
+          if(chunk.type === 'error') {
+            $('as_sim_answer').textContent = chunk.error || 'خطا در تولید پاسخ';
+            $('as_sim_meta').textContent = 'خطا';
+            return;
+          } else if(chunk.type === 'meta') {
+            $('as_sim_meta').textContent = `⚡ اولین توکن (TTFT): ${faNum(chunk.ttft_ms)} میلی‌ثانیه · در حال دریافت…`;
+          } else if(chunk.type === 'token') {
+            if(!started) {
+              started = true;
+              $('as_sim_answer').textContent = '';
+            }
+            fullText += chunk.content;
+            $('as_sim_answer').textContent = fullText;
+          } else if(chunk.type === 'done') {
+            finalMeta = chunk;
+            if(chunk.answer) {
+              fullText = chunk.answer;
+              $('as_sim_answer').textContent = fullText;
+            }
+          }
+        } catch(err) {}
+      }
+    }
+
+    if(finalMeta) {
+      const routeLabel = finalMeta.route==='conversation' ? 'گفت‌وگوی هوشمند' : (finalMeta.knowledge_used ? 'پاسخ TGJU با پایگاه دانش' : 'پاسخ TGJU با دانش عمومی');
+      const liveBadge = finalMeta.live_prices_used ? ' · ✨ نرخ‌های زنده TGJU' : '';
+      $('as_sim_meta').textContent = `${routeLabel} · TTFT: ${faNum(finalMeta.ttft_ms||0)}ms · کل: ${faNum(((finalMeta.latency_ms||0)/1000).toFixed(1))} ثانیه${liveBadge}`;
+      const sources = finalMeta.sources||[];
+      $('as_sim_sources').innerHTML = sources.length
+        ? '<b>منابع بازیابی شده:</b> ' + sources.map(s=>`<span class="pill pill-dim">${esc(s.title||s.id)}</span>`).join(' ')
+        : (finalMeta.live_prices_used ? '<span class="pill pill-ok">✨ نرخ‌های زنده TGJU اعمال شد</span>' : '<span class="muted">منبع مرتبطی بازیابی نشد.</span>');
+    }
+  } catch(e) {
+    $('as_sim_answer').textContent = 'خطا در برقراری ارتباط استریم: ' + e;
+    $('as_sim_meta').textContent = 'خطا';
+  }
 }
 
 // ── Bot (ربات) ──

@@ -95,7 +95,9 @@ from tgju_core.categories import (  # noqa: E402  # noqa: F401
 from tgju_core.scheduler import (  # noqa: E402  # noqa: F401
     _channel_post_types, _next_post_type, _scheduler_tick, scheduler_loop)
 from tgju_core.api_routes import router as api_router  # noqa: E402
+from tgju_core.assistant_routes import router as assistant_router  # noqa: E402
 from tgju_core.alias_routes import router as alias_router, resolver_loop
+from tgju_engine_ai_assistant import assistant_polling_loop  # noqa: E402
 from tgju_core import auth  # noqa: E402
 from tgju_core.auth import require_auth  # noqa: E402
 
@@ -110,6 +112,7 @@ def healthz():
 
 # Attach every route handler (URLs/responses unchanged).
 app.include_router(api_router)
+app.include_router(assistant_router)
 app.include_router(alias_router)
 # Status-family endpoints live in tgju_core/status.py; register them under
 # the exact same URLs the monolith used.  They are registered on the app
@@ -145,6 +148,9 @@ async def startup():
     RUNTIME["scheduler"] = task
     resolver_task = asyncio.create_task(resolver_loop(), name="tgju-alias-resolver")
     RUNTIME["background_tasks"].append(resolver_task)
+    assistant_task = asyncio.create_task(assistant_polling_loop(), name="tgju-ai-assistant")
+    RUNTIME["background_tasks"].append(assistant_task)
+    RUNTIME["assistant"] = assistant_task
     _start_bot_pollers()                   # بله/روبیکا/ایتا long-poll receivers
 
 
@@ -164,6 +170,7 @@ async def shutdown():
         await asyncio.gather(*tasks, return_exceptions=True)
     RUNTIME["background_tasks"] = []
     RUNTIME["scheduler"] = None
+    RUNTIME["assistant"] = None
 
 
 def _start_bot_pollers():
