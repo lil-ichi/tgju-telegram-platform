@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Channel news fetch: category/tag pages -> rotating article + lead (TGJU's own words)."""
+"""Channel news fetch: category/tag pages -> random never-repeated article (TGJU's own words).
+
+The footer hyperlink on every price post is drawn RANDOMLY from an
+accumulating per-channel pool of articles and recorded in the channel's
+used-history, so the same news never appears twice.
+"""
+import hashlib
 import json
 import os
+import random
 import re
 import time
 import urllib.parse
@@ -15,6 +22,103 @@ _ARTICLE_CACHE = {}
 _ARTICLE_CACHE_TTL = 300  # 5 min
 _CACHE_FILE = os.path.join(BASE_DIR, "state", "article_cache.json")
 _CACHE_LOADED = False
+
+# ── news pool / rotation constants ──────────────────────────────────────────
+NEWS_FETCH_SEED = 15      # deep one-time fetch that seeds an empty pool
+NEWS_FETCH_MIN = 8        # articles fetched per build (floor over news_max_items)
+NEWS_FETCH_TOPUP = 3      # per-build fetch once the pool is already deep
+NEWS_POOL_WARM = 20       # pool size above which only a top-up fetch is done
+NEWS_POOL_CAP = 400       # articles remembered per channel (FIFO)
+NEWS_RECENT_GUARD = 12    # headlines blocked right after a full-cycle reset
+NEWS_POOL_MAX_AGE = 21 * 86400   # drop pool articles older than 21 days
+_POOL_FILE_NAME = "news_pool.json"
+
+
+def _pool_path() -> str:
+    """Pool file lives next to the per-channel state files.
+
+    Resolved at call time through channel_state_path so a redirected
+    STATE_DIR (tests, portable packs) is honored automatically.
+    """
+    return os.path.join(os.path.dirname(channel_state_path("_pool")), _POOL_FILE_NAME)
+
+
+def _load_pool() -> dict:
+    try:
+        with open(_pool_path(), encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_pool(pool: dict):
+    try:
+        os.makedirs(os.path.dirname(_pool_path()), exist_ok=True)
+        with open(_pool_path(), "w", encoding="utf-8") as f:
+            json.dump(pool, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def pool_add(channel_id: str, arts: list) -> int:
+    """Merge freshly fetched articles into the channel pool (newest first).
+
+    Returns how many NEW articles were added. The pool is the memory that
+    lets the picker offer a different headline for a long time without
+    re-fetching every article page on every post.
+    """
+    if not arts:
+        return 0
+    pool = _load_pool()
+    prior = [str(a["id"]) for a in (pool.get(channel_id) or []) if a.get("id")]
+    existing = {}
+    for a in (pool.get(channel_id) or []):
+        if a.get("id"):
+            existing[str(a["id"])] = a
+    merged, added, now = [], 0, time.time()
+    for a in arts:
+        aid = str(a.get("id") or "")
+        text = (a.get("text") or "").strip()
+        if not aid or not text:
+            continue
+        if aid not in existing:
+            added += 1
+        else:
+            existing.pop(aid, None)
+        merged.append({"id": aid, "url": a.get("url", ""),
+                       "text": text, "_t": now})
+    # keep the rest of the pool underneath, newest pool entries first
+    merged.extend(existing.values())
+    cutoff = now - NEWS_POOL_MAX_AGE
+    merged = [a for a in merged
+              if not a.get("_t") or a["_t"] >= cutoff][:NEWS_POOL_CAP]
+    pool[channel_id] = merged
+    if added == 0 and [a["id"] for a in merged] == prior:
+        return 0        # nothing new — skip the disk write entirely
+    _save_pool(pool)
+    return added
+
+
+def pool_articles(channel_id: str) -> list:
+    """All remembered articles for a channel, newest first."""
+    return [a for a in (_load_pool().get(channel_id) or []) if a.get("id")]
+
+
+def _text_key(text: str) -> str:
+    """Stable fingerprint of a headline so identical texts never repeat."""
+    norm = re.sub(r"\s+", " ", (text or "")).strip()
+    return hashlib.sha1(norm.encode("utf-8")).hexdigest()[:12]
+
+
+def _dedupe_tail(items: list, cap: int) -> list:
+    """Keep item order, drop earlier duplicates, keep only the last `cap`."""
+    out = []
+    for x in items:
+        if x in out:
+            out.remove(x)
+        out.append(x)
+    return out[-cap:]
 
 
 def _load_article_cache():
@@ -150,72 +254,92 @@ def channel_articles(categories: list, tags: list, limit: int = 6) -> list:
 
 
 def pick_rotating(channel_id: str, arts: list) -> dict:
-    """Pick the newest unused article; persist used-ids per channel.
+    """Pick a RANDOM article that was never posted before (channel-scoped).
 
-    Robustness: tracks the last-picked id per channel so consecutive posts
-    NEVER repeat the same article — even after the daily `used` reset and
-    even when every top article has been seen (then it picks the next one
-    after the last-picked, never the same one again).
+    Guarantees, in order:
+      1. the picked article id AND its headline text are absent from the
+         channel's used-history — the footer hyperlink never repeats;
+      2. never the same headline as the previous post;
+      3. once the whole pool has been consumed the history resets, but the
+         most recent NEWS_RECENT_GUARD headlines stay blocked so there is
+         still no immediate repeat (a fresh full cycle begins).
+
+    History is persisted FIFO in the channel state file (which also carries
+    last_poll_at / last_analysis_at / last_news_at — always MERGEd, never
+    replaced, or the scheduler interval dedupe breaks).
     """
     if not arts:
         return {}
     state = load_channel_state(channel_id)
-    used = set(state.get("news_used") or state.get("used") or [])
-    dayid = datetime.now().timetuple().tm_yday
-    if state.get("day") != dayid:
-        used = set()  # fresh day -> allow reusing older articles
-        state["day"] = dayid
-    last_id = state.get("last_news_id", "")
-    # keep the last-picked id OUT of the candidate set so consecutive
-    # posts can't repeat the identical headline
-    candidates = [a for a in arts if a["id"] != last_id]
-    pick = None
-    for a in candidates:
-        if a["id"] not in used:
-            pick = a
-            break
-    if pick is None and candidates:
-        # every top article was seen -> rotate to the next one after
-        # the last-picked instead of always arts[0]
-        try:
-            last_pos = next(i for i, a in enumerate(arts) if a["id"] == last_id)
-            for step in range(1, len(arts)):
-                candidate_art = arts[(last_pos + step) % len(arts)]
-                if candidate_art["id"] != last_id:
-                    pick = candidate_art
-                    break
-        except StopIteration:
-            pick = candidates[0]
-    if pick is None:
-        pick = arts[0]
-    used.add(pick["id"])
-    state["last_news_id"] = pick["id"]
-    # MERGE into the existing channel state — this file also carries
-    # last_poll_at / last_analysis_at / last_news_at (scheduler dedupe).
-    # Replacing the whole dict here used to WIPE those timestamps, which
-    # broke poll/news interval tracking (polls fired every tick).
-    try:
-        from tgju_engine_config import load_channel_state as _load_full
-        full = _load_full(channel_id) or {}
-    except Exception:
-        full = {}
-    full.update({"day": dayid,
-                 "news_used": sorted(used)[-80:],
-                 "last_news_id": pick["id"],
+    used = [str(x) for x in (state.get("news_used") or state.get("used") or [])]
+    used_texts = [str(x) for x in (state.get("news_used_texts") or [])]
+    last_id = str(state.get("last_news_id") or "")
+
+    blocked_ids = set(used)
+    blocked_texts = set(used_texts)
+
+    def _available(a: dict) -> bool:
+        aid = str(a.get("id") or "")
+        return bool(aid) and aid not in blocked_ids \
+            and _text_key(a.get("text", "")) not in blocked_texts
+
+    candidates = [a for a in arts if _available(a)]
+    if not candidates:
+        # Full cycle consumed: forget older history but keep a recent guard
+        # window, so recycling the pool still never repeats back-to-back.
+        recent_ids = set(used[-NEWS_RECENT_GUARD:])
+        blocked_ids = recent_ids or ({last_id} if last_id else set())
+        blocked_texts = {_text_key(a.get("text", "")) for a in arts
+                         if str(a.get("id")) in blocked_ids}
+        candidates = [a for a in arts if _available(a)]
+    if not candidates:
+        # Pool smaller than the guard window — at minimum never repeat the
+        # headline that was posted just before.
+        candidates = [a for a in arts if str(a.get("id")) != last_id] or list(arts)
+
+    pick = random.choice(candidates)
+    pick_id = str(pick.get("id") or "")
+    used = _dedupe_tail([i for i in used if i] + [pick_id], NEWS_POOL_CAP)
+    used_texts = _dedupe_tail(used_texts + [_text_key(pick.get("text", ""))],
+                             NEWS_POOL_CAP)
+    full = load_channel_state(channel_id) or {}
+    full.pop("used", None)     # legacy key migrated into news_used
+    full.update({"news_used": used,
+                 "news_used_texts": used_texts,
+                 "last_news_id": pick_id,
                  "last_news_at": datetime.now().isoformat(timespec="seconds")})
     save_channel_state(channel_id, full)
     return pick
 
 
 def analysis_line(channel_id: str, categories: list, tags: list) -> str:
-    """One hyperlinked TGJU sentence for the channel's news feed."""
+    """One hyperlinked TGJU sentence (random, never-repeated) for the footer."""
     try:
         from tgju_platform import load_settings
-        limit = max(1, int(load_settings().get("news_max_items", 3)) + 3)
+        limit = max(NEWS_FETCH_MIN,
+                    int(load_settings().get("news_max_items", 3)) + 5)
     except Exception:
-        limit = 6
-    arts = channel_articles(categories, tags, limit=limit)
-    # Fallback: if network failed and no articles, load from disk cache
+        limit = NEWS_FETCH_MIN
+    arts = []
+    try:
+        # First build seeds a deep pool (one-time cost); afterwards the pool
+        # supplies the variety and each build only tops up newest headlines.
+        pooled = len(pool_articles(channel_id))
+        if pooled == 0:
+            want = NEWS_FETCH_SEED
+        elif pooled < NEWS_POOL_WARM:
+            want = NEWS_FETCH_MIN
+        else:
+            want = max(1, min(limit, NEWS_FETCH_TOPUP))
+        arts = channel_articles(categories, tags, limit=want)
+    except Exception:
+        arts = []
+    if arts:
+        pool_add(channel_id, arts)          # remember for future random picks
+    # The pool is the candidate source (fresh articles included) so the
+    # picker can stay random for hundreds of posts without re-fetching.
+    arts = pool_articles(channel_id) or arts
+    # Fallback: if network failed and the pool is empty, load from disk cache
     if not arts:
         try:
             from tgju_engine_fallback import load_fallback_news
