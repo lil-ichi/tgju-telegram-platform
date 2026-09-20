@@ -35,7 +35,11 @@ dev = [
 ]
 
 [project.scripts]
-tgju-platform = "tgju.tgju_platform:main"
+# One command for everything: start / stop / restart / status / logs / doctor
+tgju = "tgju.tgju_start:main"
+tgju-platform = "tgju.tgju_start:main"
+# Direct server runner (no bootstrap) — used by tgju_platform.py itself
+tgju-serve = "tgju.tgju_platform:main"
 
 [tool.setuptools]
 packages = ["tgju", "tgju.tgju_core"]

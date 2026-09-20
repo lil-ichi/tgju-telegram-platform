@@ -84,9 +84,33 @@ cd tgju-telegram-platform
 
 ### 2. Install & Run
 
-**Windows** — double-click `start-platform.bat` (handles everything automatically).
+**One command (any OS, any Python 3.11+)** — the launcher creates the venv,
+installs the requirements, starts the server, waits for `/healthz` and opens
+the dashboard:
 
-**Or manually (any OS):**
+```bash
+python tgju/tgju_start.py          # start (foreground, health-checked)
+python tgju/tgju_start.py start -d # start in the background
+```
+
+**Windows** — double-click `start-platform.bat` (same launcher, no typing).
+**Linux / macOS / git-bash** — `./start-platform.sh`.
+
+Everyday lifecycle is the same command:
+
+```bash
+./start-platform.sh status     # running? pid, port, /healthz, paths
+./start-platform.sh logs -f    # tail the log
+./start-platform.sh restart    # stop + start
+./start-platform.sh stop       # graceful stop
+./start-platform.sh doctor     # self-check: python, deps, YAML, state, port, network, secrets
+./start-platform.sh setup      # create .venv + install requirements only
+```
+
+After `pip install -e .` you also get the shorter `tgju start|stop|status|logs|doctor`.
+Useful flags: `--port 8792`, `--host 127.0.0.1`, `--reload`, `--force`, `--no-open`.
+
+**Or fully manually:**
 ```bash
 python -m venv .venv
 # Windows
@@ -141,6 +165,7 @@ python scripts/setup_auth_local.py --username tgadmin --password 'new-secret'
 ```
 tgju-telegram-platform/
 ├── tgju/
+│   ├── tgju_start.py             # Launcher CLI: start/stop/restart/status/logs/doctor/setup
 │   ├── tgju_platform.py          # FastAPI app — dashboard + API + scheduler (:8791)
 │   ├── tgju_platform_ui.html     # Persian RTL single-page dashboard
 │   ├── channels.yaml             # Channel definitions (or edit via UI)
@@ -296,19 +321,31 @@ free AI models disappear. The platform is built around those facts:
 ```bash
 git clone https://github.com/lil-ichi/tgju-telegram-platform.git
 cd tgju-telegram-platform
-python -m venv .venv
-# ویندوز:
-.venv\Scripts\activate
-# لینوکس / مک / git-bash:
-source .venv/bin/activate
-pip install -r requirements.txt
 
-# اجرا:
-start-platform.bat        # ویندوز
+# اجرا (خودش .venv می‌سازد، پیش‌نیازها را نصب می‌کند، مهلت سلامت را
+# چک می‌کند و صفحهٔ داشبورد را باز می‌کند):
+start-platform.bat        # ویندوز (یا دوبار کلیک)
 ./start-platform.sh       # لینوکس / مک / git-bash
+python tgju/tgju_start.py # همان فرمان، مستقیم با پایتون ۳٫۱۱+
 ```
 
 سپس مرورگر: **http://localhost:8791**
+
+**همهٔ کارهای روزمره با همین یک فرمان:**
+
+```bash
+./start-platform.sh start          # اجرا در پیش‌زمینه (پیش‌فرض)
+./start-platform.sh start -d       # اجرا در پس‌زمینه
+./start-platform.sh status         # در حال اجرا؟ pid، پورت، /healthz، مسیرها
+./start-platform.sh logs -f        # پیگیری زندهٔ لاگ
+./start-platform.sh restart        # توقف + اجرای مجدد
+./start-platform.sh stop           # توقف مرتب
+./start-platform.sh doctor         # خودآزمایی: پایتون، پیش‌نیازها، YAML، state، پورت، شبکه، توکن‌ها
+./start-platform.sh setup          # فقط ساخت .venv و نصب پیش‌نیازها
+```
+
+گزینه‌های مفید: `--port 8792` · `--host 127.0.0.1` · `--reload` (توسعه) · `--force` (آزادکردن پورت اشغال) · `--no-open` (بدون باز کردن مرورگر).
+پس از `pip install -e .` فرمان کوتاه‌تر `tgju start|stop|status|logs|doctor` هم در دسترس است.
 
 - توکن بات را از [@BotFather](https://t.me/BotFather) بگیرید و در تب **بات** داشبورد ثبت کنید (بات باید ادمین کانال باشد).
 - همه تنظیمات، کانال‌ها، پیش‌نمایش و ارسال از داشبورد انجام می‌شود؛ فایل `channels.yaml` نیز قابل ویرایش مستقیم است.

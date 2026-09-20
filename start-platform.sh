@@ -1,29 +1,28 @@
 #!/bin/bash
-# TGJU Platform launcher — works on Linux, macOS, and git-bash (Windows)
+# TGJU Platform launcher — thin wrapper around tgju/tgju_start.py
+#
+#   ./start-platform.sh              # start (foreground) + health check
+#   ./start-platform.sh start -d     # start detached
+#   ./start-platform.sh status       # pid, port, /healthz, paths
+#   ./start-platform.sh logs -f      # tail the app log
+#   ./start-platform.sh stop         # graceful stop
+#   ./start-platform.sh doctor       # environment self-check
+#
+# The Python launcher does the heavy lifting (creates .venv, installs
+# requirements.txt, resolves the port, waits for /healthz), so any Python
+# 3.11+ interpreter works here.
 set -e
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
-# Find python
 PY="${TGJU_PYTHON:-}"
 if [ -z "$PY" ] && [ -x ".venv/bin/python" ]; then PY="$ROOT/.venv/bin/python"; fi
 if [ -z "$PY" ] && [ -x ".venv/Scripts/python.exe" ]; then PY="$ROOT/.venv/Scripts/python.exe"; fi
-if [ -z "$PY" ]; then PY="python"; fi
+if [ -z "$PY" ]; then PY="$(command -v python3 || command -v python || true)"; fi
 
-# Create venv if missing
-if [ ! -x ".venv/bin/python" ] && [ ! -x ".venv/Scripts/python.exe" ]; then
-  echo "  [1/3] Creating virtual environment..."
-  "$PY" -m venv .venv
-  if [ -x ".venv/bin/python" ]; then PY=".venv/bin/python"; else PY=".venv/Scripts/python.exe"; fi
+if [ -z "$PY" ]; then
+  echo "  [!] Python 3.11+ not found. Install it (with the venv module) or set TGJU_PYTHON."
+  exit 1
 fi
 
-# Install deps if fastapi missing
-if ! "$PY" -c "import fastapi" 2>/dev/null; then
-  echo "  [2/3] Installing dependencies..."
-  "$PY" -m pip install -r requirements.txt --quiet
-fi
-
-# Run
-echo "  [3/3] Starting TGJU Platform..."
-echo "         Open http://127.0.0.1:8791 in your browser"
-exec "$PY" "$ROOT/tgju/tgju_platform.py"
+exec "$PY" "$ROOT/tgju/tgju_start.py" "$@"

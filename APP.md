@@ -34,23 +34,41 @@ price refresher run inside the same FastAPI process.
 
 ## 3. Quick start
 
+One command does everything — `tgju/tgju_start.py` (stdlib-only launcher):
+
 ```bash
-# Windows double-click (the launcher resolves the repository-local venv)
-start-platform.bat
-# or git-bash
-bash start-platform.sh
-# then open http://localhost:8791
+python tgju/tgju_start.py            # start (foreground) + /healthz wait + open browser
+python tgju/tgju_start.py start -d   # start detached (log: state/server.log)
+python tgju/tgju_start.py status     # pid, port, /healthz, logs, paths
+python tgju/tgju_start.py logs -f    # follow the app log (--server for uvicorn output)
+python tgju/tgju_start.py restart    # stop + start
+python tgju/tgju_start.py stop       # graceful stop (pid file → SIGTERM → SIGKILL)
+python tgju/tgju_start.py doctor     # self-check (python, deps, YAML, state, port, net, secrets)
+python tgju/tgju_start.py setup      # create .venv + install requirements only
+
+start-platform.bat                   # Windows: same CLI (double-click = start)
+./start-platform.sh                  # Linux / macOS / git-bash wrapper
+tgju start|stop|status|logs|doctor   # after `pip install -e .`
 ```
 
-- **Interpreter:** any Python 3.11+ with `fastapi`, `uvicorn`, `PyYAML`
-  (see `requirements.txt`); the launcher scripts resolve it automatically
-  (local `.venv` → `python` on PATH, or `TGJU_PYTHON` override).
+- **Bootstrap:** the launcher resolves an interpreter (a `python` on PATH that
+  already has the deps → repo-local `.venv` → create `.venv` + `pip install -r
+  requirements.txt`), then runs uvicorn on `tgju_platform:app` with `TGJU_PORT`
+  / `TGJU_HOST` set. `TGJU_PYTHON` overrides the interpreter; `--no-install`
+  forbids pip. Flags: `--port N` · `--host H` · `--daemon` · `--reload` ·
+  `--force` (free the port) · `--timeout S` · `--open/--no-open`.
+- **Runtime files:** `state/platform.pid` (pid/port/host JSON), `state/server.log`
+  (uvicorn stream when detached), `state/platform.log` (app `log_line`). The
+  launcher only recognizes its own `/healthz` (`service == "tgju-platform"`), so
+  a foreign service on the port is reported as busy, never as "running".
+- **Direct run (no bootstrap):** `cd tgju && python tgju_platform.py` (honors
+  `TGJU_PORT`/`TGJU_HOST`); `tgju-serve` console script does the same.
 - **Verify up:** `curl -s localhost:8791/healthz` → expect
   `{"ok":true,"service":"tgju-platform"}`. Detailed `/api/health` and
   `/api/status` responses are authenticated; use a session cookie from
   `/api/auth/login` for those checks.
-- **Restart after code/UI edits:** find PID via `netstat -ano | grep :8791`, then
-  `taskkill /PID <pid> /F`, then relaunch. The UI HTML is cached in the module
+- **Restart after code/UI edits:** `python tgju/tgju_start.py restart` (graceful
+  stop + health-checked start; needs no manual `netstat`/`taskkill`). The UI HTML is cached in the module
   global `UI_PAGE` on first request — a stale process serves the OLD dashboard.
 - **Compile gate:** `python -m py_compile` every `platform/*.py` + `platform/tgju_core/*.py`.
 - **Ports:** 8791 platform • 8788 Hermes LLM gateway (often down) • 8790 News Studio.
@@ -68,7 +86,7 @@ bash start-platform.sh
 | `tgju/tgju_engine_scrape.py` | tgju.org fetch + parse (230+ slugs), profile backfill, SLUG_ALIASES |
 | `tgju/tgju_engine_format.py` | Message builders: chips/star/template/footer, unit conversion (ريال→تومان), `esc()`, `plain_chip_line()` (platform-neutral) |
 | `tgju/tgju_engine_orchestrator.py` | `get_channel_rows` (slug pool + overrides + throttled backfill), `build_for_channel` |
-| `tgju/tgju_engine_news.py` | Category/tag pages → rotating article → TGJU og:description hyperlink |
+| `tgju/tgju_engine_news.py` | Category/tag pages → accumulating per-channel article pool → RANDOM never-repeated article → TGJU og:description hyperlink |
 | `tgju/tgju_engine_ai.py` | AI providers, `run_analysis`, `_chat_completion`, AI Orchestrator jobs + activity |
 | `tgju/tgju_engine_kb.py` | **Knowledge Base (KB) engine**: local folder/file scan, URL scraping, document chunking, BM25 context retrieval, prompt injection |
 | `tgju/tgju_engine_ai_assistant.py` | Independent Telegram AI assistant state, token validation, KB-grounded prompt construction and provider execution |
@@ -82,9 +100,11 @@ bash start-platform.sh
 | `tgju/tgju_core_integration.py` | Legacy↔core bridge: `orchestrated_post()`, `explain_run()`, `command_center()` |
 | `tgju/tgju_core_sources.py` | Data sources: TgjuPricesSource / TgjuNewsSource / TgjuProfileSource |
 | `tgju/tgju_multi.py` | CLI: `--list`, `--preview ch1`, `--post ch1 --real` (routes through core) |
-| `tgju/state/` | settings.json, ai_config.json, ai_jobs.json, kb_config.json, knowledge_base/, functions.json, bot_profile.json, polls.json, slug_overrides.json, profile_cache.json, fallback_*.json, platform.log, runs/, events/, approvals/, idempotency/ |
+| `tgju/state/` | settings.json, ai_config.json, ai_jobs.json, kb_config.json, knowledge_base/, functions.json, bot_profile.json, polls.json, slug_overrides.json, profile_cache.json, news_pool.json, article_cache.json, fallback_*.json, platform.log, runs/, events/, approvals/, idempotency/ |
 | `APP.md` | This file |
-| `start-platform.bat` / `.sh` | Launchers |
+| `tgju/tgju_start.py` | **Launcher CLI** (stdlib only): start/stop/restart/status/logs/doctor/setup, venv+deps bootstrap, `/healthz` wait, pid file `state/platform.pid` |
+| `start-platform.bat` / `.sh` | Thin wrappers that hand off to `tgju/tgju_start.py` (all args pass through) |
+| `pyproject.toml` scripts | `tgju` / `tgju-platform` → launcher CLI · `tgju-serve` → direct server runner |
 
 ## 5. Architecture & runtime behavior
 
@@ -148,7 +168,9 @@ format, post_types, template, custom_data`.
 
 ## 8. Post types & the scheduler
 
-- `prices` — full chip digest (header + chips + TGJU analysis hyperlink + footer)
+- `prices` — full chip digest (header + chips + TGJU analysis hyperlink + footer); the
+  hyperlink headline is drawn RANDOMLY from the channel's news pool and never repeats
+  (see §11b)
 - `news` — TGJU analysis_line hyperlink only (TGJU's own words, never AI)
 - `poll` — native Telegram `sendPoll`, `is_anonymous: true` MANDATORY in channels
 - `analysis` — AI text ONLY if `analysis.enabled` + real provider, else 400
@@ -506,8 +528,73 @@ scheduler for price posts and by the CLI), `explain_run()`, `command_center()`.
 9. UI/docs Persian RTL; Persian digits (`fa_num`), `_` separators, ZWNJ.
 10. **Update this file** after any structural change (see §2).
 
+## 11b. Footer news rotation (`tgju_engine_news.py`)
+
+The TGJU news hyperlink that rides on every price post (the `{news}` line, just
+above `{footer}`) is picked RANDOMLY and never repeats:
+- **Pool** — `state/news_pool.json` keeps up to `NEWS_POOL_CAP` (400) articles per
+  channel (id/url/text, newest first, entries older than 21 days dropped).
+  `pool_add()` merges each fetch; `pool_articles()` is the picker's candidate
+  source, so variety survives without re-fetching article pages.- **Fetch cost** — an empty pool is seeded once with `NEWS_FETCH_SEED` (15)
+  articles, then each build fetches `NEWS_FETCH_MIN` (8) while the pool is under
+  `NEWS_POOL_WARM` (20) and only tops up `NEWS_FETCH_TOPUP` (3) newest headlines
+  afterwards.
+- **Picker** — `pick_rotating()` chooses `random.choice()` among articles whose
+  id AND headline fingerprint (`_text_key`, sha1 of the normalized text) are not
+  in the channel's FIFO history (`news_used` / `news_used_texts`, cap 400). No
+  daily reset any more — a headline never comes back while the pool lasts.
+- **Full cycle** — when every pooled article has been used the history resets but
+  the most recent `NEWS_RECENT_GUARD` (12) headlines stay blocked, so recycling
+  still never repeats back-to-back (and never repeats the previous post).
+- History lives in the channel state file (`state/analysis_<cid>.json`) and is
+  always MERGEd (last_poll_at / last_analysis_at survive); the legacy `used` key
+  is migrated into `news_used` once. Applies to Telegram, Bale, Rubika and Eitaa
+  (all reuse `build_for_channel`); WhatsApp news replies still list the top 5.
+
 ## 21. Changelog
 
+- 2026-09-20 (2): **Proper start command — `tgju/tgju_start.py` launcher CLI.**
+  Previously starting meant "install deps by hand, run a script, then guess
+  whether it came up". Now one stdlib-only command does the whole lifecycle:
+  `python tgju/tgju_start.py [start|stop|restart|status|logs|doctor|setup|open|version]`
+  (aliases up/down/ps/tail/check/install; command may come before or after the
+  flags). It resolves an interpreter (deps on PATH → repo `.venv` → creates
+  `.venv` + `pip install -r requirements.txt`), starts uvicorn on
+  `tgju_platform:app` with `TGJU_PORT`/`TGJU_HOST` and `PYTHONPATH` set, waits
+  for `/healthz` (never reports a false success), prints the dashboard URL and
+  opens the browser (foreground), writes `state/platform.pid`
+  (`pid/port/host/started_at`) and logs the detached stream to
+  `state/server.log`. `stop`/`restart` are graceful (SIGTERM → SIGKILL;
+  taskkill on Windows), `status` shows pid/health/port/log paths, `logs -f`
+  tails (`--server` switches streams), `doctor` self-checks python version,
+  deps, channels.yaml YAML validity, enabled-channel telegram_ids, state-dir
+  writability, port, tgju.org/telegram reachability, bot token and the login
+  account. `--force` reclaims a busy port, and the health probe is strict
+  (`service == "tgju-platform"`) so a foreign service is never mistaken for the
+  app or killed by `stop`. Wired through: `start-platform.bat` / `.sh` are now
+  thin pass-through wrappers with usage headers, `pyproject.toml` exposes
+  `tgju`/`tgju-platform` (launcher) and `tgju-serve` (direct runner),
+  `tgju_platform.main()` honors `TGJU_PORT`/`TGJU_HOST` and points at the
+  launcher, and both READMEs document the one-command workflow. New tests
+  `tests/test_launcher.py` (36: arg parsing/aliases, URL+env resolution, pid
+  file, port/probe/wait-healthy, tail, doctor, bootstrap) — 158 tests pass;
+  verified live: sh + bat wrappers, `status`, `doctor`, listener lookup and the
+  stop path against a dummy `/healthz` server on :8799.
+- 2026-09-20: Footer news is now RANDOM and never repeats. `tgju_engine_news.py`
+  gained a per-channel article pool (`state/news_pool.json`, cap 400, 21-day
+  prune) that accumulates every fetch, and `pick_rotating()` now draws
+  `random.choice()` from the pooled articles whose id and headline fingerprint are
+  absent from the channel history (`news_used` + new `news_used_texts`, FIFO cap
+  400) — the day-reset and the deterministic "newest unused" scan are gone, so the
+  same hyperlink can no longer ride the footer post after post. When the whole pool
+  is consumed the history resets but the last `NEWS_RECENT_GUARD` (12) headlines
+  stay blocked (never a back-to-back repeat). Fetches are adaptive: a 15-article
+  one-time pool seed, 8 per build while the pool warms, 3 once it holds ≥ 20, so
+  posts stay fast. New tests
+  `tests/test_news_rotation.py` (15) cover pool growth/cap, random never-repeating
+  rotation, guard window after a full cycle, identical-text dedupe, legacy-key
+  migration and scheduler-timestamp preservation — 122 tests pass; verified live
+  against tgju.org (6 consecutive builds → 6 distinct news links).
 - 2026-09-19: Supercharged the Telegram AI Assistant (`tgju_engine_ai_assistant.py`) for ultra-low TTFT (Time To First Token), token streaming, and natural Persian financial grounding:
   1. Persistent HTTP Connection Pooling: Added `get_http_session()` in `tgju_engine_ai.py` with keep-alive connection pooling (`pool_connections=25`, `pool_maxsize=50`) and socket reuse, eliminating repeated TCP/TLS handshakes to LLM providers.
   2. SSE Token Streaming & Telemetry: Implemented `stream_chat_completion()` and `answer_question_stream()` yielding real-time chunks with millisecond-precision `ttft_ms` tracking; added `POST /api/assistant/stream` route returning `text/event-stream`.

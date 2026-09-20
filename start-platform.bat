@@ -1,33 +1,39 @@
 @echo off
+REM TGJU Platform launcher - thin wrapper around tgju\tgju_start.py
+REM
+REM   start-platform.bat              start (foreground) + health check
+REM   start-platform.bat start -d     start detached (background)
+REM   start-platform.bat status       pid, port, /healthz, paths
+REM   start-platform.bat logs -f      tail the app log
+REM   start-platform.bat stop         graceful stop
+REM   start-platform.bat doctor       environment self-check
+REM
+REM The Python launcher creates .venv, installs requirements.txt, resolves the
+REM port and waits for /healthz, so any Python 3.11+ interpreter works here.
 setlocal
 cd /d "%~dp0"
 title TGJU Platform
 
-REM -- find python --
 set "PY="
-where py >nul 2>nul && set "PY=py -3"
-if not defined PY where python >nul 2>nul && set "PY=python"
+if defined TGJU_PYTHON if exist "%TGJU_PYTHON%" set "PY=%TGJU_PYTHON%"
+if not defined PY if exist ".venv\Scripts\python.exe" set "PY=.venv\Scripts\python.exe"
+if not defined PY (
+  where py >nul 2>nul
+  if not errorlevel 1 set "PY=py -3"
+)
+if not defined PY (
+  where python >nul 2>nul
+  if not errorlevel 1 set "PY=python"
+)
 if not defined PY (
   echo  [!] Python not found. Install Python 3.11+ and add it to PATH.
   pause
   exit /b 1
 )
 
-REM -- create venv if missing --
-if not exist ".venv\Scripts\python.exe" (
-  echo  [1/3] Creating virtual environment...
-  %PY% -m venv .venv
-)
-
-REM -- install deps --
-".venv\Scripts\python.exe" -c "import fastapi" >nul 2>nul
+%PY% "tgju\tgju_start.py" %*
 if errorlevel 1 (
-  echo  [2/3] Installing dependencies...
-  ".venv\Scripts\python.exe" -m pip install -r requirements.txt --quiet
+  echo.
+  echo  [!] The launcher reported a problem - see the messages above.
+  pause
 )
-
-REM -- run --
-echo  [3/3] Starting TGJU Platform...
-echo         Open http://127.0.0.1:8791 in your browser
-".venv\Scripts\python.exe" tgju/tgju_platform.py
-pause

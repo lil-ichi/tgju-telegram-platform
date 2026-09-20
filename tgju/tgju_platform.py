@@ -223,10 +223,20 @@ def _start_bot_pollers():
 
 
 def main():
-    """Console entry point (also used by the launcher scripts)."""
+    """Direct server runner (no environment bootstrap).
+
+    Honors ``TGJU_PORT`` / ``TGJU_HOST``. For the friendly lifecycle command
+    (start/stop/status/logs/doctor + venv bootstrap) use the launcher:
+    ``python tgju/tgju_start.py`` (or the ``tgju`` console script).
+    """
     import uvicorn
-    print("TGJU Telegram Platform → http://localhost:8791")
-    uvicorn.run(app, host="0.0.0.0", port=8791)
+    port = int(os.environ.get("TGJU_PORT") or 8791)
+    host = os.environ.get("TGJU_HOST") or "0.0.0.0"
+    shown = "127.0.0.1" if host in ("0.0.0.0", "::", "") else host
+    print("TGJU Telegram Platform → http://%s:%d" % (shown, port))
+    print("Lifecycle CLI: python tgju/tgju_start.py  "
+          "(start|stop|restart|status|logs|doctor)")
+    uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
